@@ -13,6 +13,15 @@ class HealthDayEntriesLoadedState extends BaseState {
   List<Object?> get props => [entries, date];
 }
 
+class HealthMonthEntriesLoadedState extends BaseState {
+  const HealthMonthEntriesLoadedState({required this.entries});
+
+  final List<SupplementLog> entries;
+
+  @override
+  List<Object?> get props => [entries];
+}
+
 class HealthProductsLoadedState extends BaseState {
   const HealthProductsLoadedState({required this.products});
 

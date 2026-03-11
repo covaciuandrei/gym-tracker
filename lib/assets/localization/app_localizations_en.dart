@@ -133,6 +133,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get calendarNoType => 'No type';
 
   @override
+  String get calendarNoHealthLogs => 'No supplements logged for this day.';
+
+  @override
+  String get calendarSelectProduct => 'Select a product';
+
+  @override
   String get statsTitle => 'Stats';
 
   @override

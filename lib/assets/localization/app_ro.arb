@@ -43,8 +43,8 @@
   "calendarNotes": "Note",
   "calendarDurationMinutes": "Durată (minute)",
   "calendarTrainingType": "Tip antrenament",
-  "calendarNoType": "Fără tip",
-
+  "calendarNoType": "Fără tip",  "calendarNoHealthLogs": "Niciun supliment înregistrat pentru această zi.",
+  "calendarSelectProduct": "Selectează un produs",
   "statsTitle": "Statistici",
   "statsAttendances": "Prezențe",
   "statsWorkouts": "Antrenamente",

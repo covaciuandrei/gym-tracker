@@ -17,6 +17,7 @@ class HealthCubit extends BaseCubit {
   final HealthService _healthService;
 
   StreamSubscription<List<SupplementLog>>? _dayEntriesSubscription;
+  StreamSubscription<List<SupplementLog>>? _monthEntriesSubscription;
   StreamSubscription<List<SupplementProduct>>? _productsSubscription;
 
   /// Subscribes to supplement log entries for [date] ("YYYY-MM-DD") and emits
@@ -28,6 +29,24 @@ class HealthCubit extends BaseCubit {
         _healthService.watchDayEntries(userId: userId, date: date).listen(
           (entries) =>
               safeEmit(HealthDayEntriesLoadedState(entries: entries, date: date)),
+          onError: (_) => safeEmit(const SomethingWentWrongState()),
+        );
+  }
+
+  /// Subscribes to supplement log entries for the given [year]/[month] and emits
+  /// [HealthMonthEntriesLoadedState] on every update.
+  void loadMonthEntries({
+    required String userId,
+    required int year,
+    required int month,
+  }) {
+    _monthEntriesSubscription?.cancel();
+    safeEmit(const PendingState());
+    _monthEntriesSubscription = _healthService
+        .watchMonthEntries(userId: userId, year: year, month: month)
+        .listen(
+          (entries) =>
+              safeEmit(HealthMonthEntriesLoadedState(entries: entries)),
           onError: (_) => safeEmit(const SomethingWentWrongState()),
         );
   }
@@ -83,6 +102,7 @@ class HealthCubit extends BaseCubit {
   @override
   Future<void> close() async {
     await _dayEntriesSubscription?.cancel();
+    await _monthEntriesSubscription?.cancel();
     await _productsSubscription?.cancel();
     return super.close();
   }

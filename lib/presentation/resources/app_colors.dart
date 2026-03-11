@@ -34,4 +34,8 @@ abstract final class AppColors {
   static const Color success = Color(0xFF6C63FF); // same as accent
   static const Color danger = Color(0xFFFF4444);
   static const Color warning = Color(0xFFFF9800);
+
+  // ── Health indicator teal ─────────────────────────────────────────────────
+  static const Color healthTealDark = Color(0xFF26C6A4);
+  static const Color healthTealLight = Color(0xFF00897B);
 }

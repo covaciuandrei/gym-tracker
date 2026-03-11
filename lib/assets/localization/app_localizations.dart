@@ -344,6 +344,18 @@ abstract class AppLocalizations {
   /// **'No type'**
   String get calendarNoType;
 
+  /// No description provided for @calendarNoHealthLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'No supplements logged for this day.'**
+  String get calendarNoHealthLogs;
+
+  /// No description provided for @calendarSelectProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a product'**
+  String get calendarSelectProduct;
+
   /// No description provided for @statsTitle.
   ///
   /// In en, this message translates to:

@@ -44,6 +44,8 @@
   "calendarDurationMinutes": "Duration (minutes)",
   "calendarTrainingType": "Training type",
   "calendarNoType": "No type",
+  "calendarNoHealthLogs": "No supplements logged for this day.",
+  "calendarSelectProduct": "Select a product",
 
   "statsTitle": "Stats",
   "statsAttendances": "Attendances",

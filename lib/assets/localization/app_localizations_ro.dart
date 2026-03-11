@@ -134,6 +134,13 @@ class AppLocalizationsRo extends AppLocalizations {
   String get calendarNoType => 'Fără tip';
 
   @override
+  String get calendarNoHealthLogs =>
+      'Niciun supliment înregistrat pentru această zi.';
+
+  @override
+  String get calendarSelectProduct => 'Selectează un produs';
+
+  @override
   String get statsTitle => 'Statistici';
 
   @override
