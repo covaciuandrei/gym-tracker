@@ -26,7 +26,6 @@ abstract final class CustomTheme {
   static TextTheme _buildTextTheme({
     required Color onSurface,
     required Color onSurfaceVariant,
-    required Color outline,
     required Color primary,
   }) {
     return TextTheme(
@@ -59,33 +58,52 @@ abstract final class CustomTheme {
       bodySmall: TextStyle(
           fontSize: 12, fontWeight: FontWeight.w400, color: onSurfaceVariant),
       // ── Label ─────────────────────────────────────────────────────────────
+      // labelLarge: no color set — inherits from parent (e.g. button foreground)
       labelLarge: TextStyle(
-          fontSize: 14, fontWeight: FontWeight.w600, color: primary),
+          fontSize: 14, fontWeight: FontWeight.w600),
       labelMedium: TextStyle(
           fontSize: 12, fontWeight: FontWeight.w500, color: onSurfaceVariant),
+      // labelSmall: used for section headers (ABOUT, SECURITY, etc.)
       labelSmall: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: outline,
+          color: onSurfaceVariant,
           letterSpacing: 1.2),
     );
   }
 
   // ── Dark theme (default) ─────────────────────────────────────────────────
   static ThemeData get darkTheme {
+    // ColorScheme maps 1-to-1 with Angular CSS variables:
+    //   surface              = --card-bg    (#1e293b, Slate 800)
+    //   surfaceContainerHigh = --card-bg    (same, for card widgets)
+    //   surfaceContainerHighest = --surface-overlay (#334155, Slate 700)
+    //   surfaceContainerLow  = --bg-color   (#0f172a, Slate 900)
+    //   outline              = --border-color (#334155)
+    //   primaryContainer     = --primary-light overlay (~rgba(99,102,241,0.2))
     const colorScheme = ColorScheme(
       brightness: Brightness.dark,
       primary: AppColors.primary,
-      onPrimary: AppColors.textPrimary,
+      onPrimary: Colors.white,
+      primaryContainer: AppColors.primaryContainerDark,
+      onPrimaryContainer: AppColors.primary,
       secondary: AppColors.primary,
-      onSecondary: AppColors.textPrimary,
-      tertiary: AppColors.healthTealDark,
+      onSecondary: Colors.white,
+      secondaryContainer: AppColors.primaryContainerDark,
+      onSecondaryContainer: AppColors.primary,
+      tertiary: AppColors.statsCyan,
+      onTertiary: Colors.white,
       error: AppColors.danger,
-      onError: AppColors.textPrimary,
+      onError: Colors.white,
       surface: AppColors.surfaceDark,
       onSurface: AppColors.textPrimary,
       onSurfaceVariant: AppColors.textSecondary,
-      outline: AppColors.textMuted,
+      outline: AppColors.borderDark,
+      outlineVariant: AppColors.surfaceElevatedDark,
+      surfaceContainerLow: AppColors.backgroundDark,
+      surfaceContainer: AppColors.surfaceDark,
+      surfaceContainerHigh: AppColors.surfaceDark,
+      surfaceContainerHighest: AppColors.surfaceElevatedDark,
     );
 
     return ThemeData(
@@ -98,7 +116,6 @@ abstract final class CustomTheme {
       textTheme: _buildTextTheme(
         onSurface: AppColors.textPrimary,
         onSurfaceVariant: AppColors.textSecondary,
-        outline: AppColors.textMuted,
         primary: AppColors.primary,
       ),
       appBarTheme: const AppBarTheme(
@@ -107,44 +124,80 @@ abstract final class CustomTheme {
         elevation: 0,
         centerTitle: true,
       ),
-      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      // M3 NavigationBar — mirrors Angular bottom-nav:
+      //   active item: primary color + primary-light indicator pill
+      //   inactive item: text-secondary
+      //   background: card-bg (--card-bg with top border)
+      navigationBarTheme: NavigationBarThemeData(
         backgroundColor: AppColors.surfaceDark,
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textMuted,
-        type: BottomNavigationBarType.fixed,
-        elevation: 0,
+        indicatorColor: AppColors.primaryContainerDark,
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          return IconThemeData(
+            color: states.contains(WidgetState.selected)
+                ? AppColors.primary
+                : AppColors.textSecondary,
+          );
+        }),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          return TextStyle(
+            fontSize: 11,
+            fontWeight: states.contains(WidgetState.selected)
+                ? FontWeight.w600
+                : FontWeight.w500,
+            color: states.contains(WidgetState.selected)
+                ? AppColors.primary
+                : AppColors.textSecondary,
+          );
+        }),
       ),
+      // Cards: 16px radius + 1px border (Angular card / supplement-card pattern)
       cardTheme: const CardThemeData(
         color: AppColors.surfaceDark,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+          side: BorderSide(color: AppColors.borderDark),
         ),
       ),
+      // Inputs: 12px radius + 2px border (Angular: border-radius 0.75rem, border 2px)
+      // fill = backgroundDark so inputs look recessed inside cards
       inputDecorationTheme: const InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surfaceElevatedDark,
+        fillColor: AppColors.backgroundDark,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(8)),
-          borderSide: BorderSide(color: AppColors.borderDark),
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: AppColors.borderDark, width: 2),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(8)),
-          borderSide: BorderSide(color: AppColors.borderDark),
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: AppColors.borderDark, width: 2),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(8)),
-          borderSide: BorderSide(color: AppColors.primary),
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: AppColors.primary, width: 2),
         ),
         labelStyle: TextStyle(color: AppColors.textSecondary),
         hintStyle: TextStyle(color: AppColors.textMuted),
       ),
+      // Primary button: gradient in Angular (.btn-primary), use solid primary here
+      // Gradient can be applied per-widget with Ink(decoration: BoxDecoration(gradient:...))
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.textPrimary,
+          foregroundColor: Colors.white,
           shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(8)),
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+        ),
+      ),
+      // Secondary/Cancel button (.btn-secondary in Angular)
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.textSecondary,
+          side: const BorderSide(color: AppColors.borderDark),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
           ),
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
         ),
@@ -162,16 +215,26 @@ abstract final class CustomTheme {
     const colorScheme = ColorScheme(
       brightness: Brightness.light,
       primary: AppColors.primary,
-      onPrimary: AppColors.textPrimary,
+      onPrimary: Colors.white,
+      primaryContainer: AppColors.primaryContainerLight,
+      onPrimaryContainer: AppColors.primary,
       secondary: AppColors.primary,
-      onSecondary: AppColors.textPrimary,
-      tertiary: AppColors.healthTealLight,
+      onSecondary: Colors.white,
+      secondaryContainer: AppColors.primaryContainerLight,
+      onSecondaryContainer: AppColors.primary,
+      tertiary: AppColors.statsCyan,
+      onTertiary: Colors.white,
       error: AppColors.danger,
-      onError: AppColors.textPrimary,
+      onError: Colors.white,
       surface: AppColors.surfaceLight,
       onSurface: AppColors.textPrimaryLight,
       onSurfaceVariant: AppColors.textSecondaryLight,
-      outline: AppColors.textMutedLight,
+      outline: AppColors.borderLight,
+      outlineVariant: AppColors.surfaceElevatedLight,
+      surfaceContainerLow: AppColors.backgroundLight,
+      surfaceContainer: AppColors.surfaceLight,
+      surfaceContainerHigh: AppColors.surfaceLight,
+      surfaceContainerHighest: AppColors.surfaceElevatedLight,
     );
 
     return ThemeData(
@@ -184,7 +247,6 @@ abstract final class CustomTheme {
       textTheme: _buildTextTheme(
         onSurface: AppColors.textPrimaryLight,
         onSurfaceVariant: AppColors.textSecondaryLight,
-        outline: AppColors.textMutedLight,
         primary: AppColors.primary,
       ),
       appBarTheme: const AppBarTheme(
@@ -192,6 +254,28 @@ abstract final class CustomTheme {
         foregroundColor: AppColors.textPrimaryLight,
         elevation: 0,
         centerTitle: true,
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: AppColors.surfaceLight,
+        indicatorColor: AppColors.primaryContainerLight,
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          return IconThemeData(
+            color: states.contains(WidgetState.selected)
+                ? AppColors.primary
+                : AppColors.textSecondaryLight,
+          );
+        }),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          return TextStyle(
+            fontSize: 11,
+            fontWeight: states.contains(WidgetState.selected)
+                ? FontWeight.w600
+                : FontWeight.w500,
+            color: states.contains(WidgetState.selected)
+                ? AppColors.primary
+                : AppColors.textSecondaryLight,
+          );
+        }),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: AppColors.surfaceLight,
@@ -204,23 +288,24 @@ abstract final class CustomTheme {
         color: AppColors.surfaceLight,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+          side: BorderSide(color: AppColors.borderLight),
         ),
       ),
       inputDecorationTheme: const InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surfaceElevatedLight,
+        fillColor: AppColors.backgroundLight,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(8)),
-          borderSide: BorderSide(color: AppColors.borderLight),
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: AppColors.borderLight, width: 2),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(8)),
-          borderSide: BorderSide(color: AppColors.borderLight),
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: AppColors.borderLight, width: 2),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(8)),
-          borderSide: BorderSide(color: AppColors.primary),
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: AppColors.primary, width: 2),
         ),
         labelStyle: TextStyle(color: AppColors.textSecondaryLight),
         hintStyle: TextStyle(color: AppColors.textMutedLight),
@@ -228,9 +313,19 @@ abstract final class CustomTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.textPrimary,
+          foregroundColor: Colors.white,
           shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(8)),
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.textSecondaryLight,
+          side: const BorderSide(color: AppColors.borderLight),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
           ),
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
         ),

@@ -31,7 +31,10 @@ class PrimaryButton extends StatelessWidget {
               )
             : Text(
                 label,
-                style: Theme.of(context).textTheme.labelLarge,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
       ),
     );
