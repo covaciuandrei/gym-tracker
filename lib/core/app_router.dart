@@ -11,13 +11,13 @@ class AppRouter extends RootStackRouter {
 
   @override
   final List<AutoRoute> routes = <AutoRoute>[
-    AutoRoute(path: '/splash', page: SplashRoute.page, initial: true),
+    AutoRoute(path: '/', page: SplashRoute.page, initial: true),
     AutoRoute(path: '/login', page: LoginRoute.page),
     AutoRoute(path: '/register', page: RegisterRoute.page),
     AutoRoute(path: '/forgot-password', page: ForgotPasswordRoute.page),
     AutoRoute(path: '/auth/action', page: AuthActionRoute.page),
     AutoRoute(
-      path: '/',
+      path: '/app',
       page: MainShellRoute.page,
       children: [
         AutoRoute(path: 'calendar', page: CalendarRoute.page),
