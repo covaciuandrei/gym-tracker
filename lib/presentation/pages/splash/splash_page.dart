@@ -1,22 +1,11 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
-import 'package:gym_tracker/core/injection.dart';
-import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
-import 'package:gym_tracker/cubit/base_state.dart';
 
 @RoutePage()
-class SplashPage extends StatefulWidget implements AutoRouteWrapper {
+class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
-
-  @override
-  Widget wrappedRoute(BuildContext context) {
-    return BlocProvider<AuthCubit>(
-      create: (_) => getIt<AuthCubit>(),
-      child: this,
-    );
-  }
 
   @override
   State<SplashPage> createState() => _SplashPageState();
@@ -26,62 +15,52 @@ class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
-    // Defer the watchAuthState() call so the BlocProvider tree is fully built.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      try {
-        context.read<AuthCubit>().watchAuthState();
-      } catch (_) {
-        // Firebase not yet initialized (flutterfire configure not yet run).
-        // Fall through to login as a safe default.
-        context.router.replaceAll([const LoginRoute()]);
-      }
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _navigate());
+  }
+
+  Future<void> _navigate() async {
+    await Future<void>.delayed(const Duration(seconds: 2));
+    if (!mounted) return;
+    final isLoggedIn = FirebaseAuth.instance.currentUser != null;
+    if (isLoggedIn) {
+      context.router.replace(const MainShellRoute());
+    } else {
+      context.router.replace(const LoginRoute());
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<AuthCubit, BaseState>(
-      listener: (context, state) {
-        if (state is AuthAuthenticatedState) {
-          context.router.replaceAll([const MainShellRoute()]);
-        } else if (state is AuthUnauthenticatedState || state is SomethingWentWrongState) {
-          context.router.replaceAll([const LoginRoute()]);
-        }
-      },
-      child: Builder(
-        builder: (context) {
-          final cs = Theme.of(context).colorScheme;
-          return Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: cs.primary.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.fitness_center,
-                      size: 40,
-                      color: cs.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Gym Tracker',
-                    style: Theme.of(context).textTheme.displayMedium,
-                  ),
-                  const SizedBox(height: 48),
-                  CircularProgressIndicator(color: cs.primary),
-                ],
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      backgroundColor: cs.surface,
+      body: SafeArea(
+        child: Column(
+          children: [
+            const Spacer(),
+            Text(
+              '💪',
+              style: TextStyle(fontSize: 80),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Gym Tracker',
+              style: tt.displayMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Track your gym journey',
+              style: tt.bodyLarge?.copyWith(
+                color: cs.onSurfaceVariant,
               ),
             ),
-          );
-        },
+            const Spacer(),
+            CircularProgressIndicator(color: cs.primary),
+            const SizedBox(height: 48),
+          ],
+        ),
       ),
     );
   }

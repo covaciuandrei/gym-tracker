@@ -2,13 +2,9 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
 
-/// Bottom-navigation shell that hosts Calendar, Stats, Health and Profile tabs.
 @RoutePage()
-class MainShellPage extends StatelessWidget implements AutoRouteWrapper {
+class MainShellPage extends StatelessWidget {
   const MainShellPage({super.key});
-
-  @override
-  Widget wrappedRoute(BuildContext context) => this;
 
   @override
   Widget build(BuildContext context) {
@@ -20,28 +16,28 @@ class MainShellPage extends StatelessWidget implements AutoRouteWrapper {
         ProfileRoute(),
       ],
       bottomNavigationBuilder: (_, tabsRouter) {
-        return BottomNavigationBar(
-          currentIndex: tabsRouter.activeIndex,
-          onTap: tabsRouter.setActiveIndex,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today_outlined),
-              activeIcon: Icon(Icons.calendar_today),
+        return NavigationBar(
+          selectedIndex: tabsRouter.activeIndex,
+          onDestinationSelected: tabsRouter.setActiveIndex,
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.calendar_month_outlined),
+              selectedIcon: Icon(Icons.calendar_month),
               label: 'Calendar',
             ),
-            BottomNavigationBarItem(
+            NavigationDestination(
               icon: Icon(Icons.bar_chart_outlined),
-              activeIcon: Icon(Icons.bar_chart),
+              selectedIcon: Icon(Icons.bar_chart),
               label: 'Stats',
             ),
-            BottomNavigationBarItem(
+            NavigationDestination(
               icon: Icon(Icons.health_and_safety_outlined),
-              activeIcon: Icon(Icons.health_and_safety),
+              selectedIcon: Icon(Icons.health_and_safety),
               label: 'Health',
             ),
-            BottomNavigationBarItem(
+            NavigationDestination(
               icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
+              selectedIcon: Icon(Icons.person),
               label: 'Profile',
             ),
           ],

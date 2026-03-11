@@ -41,7 +41,7 @@ class AuthActionRoute extends _i13.PageRouteInfo<void> {
   static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return _i13.WrappedRoute(child: const _i1.AuthActionPage());
+      return const _i1.AuthActionPage();
     },
   );
 }
@@ -57,7 +57,7 @@ class CalendarRoute extends _i13.PageRouteInfo<void> {
   static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return _i13.WrappedRoute(child: const _i2.CalendarPage());
+      return const _i2.CalendarPage();
     },
   );
 }
@@ -73,7 +73,7 @@ class ForgotPasswordRoute extends _i13.PageRouteInfo<void> {
   static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return _i13.WrappedRoute(child: const _i3.ForgotPasswordPage());
+      return const _i3.ForgotPasswordPage();
     },
   );
 }
@@ -89,7 +89,7 @@ class HealthRoute extends _i13.PageRouteInfo<void> {
   static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return _i13.WrappedRoute(child: const _i4.HealthPage());
+      return const _i4.HealthPage();
     },
   );
 }
@@ -105,7 +105,7 @@ class LoginRoute extends _i13.PageRouteInfo<void> {
   static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return _i13.WrappedRoute(child: const _i5.LoginPage());
+      return const _i5.LoginPage();
     },
   );
 }
@@ -121,7 +121,7 @@ class MainShellRoute extends _i13.PageRouteInfo<void> {
   static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return _i13.WrappedRoute(child: const _i6.MainShellPage());
+      return const _i6.MainShellPage();
     },
   );
 }
@@ -137,7 +137,7 @@ class ProfileRoute extends _i13.PageRouteInfo<void> {
   static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return _i13.WrappedRoute(child: const _i7.ProfilePage());
+      return const _i7.ProfilePage();
     },
   );
 }
@@ -153,7 +153,7 @@ class RegisterRoute extends _i13.PageRouteInfo<void> {
   static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return _i13.WrappedRoute(child: const _i8.RegisterPage());
+      return const _i8.RegisterPage();
     },
   );
 }
@@ -169,7 +169,7 @@ class SettingsRoute extends _i13.PageRouteInfo<void> {
   static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return _i13.WrappedRoute(child: const _i9.SettingsPage());
+      return const _i9.SettingsPage();
     },
   );
 }
@@ -185,7 +185,7 @@ class SplashRoute extends _i13.PageRouteInfo<void> {
   static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return _i13.WrappedRoute(child: const _i10.SplashPage());
+      return const _i10.SplashPage();
     },
   );
 }
@@ -201,7 +201,7 @@ class StatsRoute extends _i13.PageRouteInfo<void> {
   static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return _i13.WrappedRoute(child: const _i11.StatsPage());
+      return const _i11.StatsPage();
     },
   );
 }
@@ -217,7 +217,7 @@ class WorkoutTypesRoute extends _i13.PageRouteInfo<void> {
   static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return _i13.WrappedRoute(child: const _i12.WorkoutTypesPage());
+      return const _i12.WorkoutTypesPage();
     },
   );
 }
