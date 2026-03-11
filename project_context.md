@@ -2294,16 +2294,240 @@ flutter test
 
 ### 18.10 What Phase 5 should build
 
-1. **Run `flutterfire configure`** → generates `lib/firebase_options.dart`
-2. **Uncomment Firebase init** in `main.dart` (change `TODO(phase5)` → active code)
-3. **Wire `LocaleHelper`** into `MyApp` (currently locale is fixed to `ThemeMode.dark`)
-4. **Implement real `SplashPage`**: `AuthCubit` via `BlocProvider`, `watchAuthState()`,
-   navigate to `/login` or `/` based on auth state
-5. **Implement `LoginPage`**: email + password form, `LoginCubit`/`AuthCubit`, validation
-6. **Implement `RegisterPage`**: sign-up form, email verification flow
-7. **Implement `ForgotPasswordPage`**: send reset email form
-8. **Implement `AuthActionPage`**: handle OOB codes (email verify + password reset)
-9. **Add `AuthGuard`**: redirects unauthenticated users to `/login`
-10. **Apply `AuthGuard`** to the main shell route and sub-routes
-11. Write cubit unit tests for any new login/register cubits
+~~1. **Run `flutterfire configure`** → generates `lib/firebase_options.dart`~~
+~~2. **Uncomment Firebase init** in `main.dart`~~
+~~3. **Wire `LocaleHelper`** into `MyApp`~~
+~~4. **Implement real `SplashPage`**: `AuthCubit` via `BlocProvider`, `watchAuthState()`~~
+~~5. **Implement `LoginPage`**: email + password form~~
+~~6. **Implement `RegisterPage`**: sign-up form~~
+~~7. **Implement `ForgotPasswordPage`**: send reset email form~~
+8. **Implement `AuthActionPage`**: handle OOB codes (email verify + password reset) — deferred
+9. **Add `AuthGuard`**: redirects unauthenticated users to `/login` — deferred
+10. **Apply `AuthGuard`** to the main shell route and sub-routes — deferred
+
+---
+
+## 19. Phase 5 — Auth & Profile UI  *(commit `023ee4b`)*
+
+### 19.1 Overview
+
+Phase 5 added all auth-flow pages and the profile/settings screens, wired to the
+existing `AuthCubit` + `ThemeHelper` + `LocaleHelper`. No new cubits or service
+classes were introduced. Test count stays at **139/139**.
+
+---
+
+### 19.2 New files
+
+| File | Purpose |
+|------|---------|
+| `lib/assets/theme/theme_helper.dart` | `ChangeNotifier` persisting dark/light in `SharedPreferences` |
+| `lib/presentation/controls/custom_text_field.dart` | Reusable `TextFormField` with built-in password visibility toggle |
+| `lib/presentation/controls/primary_button.dart` | Full-width `ElevatedButton` with inline `CircularProgressIndicator` |
+
+---
+
+### 19.3 Modified page stubs → full implementations
+
+| Page | Route | Key cubit interaction |
+|------|-------|-----------------------|
+| `SplashPage` | `/splash` | `watchAuthState()` → `AuthAuthenticatedState` → MainShell, `AuthUnauthenticatedState` → Login |
+| `LoginPage` | `/login` | `signIn()` → `AuthSignInSuccessState` / `AuthInvalidCredentialsState` / `AuthEmailNotVerifiedState` |
+| `RegisterPage` | `/register` | `signUp()` → `AuthSignUpSuccessState` (success screen) / `AuthEmailAlreadyInUseState` / `AuthWeakPasswordState` |
+| `ForgotPasswordPage` | `/forgot-password` | `resetPassword()` → `AuthPasswordResetSentState` (success screen) |
+| `ProfilePage` | `/profile` (shell tab) | `watchAuthState()` for user display; `signOut()` → `AuthSignOutSuccessState` → Login |
+| `SettingsPage` | `/settings` | `changePassword()` → `AuthPasswordChangedState`; `ThemeHelper`; `LocaleHelper` |
+
+---
+
+### 19.4 Shared controls
+
+#### `CustomTextField`
+
+```dart
+CustomTextField(
+  controller: _emailController,
+  label: l10n.authLoginEmail,
+  keyboardType: TextInputType.emailAddress,
+  textInputAction: TextInputAction.next,
+  autofillHints: const [AutofillHints.email],
+  validator: (v) => (v == null || v.trim().isEmpty) ? l10n.errorsFieldRequired : null,
+)
+
+// Password field — built-in visibility toggle:
+CustomTextField(
+  controller: _passwordController,
+  label: l10n.authLoginPassword,
+  isPassword: true,            // adds eye-icon suffix, manages obscureText internally
+  textInputAction: TextInputAction.done,
+  onFieldSubmitted: (_) => _submit(context),
+)
+```
+
+#### `PrimaryButton`
+
+```dart
+PrimaryButton(
+  label: l10n.authLoginButton,
+  isLoading: state is PendingState,
+  onPressed: () => _submit(context),
+)
+```
+
+---
+
+### 19.5 Page patterns
+
+All auth pages follow the same structure:
+
+```dart
+@RoutePage()
+class LoginPage extends StatefulWidget implements AutoRouteWrapper {
+  const LoginPage({super.key});
+
+  // Provides a fresh AuthCubit scoped to this page.
+  @override
+  Widget wrappedRoute(BuildContext context) => BlocProvider<AuthCubit>(
+    create: (_) => getIt<AuthCubit>(), child: this);
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  String? _errorText;   // inline error banner text
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<AuthCubit, BaseState>(
+      listener: (context, state) {
+        if (state is AuthSignInSuccessState) {
+          context.router.replaceAll([const MainShellRoute()]);
+        } else if (state is AuthInvalidCredentialsState) {
+          setState(() => _errorText = l10n.errorsInvalidCredentials);
+        } ...
+      },
+      builder: (context, state) { ... },
+    );
+  }
+}
+```
+
+Key decisions:
+- **Each page provides its own `AuthCubit`** via `wrappedRoute`. No global cubit.
+- **Validation**: `Form` + `TextFormField` validators (synchronous); cubit handles async
+  failures as emitted states.
+- **Navigation pop**: `context.maybePop()` (auto_route v9 `StackRouter` uses `maybePop`, not `pop`).
+- **Full-stack navigation**: `context.router.replaceAll([const LoginRoute()])` replaces
+  the entire navigator stack (works from tabs inside the shell too).
+
+---
+
+### 19.6 ProfilePage user display
+
+```
+ProfilePage
+├── CircleAvatar  —  initials from displayName[0] or email[0]
+├── displayName (if set)
+├── email
+├── Verified badge  (shown if user.emailVerified == true)
+│
+├── Section: MANAGE
+│   ├── Workout Types  →  context.router.push(WorkoutTypesRoute())
+│   └── Settings       →  context.router.push(SettingsRoute())
+│
+└── Section: ACCOUNT
+    └── Sign Out  →  authCubit.signOut()
+                     on AuthSignOutSuccessState → replaceAll([LoginRoute()])
+```
+
+---
+
+### 19.7 SettingsPage sections
+
+```
+SettingsPage
+├── Section: GENERAL
+│   ├── Theme  [SwitchListTile]  —  getIt<ThemeHelper>().isDark / setDark(bool)
+│   └── Language  [DropdownButton<Locale>]  —  getIt<LocaleHelper>().locale / setLocale(Locale)
+│
+├── Section: SECURITY
+│   ├── Current Password  [CustomTextField]
+│   ├── New Password      [CustomTextField isPassword]
+│   ├── Confirm Password  [CustomTextField isPassword]
+│   └── Save Password     [PrimaryButton]
+│                         → authCubit.changePassword(currentPassword, newPassword)
+│                         ✓ AuthPasswordChangedState  → success SnackBar
+│                         ✗ AuthInvalidCredentialsState → inline error banner
+│
+└── Section: ABOUT
+    ├── App Version: 1.0.0  (hardcoded constant _kAppVersion)
+    └── "Built with Flutter + Firebase"
+```
+
+---
+
+### 19.8 main.dart — LocaleHelper + ThemeHelper wiring
+
+```dart
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  configureDependencies();
+  await getIt.allReady();
+
+  // Manually register after DI (these need async SharedPreferences).
+  final prefs = await SharedPreferences.getInstance();
+  getIt.registerSingleton<LocaleHelper>(LocaleHelper(prefs));
+  getIt.registerSingleton<ThemeHelper>(ThemeHelper(prefs));
+
+  // TODO(phase6): await Firebase.initializeApp(...)
+  runApp(const MyApp());
+}
+
+class _MyAppState extends State<MyApp> {
+  late final LocaleHelper _localeHelper = getIt<LocaleHelper>();
+  late final ThemeHelper _themeHelper   = getIt<ThemeHelper>();
+
+  @override
+  void initState() {
+    super.initState();
+    _localeHelper.addListener(_onHelperChanged);
+    _themeHelper.addListener(_onHelperChanged);
+  }
+
+  void _onHelperChanged() => setState(() {});
+
+  // MaterialApp.router uses:
+  //   themeMode: _themeHelper.themeMode
+  //   locale: _localeHelper.locale
+}
+```
+
+---
+
+### 19.9 ARB additions
+
+One key was added in Phase 5:
+
+| Key | en | ro |
+|-----|----|----|
+| `settingsPasswordChangedSuccess` | "Password changed successfully." | "Parola a fost schimbată cu succes." |
+
+Run `flutter gen-l10n` after any ARB edit (l10n.yaml exists, so no flags needed).
+
+---
+
+### 19.10 What Phase 6 should build
+
+1. **Run `flutterfire configure`** → generates `lib/firebase_options.dart`, updates `pubspec.yaml`
+2. **Uncomment Firebase init** in `main.dart` (change `TODO(phase6)` → active code)
+3. **Implement `AuthActionPage`**: read `oobCode` + `mode` from deep-link query params;
+   call `AuthCubit.verifyEmail(oobCode)` or `AuthCubit.confirmPasswordReset(oobCode, newPassword)`
+4. **Add `AuthGuard`** (`auto_route` `AutoRouteGuard`): redirects unauthenticated users to `/login`
+5. **Apply `AuthGuard`** to `MainShellRoute` (and its tabs) in `AppRouter`
+6. **Implement `WorkoutTypesPage`**: list workout types, add/edit/delete
+7. **Implement remaining shell tabs**: CalendarPage, StatsPage, HealthPage (real data, not stubs)
 
