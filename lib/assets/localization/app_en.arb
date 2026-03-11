@@ -111,6 +111,9 @@
   "workoutTypesName": "Name",
   "workoutTypesIcon": "Icon",
   "workoutTypesColor": "Color",
+  "workoutTypesCancel": "Cancel",
+  "workoutTypesEmpty": "No workout types yet.\nTap + to add your first type.",
+  "workoutTypesEditTitle": "Edit Type",
 
   "healthTitle": "Health",
   "healthToday": "Today",

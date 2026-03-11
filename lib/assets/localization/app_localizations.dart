@@ -710,6 +710,24 @@ abstract class AppLocalizations {
   /// **'Color'**
   String get workoutTypesColor;
 
+  /// No description provided for @workoutTypesCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get workoutTypesCancel;
+
+  /// No description provided for @workoutTypesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No workout types yet.\nTap + to add your first type.'**
+  String get workoutTypesEmpty;
+
+  /// No description provided for @workoutTypesEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Type'**
+  String get workoutTypesEditTitle;
+
   /// No description provided for @healthTitle.
   ///
   /// In en, this message translates to:

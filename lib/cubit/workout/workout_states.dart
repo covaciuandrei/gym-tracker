@@ -18,6 +18,10 @@ class WorkoutTypeCreatedState extends BaseState {
   List<Object?> get props => [id];
 }
 
+class WorkoutTypeUpdatedState extends BaseState {
+  const WorkoutTypeUpdatedState();
+}
+
 class WorkoutTypeDeletedState extends BaseState {
   const WorkoutTypeDeletedState();
 }

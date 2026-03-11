@@ -318,6 +318,16 @@ class AppLocalizationsRo extends AppLocalizations {
   String get workoutTypesColor => 'Culoare';
 
   @override
+  String get workoutTypesCancel => 'Anulează';
+
+  @override
+  String get workoutTypesEmpty =>
+      'Nu există tipuri de antrenament.\nAtinge + pentru a adăuga primul tip.';
+
+  @override
+  String get workoutTypesEditTitle => 'Editează Tip';
+
+  @override
   String get healthTitle => 'Sănătate';
 
   @override

@@ -1723,7 +1723,7 @@ Future<void> createType(String userId, TrainingType type)
 Future<void> deleteType(String userId, String typeId)
 ```
 
-States: `WorkoutTypesLoadedState(types)`, `WorkoutTypeCreatedState(id)`, `WorkoutTypeDeletedState`
+States: `WorkoutTypesLoadedState(types)`, `WorkoutTypeCreatedState(id)`, `WorkoutTypeUpdatedState`, `WorkoutTypeDeletedState`
 
 ---
 
@@ -2145,7 +2145,7 @@ lib/
       profile/
         profile_page.dart               ✅ stub @RoutePage()
       workout_types/
-        workout_types_page.dart         ✅ stub @RoutePage()
+        workout_types_page.dart         ✅ FULL CRUD UI (Phase 6)
       settings/
         settings_page.dart              ✅ stub @RoutePage()
     resources/
@@ -2614,4 +2614,150 @@ Where `cs = Theme.of(context).colorScheme`. The `const` qualifier was removed fr
 ### 20.5 Test count
 
 Still **139/139** — no new tests (refactor only). `dart analyze lib/` — No issues found.
+
+---
+
+## 21. Phase 5.6 — Full TextTheme Scale + Typography Refactor *(commit `2ef46cb`)*
+
+### 21.1 Overview
+
+Expanded `CustomTheme._buildTextTheme` from a 4-role stub to a complete 15-role
+Material 3 scale. All presentation files updated to use `Theme.of(context).textTheme.*`
+instead of any hardcoded `TextStyle(fontSize:..., fontWeight:...)`.
+
+### 21.2 `_buildTextTheme` signature
+
+```dart
+static TextTheme _buildTextTheme({
+  required Color onSurface,
+  required Color onSurfaceVariant,
+  required Color outline,
+  required Color primary,
+})
+```
+
+Called twice — once for `darkTheme`, once for `lightTheme` — with `AppColors.*` values
+as arguments (the only place `AppColors` is used).
+
+### 21.3 Roles defined
+
+| Role | Size | Weight | Default color | Semantic use |
+|---|---|---|---|---|
+| `displayLarge` | 32 | w700 | onSurface | Hero / splash giant text |
+| `displayMedium` | 28 | w700 | onSurface | App title, avatar initial |
+| `displaySmall` | 24 | w600 | onSurface | Page title heading |
+| `headlineLarge` | 22 | w600 | onSurface | Screen/section headline |
+| `headlineMedium` | 20 | w600 | onSurface | Sub-headline |
+| `headlineSmall` | 18 | w600 | onSurface | Card heading |
+| `titleLarge` | 16 | w600 | onSurface | AppBar title, list item title |
+| `titleMedium` | 15 | w500 | onSurface | List tile title |
+| `titleSmall` | 14 | w500 | onSurface | Dense list title |
+| `bodyLarge` | 16 | w400 | onSurface | Body copy |
+| `bodyMedium` | 14 | w400 | onSurface | Default body / helper text |
+| `bodySmall` | 12 | w400 | onSurfaceVariant | Captions, subtitles |
+| `labelLarge` | 14 | w600 | primary | Button label |
+| `labelMedium` | 12 | w500 | onSurfaceVariant | Chips, badges |
+| `labelSmall` | 11 | w600 | outline | All-caps section headers (letterSpacing: 1.2) |
+
+### 21.4 Files changed
+
+- `lib/assets/theme/custom_theme.dart`
+- `lib/presentation/controls/primary_button.dart`
+- `lib/presentation/pages/splash/splash_page.dart`
+- `lib/presentation/pages/auth/login_page.dart`
+- `lib/presentation/pages/auth/register_page.dart`
+- `lib/presentation/pages/auth/forgot_password_page.dart`
+- `lib/presentation/pages/profile/profile_page.dart`
+- `lib/presentation/pages/settings/settings_page.dart`
+
+### 21.5 Test count
+
+Still **139/139**. `dart analyze lib/` — No issues found.
+
+---
+
+## 22. Phase 6 — Workout Types CRUD UI *(commit TBD)*
+
+### 22.1 Overview
+
+Full implementation of the Workout Types screen: list of training types with
+create/edit/delete, backed by the existing `WorkoutCubit` + `WorkoutService`.
+
+### 22.2 Files changed / created
+
+| File | Status |
+|------|--------|
+| `lib/cubit/workout/workout_cubit.dart` | `updateType(userId, type)` method added |
+| `lib/cubit/workout/workout_states.dart` | `WorkoutTypeUpdatedState` added |
+| `lib/assets/localization/app_en.arb` | 3 new keys (see §22.4) |
+| `lib/assets/localization/app_ro.arb` | 3 new keys (Romanian) |
+| `lib/presentation/pages/workout_types/workout_types_page.dart` | Full implementation (was stub) |
+| `test/cubit/workout/workout_cubit_test.dart` | 3 new `updateType` tests |
+
+### 22.3 WorkoutTypesPage architecture
+
+- `@RoutePage()` `StatefulWidget` implementing `AutoRouteWrapper`
+- `BlocProvider<WorkoutCubit>` in `wrappedRoute`
+- `FirebaseAuth.instance.currentUser?.uid` used to get userId (no AuthCubit needed)
+- `_types` field (`List<TrainingType>?`): `null` = initial loading, `[]` = empty, non-empty = loaded
+- Stream subscription from `loadTypes` auto-updates `_types` via `WorkoutTypesLoadedState` listener
+- `BlocConsumer` listener updates `_types` and shows error snackbars
+- Loading overlay (`Colors.black38`) shown when `PendingState` with existing list
+
+**State handling summary:**
+
+| State | Builder behavior | Listener side-effect |
+|---|---|---|
+| `null` (`_types`) | Full-screen spinner | — |
+| `WorkoutTypesLoadedState` | Rebuild list | `setState(() => _types = state.types)` |
+| `PendingState` (with loaded types) | List + black overlay | — |
+| `SomethingWentWrongState` | List unchanged (or empty) | Snackbar, unblocks spinner |
+
+### 22.4 New ARB keys
+
+| Key | en | ro |
+|-----|----|----|
+| `workoutTypesCancel` | "Cancel" | "Anulează" |
+| `workoutTypesEmpty` | "No workout types yet.\nTap + to add your first type." | (Romanian) |
+| `workoutTypesEditTitle` | "Edit Type" | "Editează Tip" |
+
+### 22.5 Form sheet (`_WorkoutTypeFormSheet`)
+
+Internal `StatefulWidget` (not a page) shown via `showModalBottomSheet`.
+- `isScrollControlled: true` + `SingleChildScrollView` for keyboard avoidance
+- Returns a named record `({String name, String emoji, String color})` via `Navigator.pop()`
+- Name: `TextFormField` with `maxLength: 30`, validates non-empty on save
+- Emoji picker: `Wrap` of 30 emojis in 44×44 `AnimatedContainer` tiles
+- Color picker: `Wrap` of 20 hex colors as 38×38 circles with checkmark on selection
+- `PrimaryButton` for save, `OutlinedButton` for cancel
+
+### 22.6 Delete confirmation dialog
+
+`showDialog<bool>` `AlertDialog` with cancel + delete (error-colored) actions.
+The cubit's `deleteType` is called **after** the dialog confirms.
+
+### 22.7 Emoji list (30 items)
+
+`🏋️ 🤸 🚴 🏊 🥊 🧘 🏃 ⚽ 🎾 🏀 🏐 🤼 🤺 🏒 🎳 🏹 🥋 🧗 🚣 🎱 🏌️ ⛷️ 🏂 🤾 🏇 🛹 ⚔️ 💪 🏋️‍♀️ 🤸‍♂️`
+
+### 22.8 Color palette (20 hex values)
+
+`#6C63FF #FF5733 #FF6B6B #FF8C42 #FFA500 #FFD93D #6BCB77 #4D96FF #845EC2 #FF6F91 #00C9A7 #F7B731 #EF5DA8 #26de81 #2BCBBA #FC5C65 #45AAF2 #FD9644 #A55EEA #00B0FF`
+
+### 22.9 Test count
+
+**142/142** (+3 `updateType` tests). `dart analyze lib/` — No issues found.
+
+### 22.10 What Phase 7 should build
+
+Phase 7 should connect the app to live Firebase and build the main navigation shell:
+
+1. **Run `flutterfire configure`** → generates `lib/firebase_options.dart`; update `pubspec.yaml`
+2. **Uncomment Firebase init** in `main.dart` (currently guarded by a TODO)
+3. **`MainShellPage`** (`@RoutePage()`) — bottom navigation bar with 4 tabs (Calendar, Stats, Health, Profile)
+   - Persistent tab state via nested `AutoTabsRouter`
+   - `AuthGuard` applied to `MainShellRoute` in `AppRouter`
+4. **`AuthGuard`** (`AutoRouteGuard`) — checks `FirebaseAuth.instance.currentUser`; redirects to `/login` if null
+5. **`AuthActionPage`** — handles Firebase OOB action codes (`verifyEmail`, `confirmPasswordReset`) via deep-link query params
+6. **Stub page upgrades**: `CalendarPage`, `StatsPage`, `HealthPage` — at minimum show the bottom nav shell with placeholder content
 

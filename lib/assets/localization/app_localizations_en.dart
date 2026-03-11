@@ -317,6 +317,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get workoutTypesColor => 'Color';
 
   @override
+  String get workoutTypesCancel => 'Cancel';
+
+  @override
+  String get workoutTypesEmpty =>
+      'No workout types yet.\nTap + to add your first type.';
+
+  @override
+  String get workoutTypesEditTitle => 'Edit Type';
+
+  @override
   String get healthTitle => 'Health';
 
   @override

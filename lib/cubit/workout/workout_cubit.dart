@@ -51,6 +51,19 @@ class WorkoutCubit extends BaseCubit {
     }
   }
 
+  /// Updates an existing [TrainingType] identified by [type.id].
+  Future<void> updateType(String userId, TrainingType type) async {
+    safeEmit(const PendingState());
+    try {
+      await _workoutService.update(userId, type);
+      safeEmit(const WorkoutTypeUpdatedState());
+    } on TrainingTypeNotFoundException {
+      safeEmit(const SomethingWentWrongState());
+    } catch (_) {
+      safeEmit(const SomethingWentWrongState());
+    }
+  }
+
   @override
   Future<void> close() async {
     await _typesSubscription?.cancel();

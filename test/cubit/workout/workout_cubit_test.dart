@@ -138,6 +138,45 @@ void main() {
     });
   });
 
+  // ─── updateType ───────────────────────────────────────────────────────
+
+  group('updateType', () {
+    test('emits pending then WorkoutTypeUpdatedState on success', () async {
+      when(() => mockService.update(_userId, _typeA)).thenAnswer((_) async {});
+
+      final future = expectLater(
+        sut.stream,
+        emitsInOrder([const PendingState(), const WorkoutTypeUpdatedState()]),
+      );
+      await sut.updateType(_userId, _typeA);
+      await future;
+    });
+
+    test('emits somethingWentWrong on TrainingTypeNotFoundException', () async {
+      when(() => mockService.update(_userId, _typeA))
+          .thenThrow(const TrainingTypeNotFoundException());
+
+      final future = expectLater(
+        sut.stream,
+        emitsInOrder([const PendingState(), const SomethingWentWrongState()]),
+      );
+      await sut.updateType(_userId, _typeA);
+      await future;
+    });
+
+    test('emits somethingWentWrong on generic failure', () async {
+      when(() => mockService.update(_userId, _typeA))
+          .thenThrow(Exception('network'));
+
+      final future = expectLater(
+        sut.stream,
+        emitsInOrder([const PendingState(), const SomethingWentWrongState()]),
+      );
+      await sut.updateType(_userId, _typeA);
+      await future;
+    });
+  });
+
   // ─── deleteType ───────────────────────────────────────────────────────
 
   group('deleteType', () {

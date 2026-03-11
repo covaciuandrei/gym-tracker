@@ -111,6 +111,9 @@
   "workoutTypesName": "Nume",
   "workoutTypesIcon": "Pictogramă",
   "workoutTypesColor": "Culoare",
+  "workoutTypesCancel": "Anulează",
+  "workoutTypesEmpty": "Nu există tipuri de antrenament.\nAtinge + pentru a adăuga primul tip.",
+  "workoutTypesEditTitle": "Editează Tip",
 
   "healthTitle": "Sănătate",
   "healthToday": "Astăzi",
