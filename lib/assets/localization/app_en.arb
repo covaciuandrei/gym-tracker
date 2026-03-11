@@ -155,5 +155,6 @@
   "errorsUnknown": "Something went wrong. Please try again.",
   "errorsFieldRequired": "This field is required.",
   "errorsPasswordMismatch": "Passwords do not match.",
-  "errorsPasswordTooShort": "Password must be at least 6 characters."
+  "errorsPasswordTooShort": "Password must be at least 6 characters.",
+  "settingsPasswordChangedSuccess": "Password changed successfully."
 }

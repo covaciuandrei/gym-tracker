@@ -961,6 +961,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Password must be at least 6 characters.'**
   String get errorsPasswordTooShort;
+
+  /// No description provided for @settingsPasswordChangedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Password changed successfully.'**
+  String get settingsPasswordChangedSuccess;
 }
 
 class _AppLocalizationsDelegate

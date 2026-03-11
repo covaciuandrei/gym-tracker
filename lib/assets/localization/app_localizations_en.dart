@@ -444,4 +444,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get errorsPasswordTooShort =>
       'Password must be at least 6 characters.';
+
+  @override
+  String get settingsPasswordChangedSuccess => 'Password changed successfully.';
 }

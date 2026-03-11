@@ -155,5 +155,6 @@
   "errorsUnknown": "Ceva nu a mers bine. Încearcă din nou.",
   "errorsFieldRequired": "Acest câmp este obligatoriu.",
   "errorsPasswordMismatch": "Parolele nu coincid.",
+  "settingsPasswordChangedSuccess": "Parola a fost schimbată cu succes.",
   "errorsPasswordTooShort": "Parola trebuie să aibă cel puțin 6 caractere."
 }

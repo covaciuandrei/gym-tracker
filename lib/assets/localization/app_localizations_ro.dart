@@ -444,4 +444,8 @@ class AppLocalizationsRo extends AppLocalizations {
   @override
   String get errorsPasswordTooShort =>
       'Parola trebuie să aibă cel puțin 6 caractere.';
+
+  @override
+  String get settingsPasswordChangedSuccess =>
+      'Parola a fost schimbată cu succes.';
 }
