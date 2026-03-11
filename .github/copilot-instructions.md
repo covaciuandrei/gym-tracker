@@ -163,3 +163,330 @@ decoration: BoxDecoration(
 | Screen prep docs | `docs/screens/<page_name>.md` |
 | Angular source | `../src/app/features/<feature>/` |
 | Angular styles | `../src/styles.css` |
+
+---
+
+## 10. Angular Codebase Architecture Map
+
+> Full inventory of every Angular component, service, guard, and Firestore
+> collection. Use this to ensure **zero features are missed** during migration.
+
+### 10.1 Route Tree (Angular → Flutter mapping)
+
+```
+/                         → redirect to /calendar
+/login          [guest]   → LoginPage          (lib/presentation/pages/auth/login_page.dart)
+/register       [guest]   → RegisterPage       (lib/presentation/pages/auth/register_page.dart)
+/forgot-password[guest]   → ForgotPasswordPage (lib/presentation/pages/auth/forgot_password_page.dart)
+/auth/action    [public]  → AuthActionPage     (lib/presentation/pages/auth/auth_action_page.dart)
+/calendar       [auth]    → CalendarPage       (lib/presentation/pages/calendar/calendar_page.dart)
+/stats          [auth]    → StatsPage (shell)  (lib/presentation/pages/stats/stats_page.dart)
+  /stats/attendances      →   AttendancesTab   (embedded tab inside StatsPage)
+  /stats/workouts         →   WorkoutsTab      (embedded tab inside StatsPage)
+  /stats/duration         →   DurationTab      (embedded tab inside StatsPage)
+  /stats/health           →   HealthTab        (embedded tab inside StatsPage)
+/profile        [auth]    → ProfilePage        (lib/presentation/pages/profile/profile_page.dart)
+/workout-types  [auth]    → WorkoutTypesPage   (lib/presentation/pages/workout_types/workout_types_page.dart)
+/settings       [auth]    → SettingsPage       (lib/presentation/pages/settings/settings_page.dart)
+/health         [auth]    → HealthPage         (lib/presentation/pages/health/health_page.dart)
+/**                       → redirect to /calendar
+```
+
+**Guards:**
+- `authGuard` — requires `user != null && user.emailVerified`. Unverified users
+  get signed out and redirected to `/login?message=verify-email`.
+- `guestGuard` — blocks already-authenticated + verified users, redirects to
+  `/calendar`.
+
+### 10.2 Feature Inventory
+
+#### AUTH FEATURE — `src/app/features/auth/`
+
+| Component | Actions / State |
+|---|---|
+| **LoginComponent** | `email`, `password` fields; `isLoading`, `errorMessage`; `onSubmit()` → `authService.signIn()` → navigate `/calendar`; link to `/register`, `/forgot-password` |
+| **RegisterComponent** | `email`, `password`, `confirmPassword`, `displayName`; validates: email format, password ≥8 chars + uppercase + number, passwords match; `onSubmit()` → `authService.signUp()` → shows "verify email" success state; link to `/login` |
+| **ForgotPasswordComponent** | `email` field; `isLoading`, `errorMessage`, `successMessage`; `onSubmit()` → `authService.resetPassword(email)` → success message; email validation; link back to `/login` |
+| **AuthActionComponent** | Reads `?mode=` & `?oobCode=` query params from Firebase email links. **Three modes:** `verifyEmail` → `authService.verifyEmail(oobCode)` → success state with "Sign In" button; `resetPassword` → verifies code first (shows email), then password form (new + confirm, strength meter, min 8 chars + uppercase + lowercase + digit, passwords match) → `authService.confirmPasswordReset()`; `unknown` → error state |
+
+**AuthService methods used by auth pages:**
+`signIn`, `signUp` (sends verification email), `signOutUser`, `resetPassword`,
+`verifyEmail`, `verifyPasswordResetCode`, `confirmPasswordReset`,
+`reauthenticate`, `updatePassword`
+
+#### CALENDAR FEATURE — `src/app/features/calendar/`
+
+| Aspect | Detail |
+|---|---|
+| **View modes** | `monthly` (default) and `yearly` toggle |
+| **Monthly grid** | 7-col Mon-first grid, 42 cells (prev/current/next month days), today highlighted |
+| **Yearly grid** | 12 mini-month grids side by side, same Mon-first layout |
+| **Day cell states** | `attended` (workout only), `supplement` only, `both`, plain/today |
+| **Day cell colours** | workout=`calWorkout` (#3b82f6), supplement=`calSupplement` (#10b981), both=`calBoth` (#06b6d4) |
+| **Day cell icon** | Shows workout-type emoji icon if a type was assigned |
+| **Navigation** | ← → arrows (prev/next month or prev/next year); year shown in header |
+| **Day tap → popup** | Bottom sheet / dialog with two tabs: **Workout** tab and **Health** tab |
+| **Workout tab actions** | Toggle attendance (mark/unmark); select workout type from dropdown; select duration (optional); edit type/duration on already-attended days |
+| **Health tab actions** | Show today's supplement logs (carousel with pages of 2); log a supplement (product dropdown); remove individual supplement log |
+| **Data loading** | Monthly view pre-loads 3 months (prev + current + next) in parallel; yearly loads full year |
+| **Workout types dropdown** | Custom dropdown (not native select); shows emoji + name + colour dot |
+| **Products dropdown** | Custom dropdown for supplement selection |
+| **Skeleton loading** | Array(42) skeleton cells during load |
+
+#### STATS FEATURE — `src/app/features/workouts/stats/`
+
+Stats is a **shell with 4 sub-tabs**. The year is shared via query param `?year=`.
+
+| Tab | Angular Component | What it shows |
+|---|---|---|
+| **Attendances** | `AttendancesStatsComponent` | Total workouts (year), current month count, monthly bar chart (12 bars), streak (current + best), days-per-week heatmap |
+| **Workouts** | `WorkoutsStatsComponent` | Workout type breakdown (year): pie/list of types × count; monthly breakdown: selected month type distribution |
+| **Duration** | `DurationStatsComponent` | Total hours (year), avg duration/session, monthly duration bar chart, per-type avg duration list |
+| **Health** | `HealthStatsComponent` | Total supplement servings (year), most-taken product, monthly supplement bar chart, top nutrients breakdown |
+
+All stats tabs share:
+- Year selector (← current year →) — changes `?year=` query param
+- Loading skeleton cards
+- "No data" empty state when no records
+
+#### HEALTH FEATURE — `src/app/features/health/`
+
+| Aspect | Detail |
+|---|---|
+| **View modes** | 3 tabs: `today` (default), `my_supplements`, `all_supplements` |
+| **Today tab** | Lists today's supplement logs grouped by product; shows product name + brand + servings taken; delete individual log |
+| **My Supplements tab** | Lists products created by current user; search bar; edit/delete each product; "Add product" FAB |
+| **All Supplements tab** | Lists all products (global + user-created); search bar; verified badge on global products; add to today's log |
+| **SupplementFormComponent** | Create/edit supplement product: `name`, `brand`, ingredient list (autocomplete from Firestore `ingredients` collection with stdId, amount, unit); save → `firebaseService.addProduct()` or `updateProduct()` |
+| **Auto-seed** | On first load, if `ingredients` collection is empty, seeds it from `core/constants/ingredients.ts` |
+
+#### WORKOUT TYPES FEATURE — `src/app/features/workouts/workout-types/`
+
+| Aspect | Detail |
+|---|---|
+| **List view** | Grid/list of cards; each card: emoji icon + name + colour dot + edit/delete buttons |
+| **Empty state** | "No workout types yet" with create button |
+| **Create modal** | Fields: name (text), colour picker (10 preset swatches), icon picker (20 preset emojis) |
+| **Edit modal** | Same form, pre-populated |
+| **Delete** | Confirmation dialog before delete |
+| **Predefined colours** | `#6366f1 #8b5cf6 #ec4899 #ef4444 #097853 #eab308 #22c55e #14b8a6 #0ea5e9 #3b82f6` |
+| **Predefined icons** | 🏋️ 🏃 🚴 🧘 🥊 🏊 ⚽ 🎾 🏀 💪 🤸 🚣 ⛹️ 🤾 🌏 🧗 🎯 🔥 ⭐ 🌟 |
+| **Navigation** | Back button → `/calendar` |
+
+#### PROFILE FEATURE — `src/app/features/user/profile/`
+
+| Aspect | Detail |
+|---|---|
+| **Avatar** | Circle with user's initial (first char of displayName or email) |
+| **Info shown** | displayName (or "User"), email, email-verified badge (`AppColors.accentGreen`) |
+| **Actions** | Logout button → `authService.signOutUser()` → navigate `/login` |
+| **Links** | → `/settings`, → `/workout-types` |
+
+#### SETTINGS FEATURE — `src/app/features/user/settings/`
+
+| Aspect | Detail |
+|---|---|
+| **Appearance section** | Dark/light theme toggle → `themeService.toggleTheme()` |
+| **Language section** | Language picker (EN / RO) → `languageService.setLanguage(lang)` |
+| **Security section** | "Change password" expander → shows form: current password + new password + confirm; validates: not empty, match, ≥6 chars; `authService.reauthenticate()` then `authService.updatePassword()`; success closes form after 2s |
+| **App version** | Shows static version string (currently `2.0.0`) |
+| **Navigation** | Back arrow → previous page |
+
+### 10.3 Firestore Data Model
+
+```
+firestore/
+├── users/{userId}/
+│   ├── (doc fields)  totalWorkouts, currentYearWorkouts, currentMonthWorkouts
+│   ├── trainingTypes/{typeId}
+│   │   └── { name, color, icon, createdAt }
+│   ├── attendances/{YYYY-MM}/days/{YYYY-MM-DD}
+│   │   └── { date, timestamp, trainingTypeId?, durationMinutes?, notes? }
+│   └── healthLogs/{YYYY-MM}/entries/{logId}
+│       └── { date, productId, productName?, productBrand?, servingsTaken, timestamp? }
+│
+├── supplementProducts/{productId}
+│   └── { name, brand, ingredients:[{stdId,name,amount,unit}],
+│          servingsPerDayDefault, createdBy?, verified? }
+│
+└── ingredients/{stdId}
+    └── { name, aliases?, category, defaultUnit, safeUpperLimit?, rda? }
+```
+
+### 10.4 Angular Services → Flutter Repository/Service Mapping
+
+| Angular Service | Flutter equivalent |
+|---|---|
+| `AuthService` | `lib/data/repository/auth_repository.dart` + `AuthCubit` |
+| `FirebaseService` (attendance) | `lib/data/repository/attendance_repository.dart` |
+| `FirebaseService` (training types) | `lib/data/repository/workout_type_repository.dart` |
+| `FirebaseService` (supplements/health logs) | `lib/data/repository/health_repository.dart` |
+| `FirebaseService` (stats queries) | `lib/data/repository/stats_repository.dart` |
+| `ThemeService` | `lib/assets/theme/theme_helper.dart` |
+| `LanguageService` | `lib/presentation/helpers/locale_helper.dart` |
+
+---
+
+## 11. App Navigation Flowchart
+
+```
+App Start
+    │
+    ▼
+SplashPage (2s delay)
+    │
+    ├─── FirebaseAuth.currentUser == null ──────────► LoginPage
+    │                                                      │
+    │                                                      ├── [submit] signIn()
+    │                                                      │       ├── success + verified ──► MainShell
+    │                                                      │       ├── success + unverified ► LoginPage (verify-email message)
+    │                                                      │       └── error ───────────────► ErrorBanner (inline)
+    │                                                      │
+    │                                                      ├── [tap "Register"] ──────────── RegisterPage
+    │                                                      │       ├── [submit] signUp()
+    │                                                      │       │       ├── success ──────► LoginPage (check-email state)
+    │                                                      │       │       └── error ────────► ErrorBanner (inline)
+    │                                                      │       └── [tap "Login"] ─────── LoginPage
+    │                                                      │
+    │                                                      └── [tap "Forgot password"] ───── ForgotPasswordPage
+    │                                                              ├── [submit] resetPassword()
+    │                                                              │       ├── success ──────► success message (stay on page)
+    │                                                              │       └── error ────────► ErrorBanner (inline)
+    │                                                              └── [tap "Back to login"] LoginPage
+    │
+    └─── FirebaseAuth.currentUser != null ─────────► MainShell (bottom nav)
+                                                         │
+                              ┌──────────────────────────┼──────────────────────────┐
+                              ▼                          ▼                          ▼ (+ more tabs)
+                        CalendarPage               StatsPage                  ProfilePage
+                              │                          │                          │
+                              │             ┌────────────┼──────────────┐           ├── [tap Settings link] ──► SettingsPage
+                              │             ▼            ▼              ▼           │       ├── Toggle theme
+                              │        Attendances   Workouts        Duration       │       ├── Change language
+                              │           tab          tab             tab          │       └── Change password
+                              │                         │                           │             └── reauthenticate() → updatePassword()
+                              │                    HealthTab                        │
+                              │                                                     └── [tap Workout Types link] ► WorkoutTypesPage
+                              │                                                             ├── [+ FAB] ───► Create modal
+                              │                                                             ├── [edit]  ───► Edit modal
+                              │                                                             └── [delete] ──► Confirm dialog → delete
+                              │
+                              ├── [tap day cell] ──────────────────────────────────────────── Day Popup
+                              │       ├── Workout tab
+                              │       │       ├── [unattended] → select type (optional) + duration (optional) → Mark as attended
+                              │       │       └── [attended]   → Edit type/duration  OR  Remove attendance
+                              │       └── Health tab
+                              │               ├── Show supplement logs (carousel, 2 per page)
+                              │               ├── [+ add] → select product from dropdown → Log supplement
+                              │               └── [remove] → remove individual log entry
+                              │
+                              └── [Monthly/Yearly toggle] ──────────────────────────────────► Switch calendar view
+
+
+Firebase email links (out-of-app):
+    │
+    └── /auth/action?mode=verifyEmail&oobCode=...  ──────────────────────────────► AuthActionPage
+            ├── mode=verifyEmail  → applyActionCode() → success → "Go to Sign In" → LoginPage
+            ├── mode=resetPassword
+            │       ├── verifyPasswordResetCode() → shows target email
+            │       └── [submit new password] → confirmPasswordReset() → success → LoginPage
+            └── mode=unknown / missing oobCode → ErrorStateWidget
+```
+
+### 11.1 Authentication State Machine
+
+```
+State: UNAUTHENTICATED
+    ├── signIn(email, pwd)
+    │       ├── OK + verified   → AUTHENTICATED
+    │       └── OK + unverified → UNAUTHENTICATED (auto sign-out)
+    ├── signUp(email, pwd) → sends verification email → UNAUTHENTICATED (must verify)
+    └── verifyEmail(oobCode) → AWAITING_LOGIN  (user goes to LoginPage)
+
+State: AUTHENTICATED
+    └── signOut() → UNAUTHENTICATED
+```
+
+### 11.2 Calendar Day Cell State Machine
+
+```
+Day cell in initial state (no attendance, no supplement)
+    │
+    ├── tap → Popup opens (Workout tab default)
+    │       │
+    │       ├── [Workout tab]
+    │       │       ├── Select workout type (optional custom dropdown)
+    │       │       ├── Select duration (optional number input, minutes)
+    │       │       └── Tap "Mark as attended" → firestore markAttendance()
+    │       │                └── cell turns blue/coloured with type icon
+    │       │
+    │       └── [Health tab]
+    │               ├── (shows empty — no logs yet for this day)
+    │               ├── Select product from dropdown
+    │               └── Tap "Log" → firestore logSupplement()
+    │                        └── cell gets green dot
+    │
+    └── If already attended:
+            Popup opens showing existing data
+            ├── [Workout tab] → shows current type/duration
+            │       ├── "Edit" → dropdown + duration editable → "Save"
+            │       └── "Remove attendance" → firestore removeAttendance()
+            └── [Health tab] → shows supplement log carousel
+                    ├── Each log: product name + servings + remove button
+                    └── Add more supplement logs same as above
+```
+
+### 11.3 Stats Data Flow
+
+```
+StatsPage (shell)
+    │  reads ?year= query param
+    │
+    ├── AttendancesTab
+    │   ├── getYearAttendance(userId, year) → 12×MonthStat[]
+    │   ├── totals: sum of all months
+    │   ├── streak: consecutive attended days algorithm
+    │   └── heatmap: group by weekday
+    │
+    ├── WorkoutsTab
+    │   ├── getWorkoutTypeStats(userId, year) → WorkoutTypeStat[] (year totals)
+    │   └── getMonthlyWorkoutTypeStats(userId, year, selectedMonth) → WorkoutTypeStat[]
+    │
+    ├── DurationTab
+    │   ├── getYearDurationStats(userId, year) → { totalMinutes, avgMinutes, monthlyData[] }
+    │   └── getWorkoutTypeDurationStats(userId, year) → WorkoutTypeDurationStat[]
+    │
+    └── HealthTab
+        ├── getSupplementLogs(userId, year, month) → SupplementLog[]
+        └── derives: totalServings, mostTakenProduct, topNutrients (from ingredient stdIds)
+```
+
+### 11.4 Health Page View Modes
+
+```
+HealthPage
+    │
+    ├── Tab: Today
+    │   ├── getSupplementLogs(userId, thisYear, thisMonth) → filter by today
+    │   ├── group by productId → GroupedLog[]
+    │   └── each group: productName + brand + totalServings for today
+    │           └── [remove] → removes individual SupplementLog entry
+    │
+    ├── Tab: My Supplements
+    │   ├── getProducts() → filter by createdBy == userId
+    │   ├── search bar (client-side filter by name/brand)
+    │   ├── [edit card] → opens SupplementForm (pre-populated)
+    │   ├── [delete card] → deleteProduct()
+    │   └── [+ FAB] → opens empty SupplementForm
+    │           SupplementForm:
+    │               name + brand fields
+    │               ingredient list: autocomplete from Firestore `ingredients`
+    │               each ingredient: stdId (hidden) + name + amount + unit
+    │               [save] → addProduct() or updateProduct()
+    │
+    └── Tab: All Supplements
+        ├── getProducts() → all (global + user-created)
+        ├── search bar (client-side filter)
+        ├── verified badge on products where verified==true
+        └── [Log today] → logSupplement(userId, today, productId, servingsTaken)
+```
