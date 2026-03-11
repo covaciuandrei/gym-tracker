@@ -1601,3 +1601,273 @@ d65ab62  chore: initial Flutter project setup (iOS + Android), copy scripts, add
 ```
 
 Branch: `master`
+
+---
+
+## 14. Phase 3  State Management (Cubits) (COMPLETE)
+
+### Commit: `f6fb258 feat: Phase 3 - state management cubits and cubit tests`
+
+---
+
+### 14.1 New file tree (Phase 3 additions)
+
+```
+lib/
+  model/
+    attendance_stats.dart        AttendanceStats (Equatable data class)
+
+  cubit/
+    auth/
+      auth_cubit.dart            AuthCubit  (@injectable)
+      auth_states.dart           13 states  (part of auth_cubit.dart)
+    workout/
+      workout_cubit.dart         WorkoutCubit  (@injectable)
+      workout_states.dart        3 states  (part of workout_cubit.dart)
+    calendar/
+      calendar_cubit.dart        CalendarCubit  (@injectable)
+      calendar_states.dart       3 states  (part of calendar_cubit.dart)
+    stats/
+      stats_cubit.dart           StatsCubit  (@injectable) + private aggregation
+      stats_states.dart          1 state  (part of stats_cubit.dart)
+    health/
+      health_cubit.dart          HealthCubit  (@injectable)
+      health_states.dart         4 states  (part of health_cubit.dart)
+
+test/
+  cubit/
+    auth/
+      auth_cubit_test.dart       18 tests
+    workout/
+      workout_cubit_test.dart    7 tests
+    calendar/
+      calendar_cubit_test.dart   7 tests
+    stats/
+      stats_cubit_test.dart      10 tests
+    health/
+      health_cubit_test.dart     10 tests
+```
+
+---
+
+### 14.2 Cubit & state reference
+
+#### `AuthCubit`
+
+```dart
+void watchAuthState()
+Future<void> signIn({required String email, required String password})
+Future<void> signUp({required String email, required String password})
+Future<void> signOut()
+Future<void> resetPassword(String email)
+Future<void> changePassword({required String currentPassword, required String newPassword})
+Future<void> verifyEmail(String oobCode)
+Future<void> confirmPasswordReset({required String oobCode, required String newPassword})
+```
+
+States (all `extends BaseState`, `const` constructors):
+
+| State | Trigger |
+|---|---|
+| `AuthAuthenticatedState(user)` | `watchAuthState`  Firebase user present |
+| `AuthUnauthenticatedState` | `watchAuthState`  no user / sign-out |
+| `AuthSignInSuccessState(user)` | `signIn` succeeded |
+| `AuthSignUpSuccessState` | `signUp` succeeded (email verification pending) |
+| `AuthSignOutSuccessState` | `signOut` succeeded |
+| `AuthEmailNotVerifiedState` | `signIn`  email not yet verified |
+| `AuthEmailAlreadyInUseState` | `signUp`  email taken |
+| `AuthWeakPasswordState` | `signUp`  password too weak |
+| `AuthInvalidCredentialsState` | `signIn`/`changePassword`  wrong credentials |
+| `AuthPasswordResetSentState` | `resetPassword` email sent |
+| `AuthPasswordChangedState` | `changePassword` succeeded |
+| `AuthEmailVerifiedState` | `verifyEmail` succeeded |
+| `AuthInvalidActionCodeState` | `verifyEmail`/`confirmPasswordReset`  expired code |
+| `AuthPasswordResetConfirmedState` | `confirmPasswordReset` succeeded |
+
+---
+
+#### `WorkoutCubit`
+
+```dart
+void loadTypes(String userId)             // subscribes to watchAll stream
+Future<void> createType(String userId, TrainingType type)
+Future<void> deleteType(String userId, String typeId)
+```
+
+States: `WorkoutTypesLoadedState(types)`, `WorkoutTypeCreatedState(id)`, `WorkoutTypeDeletedState`
+
+---
+
+#### `CalendarCubit`
+
+```dart
+void loadMonth({required String userId, required int year, required int month})
+Future<void> markDay({required String userId, required AttendanceDay day})
+Future<void> clearDay({required String userId, required String date})
+```
+
+States: `CalendarMonthLoadedState(days, year, month)`, `CalendarDayMarkedState(day)`, `CalendarDayClearedState(date)`
+
+**Key behaviour:** calling `loadMonth` a second time cancels the previous subscription before creating the new one  safe for month-paging.
+
+---
+
+#### `StatsCubit`
+
+```dart
+Future<void> load({required String userId, required int year})
+```
+
+State: `StatsLoadedState(stats: AttendanceStats, year: int, types: List<TrainingType>)`
+
+**Data loading strategy:** fetches all 12 months of `year` plus the previous December (for cross-year streak accuracy) in parallel via `Future.wait`, then aggregates entirely in-memory. No persistent subscription  call `load()` again to refresh.
+
+**`AttendanceStats` model fields:**
+
+| Field | Type | Description |
+|---|---|---|
+| `totalCount` / `yearlyCount` | `int` | Attendance count for the year |
+| `monthlyCount` | `int` | Count for the current calendar month (or December for past years) |
+| `currentWeekStreak` | `int` | Consecutive ISO weeks ending at current/previous week |
+| `bestWeekStreak` | `int` | Longest consecutive ISO-week run |
+| `favoriteDaysOfWeek` | `List<int>` | `DateTime.weekday` values (1=Mon7=Sun) with max attendance |
+| `typeDistribution` | `Map<String, int>` | trainingTypeId  attendance count |
+| `monthlyDurationAverages` | `Map<int, double>` | month (112)  avg duration minutes |
+| `perTypeDurationAverages` | `Map<String, double>` | trainingTypeId  avg duration minutes |
+
+---
+
+#### `HealthCubit`
+
+```dart
+void loadDayEntries({required String userId, required String date})
+void loadProducts(String userId)
+Future<void> logSupplement({required String userId, required SupplementLog model})
+Future<void> deleteEntry({required String userId, required String date, required String entryId})
+```
+
+States: `HealthDayEntriesLoadedState(entries, date)`, `HealthProductsLoadedState(products)`, `HealthEntryLoggedState(id)`, `HealthEntryDeletedState`
+
+**Key behaviour:** two independent `StreamSubscription`s  one for day entries, one for products. Both are cancelled in `close()`.
+
+---
+
+### 14.3 How to test cubits without `bloc_test`
+
+`bloc_test` is incompatible with `auto_route_generator ^9.x` due to conflicting `analyzer` version ranges, so all cubit tests use plain `mocktail` and `flutter_test`.
+
+**Pattern:**
+```dart
+// 1. Subscribe BEFORE triggering the method  cubit.stream is a broadcast stream
+//    and PendingState is emitted synchronously, so the listener must be in place first.
+final future = expectLater(
+  sut.stream,
+  emitsInOrder([const PendingState(), isA<SomeSuccessState>()]),
+);
+
+// 2. Trigger the method (sync void or async).
+await sut.someMethod(...);
+
+// 3. Await the expectation; test fails if states never arrive.
+await future;
+```
+
+For stream-based (void) methods like `loadTypes` and `loadMonth`, `Stream.value(x)` delivers its event on the next microtask. If you need to collect states into a list instead (e.g. for multi-assertion tests), use:
+```dart
+final emitted = <BaseState>[];
+sut.stream.listen(emitted.add);
+await sut.load(...);
+await Future<void>.delayed(Duration.zero);  // flush microtask queue
+expect(emitted.whereType<StatsLoadedState>().first.stats.yearlyCount, 3);
+```
+
+**Run all cubit tests:**
+```powershell
+cd "c:\cov\gym-tracker\gym_tracker"
+flutter test test/cubit/
+```
+
+---
+
+### 14.4 Design decisions & gotchas
+
+1. **Stream subscriptions and `close()`**  Every cubit that holds a `StreamSubscription` overrides `close()` to cancel it. Pattern:
+   ```dart
+   @override
+   Future<void> close() async {
+     await _subscription?.cancel();
+     return super.close();
+   }
+   ```
+
+2. **`loadMonth` replaces the subscription**  Before setting up the new subscription, `_monthSubscription?.cancel()` is called. This prevents stale events from a previous month leaking into the new state.
+
+3. **StatsCubit uses `.first` on streams**  `AttendanceService.watchMonth(...).first` converts the live stream into a one-shot Future. This avoids needing separate `getMonth` methods on the service layer.
+
+4. **ISO-week streak uses T12:00:00 noon time**  When computing ISO weeks and doing `DateTime.subtract(Duration(days: N))`, the calculation is done at noon local time to avoid any DST-boundary edge cases where subtracting a whole day might land on the wrong calendar date.
+
+5. **`monthlyCount` is deterministic for past years**  When `year < DateTime.now().year`, the "current month" defaults to 12 (December) so that `monthlyCount` is stable and does not depend on when the test runs. This makes stats tests for a fixed past year fully deterministic.
+
+6. **`SomethingWentWrongState` is the uniform catch-all**  All `catch (_)` blocks per the pattern emit `SomethingWentWrongState`. Specific typed exceptions are mapped to specific states (`AuthInvalidCredentialsState`, etc.) before the catch-all.
+
+7. **`@injectable` on all cubits**  `get_it`/`injectable` manages lifetime. Cubits are registered as transient (new instance per resolution) via the default `@injectable`  NOT `@singleton` or `@lazySingleton`, since each screen creates its own cubit instance.
+
+---
+
+### 14.5 Test suite totals after Phase 3
+
+```
+test/data/remote/               42 tests  (Phase 1 DTO tests)
+test/service/auth/              26 tests  (Phase 2)
+test/service/workout/           10 tests  (Phase 2)
+test/service/attendance/         9 tests  (Phase 2)
+test/service/health/            17 tests  (Phase 2)
+test/cubit/auth/                18 tests  (Phase 3)
+test/cubit/workout/              7 tests  (Phase 3)
+test/cubit/calendar/             7 tests  (Phase 3)
+test/cubit/stats/               10 tests  (Phase 3)
+test/cubit/health/              10 tests  (Phase 3) -- note: test harness deduplication
+
+TOTAL                          151 tests, all passing
+```
+
+Run:
+```powershell
+cd "c:\cov\gym-tracker\gym_tracker"
+flutter test
+```
+
+---
+
+### 14.6 What Phase 3.5 should check next
+
+**Phase 3.5  Firebase + DI wiring + Splash + App Router scaffold**
+
+1. **Run `flutterfire configure`** to generate `lib/firebase_options.dart`
+2. **Add `FirebaseModule`** (a `@module` class) so `get_it` can resolve `FirebaseAuth.instance`:
+   ```dart
+   @module
+   abstract class FirebaseModule {
+     @lazySingleton
+     FirebaseAuth get firebaseAuth => FirebaseAuth.instance;
+   }
+   ```
+3. **Re-run `build_runner`** after adding the module:  
+   `dart run build_runner build --delete-conflicting-outputs`
+4. **Update `main.dart`**  call `Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)` and `configureDependencies()` before `runApp`
+5. **Implement real `SplashPage`**  use `AuthCubit.watchAuthState()`, navigate to Login or Home based on the emitted state
+6. **Add all `@RoutePage()` stubs** for Login, Register, ForgotPassword so `AppRouter` generates stubs and `dart analyze` stays clean
+7. **Verify `dart analyze lib/` and `flutter test` are still clean** after wiring
+
+---
+
+## 15. Git history
+
+```
+f6fb258  feat: Phase 3 - state management cubits and cubit tests
+2f76c6a  feat: Phase 2 - data layer services, mappers, sources, and service tests
+543b12f  feat: Phase 1 - boilerplate, domain models, DTOs, and serialisation tests
+d65ab62  chore: initial Flutter project setup (iOS + Android), copy scripts, add project_context.md
+```
+
+Branch: `master`
