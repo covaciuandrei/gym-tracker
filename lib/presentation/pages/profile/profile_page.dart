@@ -69,10 +69,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 if (user?.displayName != null) ...[
                   Text(
                     user!.displayName!,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(fontSize: 22),
+                    style: Theme.of(context).textTheme.headlineLarge,
                   ),
                   const SizedBox(height: 4),
                 ],
@@ -81,7 +78,10 @@ class _ProfilePageState extends State<ProfilePage> {
                 if (user?.email != null)
                   Text(
                     user!.email!,
-                    style: TextStyle(color: cs.onSurfaceVariant),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 const SizedBox(height: 10),
 
@@ -104,8 +104,10 @@ class _ProfilePageState extends State<ProfilePage> {
                         const SizedBox(width: 4),
                         Text(
                           l10n.profileEmailVerified,
-                          style: TextStyle(
-                              fontSize: 12, color: cs.primary),
+                          style: Theme.of(context)
+                              .textTheme
+                              .labelMedium
+                              ?.copyWith(color: cs.primary),
                         ),
                       ],
                     ),
@@ -182,11 +184,10 @@ class _Avatar extends StatelessWidget {
       child: Center(
         child: Text(
           _initial,
-          style: TextStyle(
-            fontSize: 36,
-            fontWeight: FontWeight.bold,
-            color: cs.primary,
-          ),
+          style: Theme.of(context)
+              .textTheme
+              .displayMedium
+              ?.copyWith(color: cs.primary),
         ),
       ),
     );
@@ -208,12 +209,7 @@ class _SectionHeader extends StatelessWidget {
         padding: const EdgeInsets.only(bottom: 8),
         child: Text(
           title.toUpperCase(),
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.outline,
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 1.2,
-          ),
+          style: Theme.of(context).textTheme.labelSmall,
         ),
       ),
     );
@@ -254,7 +250,10 @@ class _MenuTile extends StatelessWidget {
             : Icon(icon, color: iconColor ?? cs.onSurfaceVariant, size: 22),
         title: Text(
           label,
-          style: TextStyle(color: textColor ?? cs.onSurface),
+          style: Theme.of(context)
+              .textTheme
+              .titleMedium
+              ?.copyWith(color: textColor ?? cs.onSurface),
         ),
         trailing: isLoading
             ? null

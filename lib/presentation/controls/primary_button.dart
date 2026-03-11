@@ -29,7 +29,10 @@ class PrimaryButton extends StatelessWidget {
                 height: 22,
                 child: CircularProgressIndicator(strokeWidth: 2.5),
               )
-            : Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            : Text(
+                label,
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
       ),
     );
   }

@@ -73,10 +73,7 @@ class _SplashPageState extends State<SplashPage> {
                   const SizedBox(height: 20),
                   Text(
                     'Gym Tracker',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(fontSize: 28),
+                    style: Theme.of(context).textTheme.displayMedium,
                   ),
                   const SizedBox(height: 48),
                   CircularProgressIndicator(color: cs.primary),

@@ -125,7 +125,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   _SectionHeader(title: l10n.settingsSecurity),
                   Text(
                     l10n.settingsChangePassword,
-                    style: TextStyle(color: cs.onSurfaceVariant),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: cs.onSurfaceVariant),
                   ),
                   const SizedBox(height: 12),
 
@@ -189,7 +192,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   const SizedBox(height: 8),
                   Text(
                     l10n.settingsBuiltWith,
-                    style: TextStyle(color: cs.outline),
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
 
                   const SizedBox(height: 40),
@@ -216,12 +219,7 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title.toUpperCase(),
-        style: TextStyle(
-          color: Theme.of(context).colorScheme.outline,
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 1.2,
-        ),
+        style: Theme.of(context).textTheme.labelSmall,
       ),
     );
   }
@@ -251,7 +249,7 @@ class _ToggleTile extends StatelessWidget {
         title: Text(label),
         subtitle: Text(
           value ? trueLabel : falseLabel,
-          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
+          style: Theme.of(context).textTheme.bodySmall,
         ),
         value: value,
         onChanged: onChanged,
@@ -314,8 +312,8 @@ class _InfoRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(color: cs.onSurfaceVariant)),
-        Text(value, style: TextStyle(color: cs.onSurface)),
+        Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+        Text(value, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: cs.onSurface)),
       ],
     );
   }
@@ -342,7 +340,10 @@ class _ErrorBanner extends StatelessWidget {
       ),
       child: Text(
         message,
-        style: TextStyle(color: cs.error, fontSize: 13),
+        style: Theme.of(context)
+            .textTheme
+            .bodyMedium
+            ?.copyWith(color: cs.error),
       ),
     );
   }

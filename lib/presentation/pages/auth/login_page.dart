@@ -95,10 +95,7 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 20),
                       Text(
                         l10n.authLoginTitle,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(fontSize: 24),
+                        style: Theme.of(context).textTheme.displaySmall,
                       ),
                       const SizedBox(height: 32),
 
@@ -116,8 +113,10 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           child: Text(
                             _errorMessage!,
-                            style: TextStyle(
-                                color: cs.error, fontSize: 14),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(color: cs.error),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -181,8 +180,10 @@ class _LoginPageState extends State<LoginPage> {
                         children: [
                           Text(
                             l10n.authLoginNoAccount,
-                            style: TextStyle(
-                                color: cs.onSurfaceVariant),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(color: cs.onSurfaceVariant),
                           ),
                           TextButton(
                             onPressed: () =>

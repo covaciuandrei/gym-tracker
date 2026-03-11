@@ -800,8 +800,27 @@ dev_dependencies:
     - `Theme.of(context).colorScheme.outline` → muted text, borders, disabled icons
     - `Theme.of(context).colorScheme.surface` → card / panel backgrounds
     - `Theme.of(context).scaffoldBackgroundColor` → page background
-    - `Theme.of(context).textTheme.*` → text styles (`titleLarge`, `bodyMedium`, `bodySmall`)
+    - `Theme.of(context).textTheme.*` → text styles (see Rule 14)
     Never hardcode hex `Color(0xFF…)` values inside widgets either.
+14. **Never hardcode `TextStyle(fontSize:…, fontWeight:…)` in widget `build()` methods** — always use `Theme.of(context).textTheme.*`, with `.copyWith()` only for single-property overrides (e.g. color). The full 15-role mapping is:
+
+    | Role | Size | Weight | Default color | Semantic use |
+    |---|---|---|---|---|
+    | `displayLarge` | 32 | w700 | onSurface | Hero / splash giant text |
+    | `displayMedium` | 28 | w700 | onSurface | App title, avatar initial |
+    | `displaySmall` | 24 | w600 | onSurface | Page title heading |
+    | `headlineLarge` | 22 | w600 | onSurface | Screen/section headline |
+    | `headlineMedium` | 20 | w600 | onSurface | Sub-headline |
+    | `headlineSmall` | 18 | w600 | onSurface | Card heading |
+    | `titleLarge` | 16 | w600 | onSurface | AppBar title, list item title |
+    | `titleMedium` | 15 | w500 | onSurface | List tile title |
+    | `titleSmall` | 14 | w500 | onSurface | Dense list title |
+    | `bodyLarge` | 16 | w400 | onSurface | Body copy |
+    | `bodyMedium` | 14 | w400 | onSurface | Default body / helper text |
+    | `bodySmall` | 12 | w400 | onSurfaceVariant | Captions, subtitles |
+    | `labelLarge` | 14 | w600 | primary | Button label |
+    | `labelMedium` | 12 | w500 | onSurfaceVariant | Chips, badges |
+    | `labelSmall` | 11 | w600 | outline | All-caps section headers (letterSpacing: 1.2) |
 
 
 # gym_tracker — Project Context after Phase 1

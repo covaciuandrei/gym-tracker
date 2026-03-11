@@ -102,8 +102,10 @@ class _RegisterPageState extends State<RegisterPage> {
                                 ),
                                 child: Text(
                                   _errorMessage!,
-                                  style: TextStyle(
-                                      color: cs.error),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(color: cs.error),
                                 ),
                               ),
                               const SizedBox(height: 16),
@@ -179,8 +181,10 @@ class _RegisterPageState extends State<RegisterPage> {
                                 children: [
                                   Text(
                                     l10n.authRegisterHaveAccount,
-                                    style: TextStyle(
-                                        color: cs.onSurfaceVariant),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(color: cs.onSurfaceVariant),
                                   ),
                                   TextButton(
                                     onPressed: () => context.maybePop(),
@@ -219,15 +223,17 @@ class _RegisterPageState extends State<RegisterPage> {
         const SizedBox(height: 20),
         Text(
           'Check your email',
-          style:
-              Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 22),
+          style: Theme.of(context).textTheme.headlineLarge,
         ),
         const SizedBox(height: 12),
         Text(
           'We sent a verification link to ${_emailController.text.trim()}.\n'
           'Please verify your email before logging in.',
           textAlign: TextAlign.center,
-          style: TextStyle(color: cs.onSurfaceVariant, height: 1.5),
+          style: Theme.of(context)
+              .textTheme
+              .bodyMedium
+              ?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
         ),
         const SizedBox(height: 32),
         PrimaryButton(

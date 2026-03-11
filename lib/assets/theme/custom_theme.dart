@@ -4,29 +4,70 @@ import 'package:gym_tracker/presentation/resources/app_colors.dart';
 /// Provides the [darkTheme] and [lightTheme] [ThemeData] instances used
 /// throughout the app.
 abstract final class CustomTheme {
-  // ── Shared text theme ────────────────────────────────────────────────────
-  static TextTheme _buildTextTheme(Color primary, Color secondary) {
+  // ── Full text theme (15-role M3 scale) ───────────────────────────────────
+  //
+  // | Role            | Size | Weight | Typical usage                         |
+  // |-----------------|------|--------|---------------------------------------|
+  // | displayLarge    |  32  |  w700  | Hero headings                         |
+  // | displayMedium   |  28  |  w700  | Splash / marketing headings           |
+  // | displaySmall    |  24  |  w600  | Page titles                           |
+  // | headlineLarge   |  22  |  w600  | Card titles                           |
+  // | headlineMedium  |  20  |  w600  | Dialog / sheet titles                 |
+  // | headlineSmall   |  18  |  w600  | Sub-section titles                    |
+  // | titleLarge      |  16  |  w600  | AppBar title, list headers            |
+  // | titleMedium     |  15  |  w500  | List item primary text                |
+  // | titleSmall      |  14  |  w500  | Settings section headers, badges      |
+  // | bodyLarge       |  16  |  w400  | Body paragraphs                       |
+  // | bodyMedium      |  14  |  w400  | Default body text                     |
+  // | bodySmall       |  12  |  w400  | Helper / secondary text, labels       |
+  // | labelLarge      |  14  |  w600  | Buttons, active tabs                  |
+  // | labelMedium     |  12  |  w500  | Chips, badges                         |
+  // | labelSmall      |  11  |  w600  | Section headers (all-caps)            |
+  static TextTheme _buildTextTheme({
+    required Color onSurface,
+    required Color onSurfaceVariant,
+    required Color outline,
+    required Color primary,
+  }) {
     return TextTheme(
+      // ── Display ──────────────────────────────────────────────────────────
+      displayLarge: TextStyle(
+          fontSize: 32, fontWeight: FontWeight.w700, color: onSurface),
+      displayMedium: TextStyle(
+          fontSize: 28, fontWeight: FontWeight.w700, color: onSurface),
+      displaySmall: TextStyle(
+          fontSize: 24, fontWeight: FontWeight.w600, color: onSurface),
+      // ── Headline ─────────────────────────────────────────────────────────
+      headlineLarge: TextStyle(
+          fontSize: 22, fontWeight: FontWeight.w600, color: onSurface),
+      headlineMedium: TextStyle(
+          fontSize: 20, fontWeight: FontWeight.w600, color: onSurface),
+      headlineSmall: TextStyle(
+          fontSize: 18, fontWeight: FontWeight.w600, color: onSurface),
+      // ── Title ─────────────────────────────────────────────────────────────
       titleLarge: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: primary,
-      ),
+          fontSize: 16, fontWeight: FontWeight.w600, color: onSurface),
+      titleMedium: TextStyle(
+          fontSize: 15, fontWeight: FontWeight.w500, color: onSurface),
+      titleSmall: TextStyle(
+          fontSize: 14, fontWeight: FontWeight.w500, color: onSurface),
+      // ── Body ──────────────────────────────────────────────────────────────
+      bodyLarge: TextStyle(
+          fontSize: 16, fontWeight: FontWeight.w400, color: onSurface),
       bodyMedium: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.normal,
-        color: primary,
-      ),
+          fontSize: 14, fontWeight: FontWeight.w400, color: onSurface),
       bodySmall: TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.normal,
-        color: secondary,
-      ),
+          fontSize: 12, fontWeight: FontWeight.w400, color: onSurfaceVariant),
+      // ── Label ─────────────────────────────────────────────────────────────
+      labelLarge: TextStyle(
+          fontSize: 14, fontWeight: FontWeight.w600, color: primary),
       labelMedium: TextStyle(
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-        color: secondary,
-      ),
+          fontSize: 12, fontWeight: FontWeight.w500, color: onSurfaceVariant),
+      labelSmall: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: outline,
+          letterSpacing: 1.2),
     );
   }
 
@@ -53,7 +94,12 @@ abstract final class CustomTheme {
       scaffoldBackgroundColor: AppColors.backgroundDark,
       cardColor: AppColors.surfaceDark,
       dividerColor: AppColors.borderDark,
-      textTheme: _buildTextTheme(AppColors.textPrimary, AppColors.textSecondary),
+      textTheme: _buildTextTheme(
+        onSurface: AppColors.textPrimary,
+        onSurfaceVariant: AppColors.textSecondary,
+        outline: AppColors.textMuted,
+        primary: AppColors.primary,
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.backgroundDark,
         foregroundColor: AppColors.textPrimary,
@@ -134,8 +180,10 @@ abstract final class CustomTheme {
       cardColor: AppColors.surfaceLight,
       dividerColor: AppColors.borderLight,
       textTheme: _buildTextTheme(
-        AppColors.textPrimaryLight,
-        AppColors.textSecondaryLight,
+        onSurface: AppColors.textPrimaryLight,
+        onSurfaceVariant: AppColors.textSecondaryLight,
+        outline: AppColors.textMutedLight,
+        primary: AppColors.primary,
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: AppColors.backgroundLight,

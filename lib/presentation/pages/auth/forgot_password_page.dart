@@ -76,8 +76,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             const SizedBox(height: 16),
                             Text(
                               'Enter your email address and we\'ll send you a link to reset your password.',
-                              style: TextStyle(
-                                  color: cs.onSurfaceVariant, height: 1.5),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
                             ),
                             const SizedBox(height: 24),
                             CustomTextField(
@@ -136,13 +138,16 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         const SizedBox(height: 20),
         Text(
           'Email Sent',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 22),
+          style: Theme.of(context).textTheme.headlineLarge,
         ),
         const SizedBox(height: 12),
         Text(
           l10n.authForgotPasswordSent,
           textAlign: TextAlign.center,
-          style: TextStyle(color: cs.onSurfaceVariant, height: 1.5),
+          style: Theme.of(context)
+              .textTheme
+              .bodyMedium
+              ?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
         ),
         const SizedBox(height: 32),
         PrimaryButton(
