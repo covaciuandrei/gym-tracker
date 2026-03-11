@@ -1344,3 +1344,260 @@ d65ab62  chore: initial Flutter project setup (iOS + Android), copy scripts, add
 ```
 
 Branch: `master`
+
+---
+
+## 12. Phase 2  Data Layer (COMPLETE)
+
+### Commit: `2f76c6a feat: Phase 2 - data layer services, mappers, sources, and service tests`
+
+---
+
+### 12.1 New file tree (Phase 2 additions)
+
+```
+lib/
+  data/
+    mappers/
+      attendance_day_mapper.dart         AttendanceDayMapper
+      supplement_mapper.dart             SupplementMapper  (products + logs)
+      training_type_mapper.dart          TrainingTypeMapper
+    remote/
+      attendance/
+        attendance_day_source.dart       AttendanceDaySource  (Firestore)
+      supplement/
+        health_source.dart               HealthSource  (products + log entries)
+      training_type/
+        training_type_source.dart        TrainingTypeSource  (Firestore)
+  service/
+    auth/
+      auth_service.dart                  AuthService
+      auth_service_exceptions.dart       (part of auth_service.dart)
+    attendance/
+      attendance_service.dart            AttendanceService
+      attendance_service_exceptions.dart 
+    health/
+      health_service.dart                HealthService
+      health_service_exceptions.dart   
+    workout/
+      workout_service.dart               WorkoutService
+      workout_service_exceptions.dart  
+
+test/
+  service/
+    auth/
+      auth_service_test.dart             26 tests
+    attendance/
+      attendance_service_test.dart       9 tests
+    health/
+      health_service_test.dart           17 tests
+    workout/
+      workout_service_test.dart          10 tests
+```
+
+---
+
+### 12.2 Service method signatures
+
+#### `AuthService` (`lib/service/auth/auth_service.dart`)
+
+Wraps `FirebaseAuth` (injected via constructor). Annotated `@injectable`.
+
+```dart
+Stream<AuthUser?> get currentUser$
+Future<AuthUser> signUp({required String email, required String password})
+Future<AuthUser> signIn({required String email, required String password})
+Future<void> signOut()
+Future<void> resetPassword(String email)
+Future<void> verifyEmail(String oobCode)
+Future<void> confirmPasswordReset({required String oobCode, required String newPassword})
+Future<void> changePassword({required String currentPassword, required String newPassword})
+```
+
+**Exceptions** (all `implements Exception`, `const` constructors):
+- `InvalidCredentialsException`  wrong email/password
+- `EmailNotVerifiedException`  sign-in before verification
+- `EmailAlreadyInUseException`  sign-up with taken email
+- `WeakPasswordException`  password too short
+- `InvalidActionCodeException`  expired/invalid OOB code
+- `AuthUserNotFoundException`  no current user or disabled account
+
+**Key behaviour:** `signIn` calls `_auth.signOut()` and throws `EmailNotVerifiedException` when `user.emailVerified == false`. `changePassword` re-authenticates before updating.
+
+---
+
+#### `WorkoutService` (`lib/service/workout/workout_service.dart`)
+
+Wraps `TrainingTypeSource`. Annotated `@injectable`.
+
+```dart
+Stream<List<TrainingType>> watchAll(String userId)
+Future<TrainingType?> getById(String userId, String typeId)
+Future<String> create(String userId, TrainingType model)   // returns new doc id
+Future<void> update(String userId, TrainingType model)     // throws TrainingTypeNotFoundException if not found
+Future<void> delete(String userId, String typeId)
+```
+
+**Exceptions:** `TrainingTypeNotFoundException`
+
+---
+
+#### `AttendanceService` (`lib/service/attendance/attendance_service.dart`)
+
+Wraps `AttendanceDaySource`. Annotated `@injectable`.
+
+```dart
+static String yearMonthKey(int year, int month)  // "2025-03"
+Stream<List<AttendanceDay>> watchMonth({required String userId, required int year, required int month})
+Future<AttendanceDay?> getDay({required String userId, required String date})   // date = "YYYY-MM-DD"
+Future<void> upsertDay({required String userId, required AttendanceDay model})
+Future<void> deleteDay({required String userId, required String date})
+```
+
+**Exceptions:** `AttendanceDayNotFoundException` (defined but not yet thrown  reserved for future use)
+
+**Key behaviour:** yearMonth is always derived from the date string via `date.substring(0, 7)`  never passed in separately from the caller.
+
+---
+
+#### `HealthService` (`lib/service/health/health_service.dart`)
+
+Wraps `HealthSource`. Annotated `@injectable`.
+
+```dart
+static String yearMonthKey(int year, int month)   // "2025-04"
+// Products
+Stream<List<SupplementProduct>> watchAllProducts()
+Stream<List<SupplementProduct>> watchMyProducts(String userId)
+Future<SupplementProduct?> getProduct(String productId)
+Future<String> createProduct(SupplementProduct model)   // returns new doc id
+Future<void> updateProduct(SupplementProduct model)     // throws SupplementProductNotFoundException if not found
+Future<void> deleteProduct(String productId)
+// Log entries
+Stream<List<SupplementLog>> watchMonthEntries({required String userId, required int year, required int month})
+Stream<List<SupplementLog>> watchDayEntries({required String userId, required String date})
+Future<String> logSupplement({required String userId, required SupplementLog model})   // returns new entry id
+Future<void> deleteEntry({required String userId, required String date, required String entryId})
+```
+
+**Exceptions:** `SupplementProductNotFoundException`
+
+---
+
+### 12.3 Mappers
+
+All mappers: `@injectable`, no state, pure mapping functions.
+
+| Mapper | mapDto() in | mapModel() out |
+|--------|------------|----------------|
+| `TrainingTypeMapper` | `TrainingTypeDto`  `TrainingType` | `TrainingType`  `TrainingTypeDto` (accepts optional `Timestamp? createdAt`) |
+| `AttendanceDayMapper` | `AttendanceDayDto`  `AttendanceDay` (calls `.toDate()` on Timestamp) | `AttendanceDay`  `AttendanceDayDto` (calls `Timestamp.fromDate()`) |
+| `SupplementMapper` | `mapProductDto`, `mapLogDto` | `mapProductModel`, `mapLogModel` (handles nested `ProductIngredient``ProductIngredientDto`) |
+
+---
+
+### 12.4 Sources (Firestore access layer)
+
+All sources: `@injectable`, `const` constructor, receive mapper via injection, access `FirebaseFirestore.instance` directly (not injected  matches teamlyst pattern).
+
+All sources use `.withConverter<Dto>()` on collection references. The `id` field is populated from `snap.id` inside the `fromFirestore` closure (since DTOs exclude it from JSON).
+
+| Source | Collection path | Operations |
+|--------|----------------|------------|
+| `TrainingTypeSource` | `users/{uid}/trainingTypes` | `watchAll`, `getById`, `create`, `update`, `delete` |
+| `AttendanceDaySource` | `users/{uid}/attendances/{YYYY-MM}/days` | `watchMonth`, `getDay`, `upsertDay`, `deleteDay` |
+| `HealthSource` | `supplementProducts` + `users/{uid}/healthLogs/{YYYY-MM}/entries` | full product CRUD + log `watchMonthEntries`, `watchDayEntries`, `createEntry`, `deleteEntry` |
+
+---
+
+### 12.5 Design decisions and gotchas
+
+1. **Services are thin orchestration layers**  they delegate to sources and add only business-rule checks (existence guards). Do NOT add Firestore logic to services.
+
+2. **Existence guard pattern:**
+   ```dart
+   final existing = await _source.getById(userId, model.id);
+   if (existing == null) throw const TrainingTypeNotFoundException();
+   return _source.update(userId, model);
+   ```
+   Used in `WorkoutService.update` and `HealthService.updateProduct`.
+
+3. **yearMonth derivation**  Services always derive `yearMonth` from a date string:
+   ```dart
+   final yearMonth = model.date.substring(0, 7); // "YYYY-MM-DD"  "YYYY-MM"
+   ```
+   Callers never need to compute or pass `yearMonth` separately.
+
+4. **`signIn` signs out unverified users**  After Firebase returns a `UserCredential` for a valid but unverified account, `AuthService.signIn` immediately calls `_auth.signOut()` before throwing `EmailNotVerifiedException`. This prevents an unverified user from having an active Firebase session.
+
+5. **`FirebaseAuth` is injected**  Unlike Firestore (accessed via `.instance`), `FirebaseAuth` is passed to `AuthService` as a constructor parameter. This is what makes unit testing possible without `firebase_auth_mocks`.
+
+6. **`mocktail` `registerFallbackValue` requirement**  When `any()` is used on a parameter whose type is a custom class, mocktail requires a fallback to be registered in `setUpAll`. Required fakes:
+   ```dart
+   class _FakeAuthCredential extends Fake implements AuthCredential {}
+   class _FakeTrainingType extends Fake implements TrainingType {}
+   class _FakeSupplementProduct extends Fake implements SupplementProduct {}
+   class _FakeSupplementLog extends Fake implements SupplementLog {}
+   ```
+
+7. **`widget_test.dart` removed**  The default Flutter counter test was deleted because it tries to pump `MyApp` without a DI environment.
+
+---
+
+### 12.6 Test suite totals after Phase 2
+
+```
+test/data/remote/               42 tests  (Phase 1 DTO tests  unchanged)
+test/service/auth/              26 tests
+test/service/workout/           10 tests
+test/service/attendance/         9 tests
+test/service/health/            17 tests
+
+TOTAL                           94 tests, all passing
+```
+
+Run:
+```powershell
+cd "c:\cov\gym-tracker\gym_tracker"
+flutter test
+```
+
+---
+
+### 12.7 What Phase 3 should build
+
+**Phase 3  Firebase setup + Auth cubits + Auth pages**
+
+Goals:
+1. Run `flutterfire configure`  generates `lib/firebase_options.dart`
+2. Update `main.dart` to call `Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)` after `getIt.allReady()`
+3. Register `FirebaseAuth` in the DI container so `AuthService` receives it
+4. Build `AuthCubit` (watches `AuthService.currentUser$`, emits auth state changes  drives splash navigation)
+5. Build `LoginCubit` + `login_states.dart`
+6. Build `RegisterCubit` + `register_states.dart`
+7. Build `ForgotPasswordCubit` + states
+8. Build pages: `LoginPage`, `RegisterPage`, `ForgotPasswordPage`, `AuthActionPage`
+9. Update `AppRouter` with all auth routes + `AuthGuard`
+10. Implement real `SplashPage` (waits for auth state, navigates to Login or main shell)
+11. Write cubit unit tests using `mocktail` (stub `AuthService`)
+
+**DI registration for FirebaseAuth** (to be added to a `@module` class):
+```dart
+@module
+abstract class FirebaseModule {
+  @lazySingleton
+  FirebaseAuth get firebaseAuth => FirebaseAuth.instance;
+}
+```
+
+---
+
+## 13. Git history
+
+```
+2f76c6a  feat: Phase 2 - data layer services, mappers, sources, and service tests
+543b12f  feat: Phase 1 - boilerplate, domain models, DTOs, and serialisation tests
+d65ab62  chore: initial Flutter project setup (iOS + Android), copy scripts, add project_context.md
+```
+
+Branch: `master`
