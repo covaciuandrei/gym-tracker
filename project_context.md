@@ -792,6 +792,16 @@ dev_dependencies:
 10. **All model IDs excluded from `toJson()**: `@JsonKey(includeFromJson: false, includeToJson: false)` for IDs that come from Firestore doc ID (not stored in fields).
 11. **Mobile-only:** The project was created with `--platforms=android,ios`. Do not add web support.
 12. **`yearMonth` key format = "YYYY-MM"** (zero-padded month). `date` format = "YYYY-MM-DD".
+13. **`AppColors` is only used inside `CustomTheme`** — never reference `AppColors.*` directly in widget `build()` methods. All widgets must read colors from `Theme.of(context)` so that light/dark switching works automatically. The correct M3 mappings are:
+    - `Theme.of(context).colorScheme.primary` → accent / brand color
+    - `Theme.of(context).colorScheme.error` → danger / destructive actions
+    - `Theme.of(context).colorScheme.onSurface` → primary text on surfaces
+    - `Theme.of(context).colorScheme.onSurfaceVariant` → secondary / helper text
+    - `Theme.of(context).colorScheme.outline` → muted text, borders, disabled icons
+    - `Theme.of(context).colorScheme.surface` → card / panel backgrounds
+    - `Theme.of(context).scaffoldBackgroundColor` → page background
+    - `Theme.of(context).textTheme.*` → text styles (`titleLarge`, `bodyMedium`, `bodySmall`)
+    Never hardcode hex `Color(0xFF…)` values inside widgets either.
 
 
 # gym_tracker — Project Context after Phase 1
@@ -2530,4 +2540,59 @@ Run `flutter gen-l10n` after any ARB edit (l10n.yaml exists, so no flags needed)
 5. **Apply `AuthGuard`** to `MainShellRoute` (and its tabs) in `AppRouter`
 6. **Implement `WorkoutTypesPage`**: list workout types, add/edit/delete
 7. **Implement remaining shell tabs**: CalendarPage, StatsPage, HealthPage (real data, not stubs)
+
+---
+
+## 20. Phase 5.5 — Theme Consistency Refactor *(commit `68e6929`)*
+
+### 20.1 Overview
+
+Checkpoint refactor — no new features. Enforces the rule that `AppColors` is only
+used inside `CustomTheme`, never in widget `build()` methods.
+
+### 20.2 CustomTheme changes
+
+Added `onSurfaceVariant` and `outline` to both `ColorScheme` definitions:
+
+```dart
+// Dark:
+onSurfaceVariant: AppColors.textSecondary,   // secondary / helper text
+outline: AppColors.textMuted,                 // muted text, borders
+
+// Light:
+onSurfaceVariant: AppColors.textSecondaryLight,
+outline: AppColors.textMutedLight,
+```
+
+### 20.3 Color mapping applied everywhere
+
+| AppColors (old ❌) | Theme.of(context) (new ✅) |
+|--------------------|---------------------------|
+| `AppColors.primary` | `cs.primary` |
+| `AppColors.danger` | `cs.error` |
+| `AppColors.textPrimary` | `cs.onSurface` |
+| `AppColors.textSecondary` | `cs.onSurfaceVariant` |
+| `AppColors.textMuted` | `cs.outline` |
+| `AppColors.backgroundDark` | `Theme.of(context).scaffoldBackgroundColor` |
+
+Where `cs = Theme.of(context).colorScheme`. The `const` qualifier was removed from
+`TextStyle(…)` and `Icon(…)` constructors wherever the color became a runtime value.
+
+### 20.4 Files changed
+
+- `lib/assets/theme/custom_theme.dart` — added two new ColorScheme roles
+- `lib/presentation/pages/splash/splash_page.dart`
+- `lib/presentation/pages/auth/login_page.dart`
+- `lib/presentation/pages/auth/register_page.dart`
+- `lib/presentation/pages/auth/forgot_password_page.dart`
+- `lib/presentation/pages/profile/profile_page.dart`
+- `lib/presentation/pages/settings/settings_page.dart`
+
+`lib/presentation/controls/custom_text_field.dart` and
+`lib/presentation/controls/primary_button.dart` had no direct `AppColors` usages
+(they inherit styling from the theme via `InputDecorationTheme` / `ElevatedButtonTheme`).
+
+### 20.5 Test count
+
+Still **139/139** — no new tests (refactor only). `dart analyze lib/` — No issues found.
 
