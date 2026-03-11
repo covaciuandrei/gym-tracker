@@ -15,6 +15,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authLoginTitle => 'Log In';
 
   @override
+  String get authLoginWelcomeTitle => 'Welcome Back';
+
+  @override
+  String get authLoginSubtitle => 'Sign in to track your gym attendance';
+
+  @override
+  String get authLoginSignUp => 'Sign up';
+
+  @override
   String get authLoginEmail => 'Email';
 
   @override

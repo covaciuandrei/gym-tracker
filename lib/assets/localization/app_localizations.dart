@@ -110,6 +110,24 @@ abstract class AppLocalizations {
   /// **'Log In'**
   String get authLoginTitle;
 
+  /// No description provided for @authLoginWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome Back'**
+  String get authLoginWelcomeTitle;
+
+  /// No description provided for @authLoginSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to track your gym attendance'**
+  String get authLoginSubtitle;
+
+  /// No description provided for @authLoginSignUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign up'**
+  String get authLoginSignUp;
+
   /// No description provided for @authLoginEmail.
   ///
   /// In en, this message translates to:

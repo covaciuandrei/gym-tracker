@@ -125,6 +125,20 @@ decoration: BoxDecoration(
   `AppColors.*` constants
 - **No hardcoded text styles** — always use `Theme.of(context).textTheme.*`
 
+**Reusable Controls Rule:**
+
+- If a widget is likely to be reused across the app (examples: all kinds of
+  buttons, form fields, cards, common list rows, chips, or scaled layout
+  primitives), place the widget in `lib/presentation/controls/` as a public
+  widget (one public widget per file). Add a widget test under `test/` that
+  verifies basic rendering and loading states. The AI must follow this rule
+  when generating UI code — prefer extraction into `controls/` instead of
+  duplicating similar widgets across pages.
+
+Example: `GradientButton` is a reusable primary button (indigo gradient)
+placed in `lib/presentation/controls/gradient_button.dart` and should be used
+everywhere the Angular `.btn-primary` pattern appears.
+
 ---
 
 ## 7. Code Quality Standards

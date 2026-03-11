@@ -3,6 +3,9 @@
   "appTitle": "Gym Tracker",
 
   "authLoginTitle": "Autentificare",
+  "authLoginWelcomeTitle": "Bine ai revenit",
+  "authLoginSubtitle": "Autentifică-te pentru a urmări prezența la sală",
+  "authLoginSignUp": "Înregistrează-te",
   "authLoginEmail": "Email",
   "authLoginPassword": "Parolă",
   "authLoginButton": "Autentificare",

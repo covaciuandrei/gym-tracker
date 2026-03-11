@@ -15,6 +15,16 @@ class AppLocalizationsRo extends AppLocalizations {
   String get authLoginTitle => 'Autentificare';
 
   @override
+  String get authLoginWelcomeTitle => 'Bine ai revenit';
+
+  @override
+  String get authLoginSubtitle =>
+      'Autentifică-te pentru a urmări prezența la sală';
+
+  @override
+  String get authLoginSignUp => 'Înregistrează-te';
+
+  @override
   String get authLoginEmail => 'Email';
 
   @override

@@ -3,6 +3,9 @@
   "appTitle": "Gym Tracker",
 
   "authLoginTitle": "Log In",
+  "authLoginWelcomeTitle": "Welcome Back",
+  "authLoginSubtitle": "Sign in to track your gym attendance",
+  "authLoginSignUp": "Sign up",
   "authLoginEmail": "Email",
   "authLoginPassword": "Password",
   "authLoginButton": "Log In",
