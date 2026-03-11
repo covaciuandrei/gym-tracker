@@ -792,3 +792,555 @@ dev_dependencies:
 10. **All model IDs excluded from `toJson()**: `@JsonKey(includeFromJson: false, includeToJson: false)` for IDs that come from Firestore doc ID (not stored in fields).
 11. **Mobile-only:** The project was created with `--platforms=android,ios`. Do not add web support.
 12. **`yearMonth` key format = "YYYY-MM"** (zero-padded month). `date` format = "YYYY-MM-DD".
+
+
+# gym_tracker — Project Context after Phase 1
+
+> **Purpose:** Drop-in context for any AI agent picking up this project.
+> Read `project_context.md` for the full feature spec and architecture rules.
+> This file records what **already exists**, what still needs to be built, and
+> every decision / gotcha discovered during Phase 1.
+> Last updated: Phase 1 complete (2 commits on `master`).
+
+---
+
+## 0. Quick-start for a new agent
+
+1. Read `project_context.md` first — it contains the full feature spec, Firestore
+   schema, UI design, and architecture rules.
+2. Read this file to know what is already done and what the next phases are.
+3. Project is at `c:\cov\gym-tracker\gym_tracker`.
+4. Run `dart analyze lib/` — should report **No issues found** before you start.
+5. Run `flutter test` — should report **42 passed, 0 failed** before you start.
+
+---
+
+## 1. Environment
+
+| Item | Version |
+|---|---|
+| Flutter | 3.41.0 |
+| Dart SDK | ^3.11.0 |
+| Java | JDK 17 |
+| OS | Windows (PowerShell terminal) |
+| Platforms | `android`, `ios` only (`--platforms=android,ios`) |
+| Firebase | Auth + Firestore (prod only, no dev env) |
+
+---
+
+## 2. Exact `pubspec.yaml` (as of Phase 1)
+
+```yaml
+name: gym_tracker
+description: "Gym Tracker - A personal gym attendance and supplement tracking app."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+
+  # Firebase
+  firebase_core: ^3.13.0
+  firebase_auth: ^5.5.2
+  cloud_firestore: ^5.6.5
+
+  # State management
+  flutter_bloc: ^9.1.0
+  equatable: ^2.0.7
+
+  # Dependency injection
+  get_it: ^8.0.3
+  injectable: ^2.5.0
+
+  # Routing
+  auto_route: ^9.3.0
+
+  # Storage
+  shared_preferences: ^2.5.3
+  flutter_secure_storage: ^9.2.4
+
+  # Serialization (runtime)
+  json_annotation: ^4.9.0
+
+  # Utils
+  collection: ^1.19.1
+  intl: ^0.20.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+  # Code generation
+  build_runner: ^2.4.15
+  injectable_generator: ^2.7.0
+  auto_route_generator: ^9.0.0
+  json_serializable: ^6.9.5
+
+  # Testing
+  mocktail: ^1.0.4
+
+flutter:
+  uses-material-design: true
+  generate: true           # enables flutter gen-l10n
+  assets:
+    - lib/assets/localization/
+```
+
+### ⚠️ Known dependency constraint: `bloc_test` is intentionally absent
+
+`bloc_test ^9.x` / `^10.x` is **incompatible** with `auto_route_generator ^9.x`
+because of conflicting `analyzer` version ranges. Do **not** add `bloc_test`
+without first upgrading to `auto_route ^10.x + auto_route_generator ^10.x`.
+Use `mocktail` alone for unit tests until that upgrade happens.
+
+---
+
+## 3. File tree — what EXISTS right now
+
+```
+lib/
+  main.dart                                    ✅ boilerplate
+  assets/
+    localization/
+      app_en.arb                               ✅ placeholder
+      app_ro.arb                               ✅ placeholder
+      app_localizations.dart                   ✅ GENERATED (flutter gen-l10n)
+      app_localizations_en.dart                ✅ GENERATED
+      app_localizations_ro.dart                ✅ GENERATED
+  core/
+    app_router.dart                            ✅ shell (SplashRoute only)
+    app_router.gr.dart                         ✅ GENERATED (auto_route)
+    injection.dart                             ✅ boilerplate
+    injection.config.dart                      ✅ GENERATED (injectable)
+  cubit/
+    base_cubit.dart                            ✅
+    base_state.dart                            ✅
+  data/
+    remote/
+      attendance/
+        attendance_day_dto.dart                ✅
+        attendance_day_dto.g.dart              ✅ GENERATED
+      supplement/
+        product_ingredient_dto.dart            ✅
+        product_ingredient_dto.g.dart          ✅ GENERATED
+        supplement_log_dto.dart                ✅
+        supplement_log_dto.g.dart              ✅ GENERATED
+        supplement_product_dto.dart            ✅ (@JsonSerializable(explicitToJson: true))
+        supplement_product_dto.g.dart          ✅ GENERATED
+      training_type/
+        training_type_dto.dart                 ✅
+        training_type_dto.g.dart               ✅ GENERATED
+  model/
+    auth_user.dart                             ✅
+    attendance_day.dart                        ✅
+    supplement_log.dart                        ✅
+    supplement_product.dart                    ✅  (also contains ProductIngredient)
+    training_type.dart                         ✅
+  presentation/
+    pages/
+      splash/
+        splash_page.dart                       ✅ placeholder @RoutePage()
+
+test/
+  data/
+    remote/
+      attendance/
+        attendance_day_dto_test.dart           ✅ 9 tests
+      supplement/
+        product_ingredient_dto_test.dart       ✅ 7 tests
+        supplement_product_dto_test.dart       ✅ 13 tests
+        supplement_log_dto_test.dart           ✅ 13 tests
+      training_type/
+        training_type_dto_test.dart            ✅ 9 tests
+  widget_test.dart                             (default Flutter test — not modified)
+```
+
+**Files still to be created (none yet):**
+- `lib/assets/theme/` — `CustomTheme` (light/dark not yet built)
+- `lib/data/constants/`, `lib/data/exceptions/`, `lib/data/mappers/` — empty
+- `lib/data/preferences/`, `lib/data/secure_storage/` — empty
+- `lib/data/remote/*/` — sources not yet written
+- `lib/service/*/` — no services yet
+- `lib/presentation/resources/` — `app_colors.dart`, `app_images.dart` not yet written
+- No feature pages, cubits, or routes beyond `SplashPage`
+
+---
+
+## 4. Exact source for every boilerplate file
+
+### `lib/main.dart`
+```dart
+import 'package:auto_route/auto_route.dart';
+import 'package:flutter/material.dart';
+import 'package:gym_tracker/core/app_router.dart';
+import 'package:gym_tracker/core/injection.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  configureDependencies();
+  await getIt.allReady();
+  runApp(const MyApp());
+}
+
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final _appRouter = getIt<AppRouter>();
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
+      routerConfig: _appRouter.config(
+        navigatorObservers: () => [AutoRouteObserver()],
+      ),
+      title: 'Gym Tracker',
+    );
+  }
+}
+```
+
+> **TODO for Phase 2:** Add `Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)`
+> AFTER `configureDependencies()` / `getIt.allReady()`. Also add `localizationsDelegates`
+> and `supportedLocales` to `MaterialApp.router` and wire up the theme.
+
+### `lib/core/injection.dart`
+```dart
+import 'package:get_it/get_it.dart';
+import 'package:injectable/injectable.dart';
+import 'injection.config.dart';
+
+final getIt = GetIt.instance;
+
+@InjectableInit(
+  initializerName: r'$initGetIt',
+  preferRelativeImports: true,
+  asExtension: false,
+)
+void configureDependencies() => $initGetIt(getIt);
+```
+
+### `lib/core/app_router.dart`
+```dart
+import 'package:auto_route/auto_route.dart';
+import 'package:injectable/injectable.dart';
+import 'app_router.gr.dart';
+
+@lazySingleton
+@AutoRouterConfig(replaceInRouteName: 'Page,Route')
+class AppRouter extends RootStackRouter {
+  @override
+  RouteType get defaultRouteType => const RouteType.material();
+
+  @override
+  final List<AutoRoute> routes = <AutoRoute>[
+    AutoRoute(
+      path: '/splash',
+      page: SplashRoute.page,
+      initial: true,
+      maintainState: false,
+    ),
+  ];
+}
+```
+
+### `lib/cubit/base_cubit.dart`
+```dart
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:gym_tracker/cubit/base_state.dart';
+
+class BaseCubit extends Cubit<BaseState> {
+  BaseCubit() : super(const InitialState());
+
+  void safeEmit(BaseState state) {
+    if (!isClosed) emit(state);
+  }
+}
+```
+
+### `lib/cubit/base_state.dart`
+```dart
+import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
+
+@immutable
+class BaseState extends Equatable {
+  const BaseState();
+  @override
+  List<Object?> get props => [];
+}
+
+class InitialState extends BaseState { const InitialState(); }
+class PendingState extends BaseState { const PendingState(); }
+class SomethingWentWrongState extends BaseState { const SomethingWentWrongState(); }
+```
+
+### `lib/presentation/pages/splash/splash_page.dart`
+```dart
+import 'package:auto_route/auto_route.dart';
+import 'package:flutter/material.dart';
+
+@RoutePage()
+class SplashPage extends StatelessWidget {
+  const SplashPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: Text('Gym Tracker')),
+    );
+  }
+}
+```
+
+---
+
+## 5. Domain models (exact fields)
+
+All models: `extends Equatable`, `const` constructors, `@override props`.
+
+### `AuthUser` (`lib/model/auth_user.dart`)
+```dart
+class AuthUser extends Equatable {
+  final String uid;
+  final String? email;
+  final String? displayName;
+  final bool emailVerified;
+}
+```
+
+### `TrainingType` (`lib/model/training_type.dart`)
+```dart
+class TrainingType extends Equatable {
+  final String id;
+  final String name;
+  final String color;    // hex, e.g. "#FF5733"
+  final String? icon;   // emoji, e.g. "💪"
+}
+```
+
+### `AttendanceDay` (`lib/model/attendance_day.dart`)
+```dart
+class AttendanceDay extends Equatable {
+  final String date;              // "YYYY-MM-DD"
+  final DateTime timestamp;
+  final String? trainingTypeId;
+  final int? durationMinutes;
+  final String? notes;
+}
+```
+
+### `ProductIngredient` + `SupplementProduct` (`lib/model/supplement_product.dart`)
+```dart
+class ProductIngredient extends Equatable {
+  final String stdId;    // references global ingredients/{id}
+  final String name;
+  final double amount;
+  final String unit;
+}
+
+class SupplementProduct extends Equatable {
+  final String id;
+  final String name;
+  final String brand;
+  final List<ProductIngredient> ingredients;
+  final double servingsPerDayDefault;
+  final String? createdBy;   // userId who created this, null = global
+  final bool? verified;
+}
+```
+
+### `SupplementLog` (`lib/model/supplement_log.dart`)
+```dart
+class SupplementLog extends Equatable {
+  final String id;             // Firestore auto-gen doc id
+  final String date;           // "YYYY-MM-DD"
+  final String productId;      // references supplementProducts/{id}
+  final String? productName;   // snapshot at log time
+  final String? productBrand;  // snapshot at log time
+  final double servingsTaken;
+  final DateTime? timestamp;
+}
+```
+
+---
+
+## 6. DTOs — key design decisions
+
+All DTOs: `@JsonSerializable()`, `factory fromJson`, `toJson`, `part '...g.dart'`.
+
+### ID field pattern (ALL DTOs that have an id)
+```dart
+// The Firestore doc ID is NOT stored as a Firestore field.
+// It is populated from doc.id after a read, never serialized.
+@JsonKey(includeFromJson: false, includeToJson: false, defaultValue: '')
+final String id;
+```
+
+### Timestamp fields
+Fields that hold Firestore `Timestamp` objects are typed as **`Object`** (non-nullable)
+or **`Object?`** (nullable) on the DTO. This allows:
+- Unit tests to pass a plain `String` (no Firebase dep needed)
+- Production code to pass an actual `cloud_firestore.Timestamp`
+
+The mapper is responsible for calling `.toDate()` on the Timestamp when mapping
+DTO → model.
+
+### `SupplementProductDto` uses `explicitToJson: true`
+```dart
+@JsonSerializable(explicitToJson: true)  // ← required for nested List<ProductIngredientDto>
+class SupplementProductDto { ... }
+```
+Without this, `toJson()` leaves `ProductIngredientDto` objects raw in the list —
+Firestore would reject them. All other DTOs use plain `@JsonSerializable()`.
+
+### DTO file locations
+```
+lib/data/remote/
+  attendance/attendance_day_dto.dart
+  supplement/product_ingredient_dto.dart
+  supplement/supplement_log_dto.dart
+  supplement/supplement_product_dto.dart
+  training_type/training_type_dto.dart
+```
+
+---
+
+## 7. Code generation
+
+After any annotation change, run:
+```powershell
+cd "c:\cov\gym-tracker\gym_tracker"
+dart run build_runner build --delete-conflicting-outputs
+```
+
+After any ARB file change, run:
+```powershell
+flutter gen-l10n
+```
+
+For a full clean rebuild (branch switch, etc.) use `clean_rebuild.sh` or manually:
+```powershell
+flutter clean
+Remove-Item ios/Podfile.lock, pubspec.lock -ErrorAction SilentlyContinue
+Remove-Item ios/Pods, ios/Runner.xcworkspace -Recurse -Force -ErrorAction SilentlyContinue
+flutter pub get
+dart run build_runner build --delete-conflicting-outputs
+flutter gen-l10n
+```
+
+---
+
+## 8. Test suite
+
+```
+test/data/remote/
+  attendance/attendance_day_dto_test.dart       9 tests
+  supplement/product_ingredient_dto_test.dart   7 tests
+  supplement/supplement_product_dto_test.dart  13 tests
+  supplement/supplement_log_dto_test.dart      13 tests
+  training_type/training_type_dto_test.dart     9 tests
+TOTAL: 42 tests, all passing
+```
+
+Run tests:
+```powershell
+cd "c:\cov\gym-tracker\gym_tracker"
+flutter test
+```
+
+Each test file covers:
+- `fromJson` — field mapping, snake_case keys, default values, `id` excluded
+- `toJson`   — correct key names, `id` absent, nested objects serialized as Maps
+- Round-trip — `fromJson → toJson` is lossless
+
+---
+
+## 9. What Phase 2 should build
+
+The following are the suggested next phases. Adjust as needed.
+
+### Phase 2 — Auth feature (end-to-end)
+
+**Goal:** Login, Register, ForgotPassword pages wired to Firebase Auth. Splash page
+navigates to Login if unauthenticated, or to the main shell if authenticated.
+
+**Checklist:**
+- [ ] Run `flutterfire configure` to generate `firebase_options.dart` and wire
+      `Firebase.initializeApp` in `main.dart`
+- [ ] `lib/data/remote/auth/auth_source.dart` — wraps `FirebaseAuth`
+- [ ] `lib/service/auth/auth_service.dart` + `auth_service_exceptions.dart`
+- [ ] `lib/cubit/auth/` — `AuthCubit` (listens to `currentUser$` stream),
+      `auth_states.dart`
+- [ ] `lib/cubit/login/login_cubit.dart` + `login_states.dart`
+- [ ] `lib/cubit/register/register_cubit.dart` + `register_states.dart`
+- [ ] `lib/cubit/forgot_password/forgot_password_cubit.dart` + states
+- [ ] Pages: `LoginPage`, `RegisterPage`, `ForgotPasswordPage`, `AuthActionPage`
+      — all `@RoutePage()`, all implement `AutoRouteWrapper`
+- [ ] Update `AppRouter` with all auth routes + a guard redirecting to Login
+      when not authenticated
+- [ ] `SplashPage` becomes a real splash: initialize Firebase, check auth state,
+      navigate accordingly
+- [ ] Write cubit unit tests using `mocktail` (stub `AuthService`)
+
+**Key custom exceptions (minimum set):**
+```dart
+// auth_service_exceptions.dart (part of auth_service.dart)
+class InvalidCredentialsException implements Exception {}
+class EmailAlreadyInUseException implements Exception {}
+class EmailNotVerifiedException implements Exception {}
+class WeakPasswordException implements Exception {}
+```
+
+### Phase 3 — Main shell + bottom navigation
+
+**Goal:** Authenticated users land on a bottom-nav shell with 4 tabs:
+Calendar, Stats, Health, Profile.
+
+### Phase 4 — Calendar feature
+
+### Phase 5 — Stats feature
+
+### Phase 6 — Health / Supplements feature
+
+### Phase 7 — Profile + Settings + Workout Types
+
+---
+
+## 10. Architecture rules (critical summary — full list in `project_context.md`)
+
+1. **Every page**: `@RoutePage()` + implements `AutoRouteWrapper` (creates its own `BlocProvider` via `wrappedRoute`)
+2. **Every cubit**: `@injectable`, extends `BaseCubit`, always calls `safeEmit(PendingState())` before async ops
+3. **Every service**: `@injectable`, `part` + `part of` for its exceptions file
+4. **Every source**: `@injectable`, uses `FirebaseFirestore.instance` directly (not injected)
+5. **Every mapper**: `@injectable`, maps DTO↔Model, handles `Timestamp.toDate()` and `Timestamp.fromDate()`
+6. **No copyWith** anywhere on states or models
+7. **Firestore paths are sacred** — never flatten:
+   - Attendance: `users/{uid}/attendances/{YYYY-MM}/days/{YYYY-MM-DD}`
+   - Health logs: `users/{uid}/healthLogs/{YYYY-MM}/entries/{logId}`
+8. **`yearMonth` format = `"YYYY-MM"`**, `date` format = `"YYYY-MM-DD"`
+9. **No SQLite / Drift** — only Firestore + SharedPreferences + FlutterSecureStorage
+10. **No dev/staging environment** — one Firebase config, prod only
+
+---
+
+## 11. Git history
+
+```
+543b12f  feat: Phase 1 – boilerplate, domain models, DTOs, and serialisation tests
+d65ab62  chore: initial Flutter project setup (iOS + Android), copy scripts, add project_context.md
+```
+
+Branch: `master`
