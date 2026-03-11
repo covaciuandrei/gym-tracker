@@ -2071,3 +2071,239 @@ d65ab62  chore: initial Flutter project setup (iOS + Android), copy scripts, add
 ```
 
 Branch: `master`
+
+---
+
+## 18. Phase 4 — Theme, Localizations, Routing Foundation (COMPLETE)
+
+### Commit: `477520d feat: Phase 4 - theme, localizations, full AppRouter, and page stubs`
+
+---
+
+### 18.1 New file tree (Phase 4 additions)
+
+```
+lib/
+  assets/
+    localization/
+      app_en.arb                        ✅ 130+ keys, 11 namespaces
+      app_ro.arb                        ✅ Romanian translations
+      app_localizations.dart            ✅ REGENERATED (flutter gen-l10n)
+      app_localizations_en.dart         ✅ REGENERATED
+      app_localizations_ro.dart         ✅ REGENERATED
+    theme/
+      custom_theme.dart                 ✅ CustomTheme (darkTheme + lightTheme)
+  core/
+    app_router.dart                     ✅ Full route tree
+    app_router.gr.dart                  ✅ REGENERATED (auto_route)
+  presentation/
+    helpers/
+      locale_helper.dart                ✅ LocaleHelper (ChangeNotifier + SharedPreferences)
+    pages/
+      auth/
+        login_page.dart                 ✅ stub @RoutePage()
+        register_page.dart              ✅ stub @RoutePage()
+        forgot_password_page.dart       ✅ stub @RoutePage()
+        auth_action_page.dart           ✅ stub @RoutePage()
+      main_shell/
+        main_shell_page.dart            ✅ AutoTabsScaffold bottom nav
+      calendar/
+        calendar_page.dart              ✅ stub @RoutePage()
+      stats/
+        stats_page.dart                 ✅ stub @RoutePage()
+      health/
+        health_page.dart                ✅ stub @RoutePage()
+      profile/
+        profile_page.dart               ✅ stub @RoutePage()
+      workout_types/
+        workout_types_page.dart         ✅ stub @RoutePage()
+      settings/
+        settings_page.dart              ✅ stub @RoutePage()
+    resources/
+      app_colors.dart                   ✅ AppColors constants
+  main.dart                             ✅ wired: theme, l10n, DI order
+```
+
+---
+
+### 18.2 AppColors palette
+
+```
+AppColors.primary               #6C63FF  purple-blue accent
+AppColors.backgroundDark        #0F0F0F  near-black
+AppColors.surfaceDark           #1A1A1A  card/surface
+AppColors.surfaceElevatedDark   #252525  elevated surface
+AppColors.borderDark            #333333  dividers
+AppColors.textPrimary           #FFFFFF  white
+AppColors.textSecondary         #888888  dimmed
+AppColors.textMuted             #555555  muted
+AppColors.success               #6C63FF  (same as primary)
+AppColors.danger                #FF4444  delete/error
+AppColors.warning               #FF9800  warning
+```
+
+---
+
+### 18.3 CustomTheme
+
+Located at `lib/assets/theme/custom_theme.dart`.
+
+```dart
+// Usage in MaterialApp.router:
+theme: CustomTheme.lightTheme,
+darkTheme: CustomTheme.darkTheme,
+themeMode: ThemeMode.dark,  // dark is default
+```
+
+Both themes share the same `AppColors.primary` accent and semantic colors.
+The dark theme uses the `*Dark` surface/text variants; light uses `*Light`.
+
+---
+
+### 18.4 Localization namespaces (ARB keys)
+
+| Namespace | Key prefix | Examples |
+|---|---|---|
+| AUTH | `auth*` | `authLoginTitle`, `authRegisterButton`, `authSignOut` |
+| NAV | `nav*` | `navCalendar`, `navStats`, `navHealth`, `navProfile` |
+| CALENDAR | `calendar*` | `calendarMarkAttended`, `calendarWentToGym` |
+| STATS | `stats*` | `statsCurrentStreak`, `statsBestStreak`, `statsStreak0` |
+| MONTHS | `months*` | `monthsJanuary` … `monthsDecember` |
+| WEEKDAYS | `weekdays*` | `weekdaysMonday` … `weekdaysSunday` |
+| WEEKDAYS_MINI | `weekdaysMini*` | `weekdaysMiniMon` … `weekdaysMiniSun` |
+| PROFILE | `profile*` | `profileTitle`, `profileSignOut`, `profileWorkoutTypes` |
+| WORKOUT_TYPES | `workoutTypes*` | `workoutTypesAdd`, `workoutTypesDeleteConfirm` |
+| HEALTH | `health*` | `healthToday`, `healthAddSupplement`, `healthLogToday` |
+| SETTINGS | `settings*` | `settingsThemeDark`, `settingsRunMigration` |
+| ERRORS | `errors*` | `errorsInvalidCredentials`, `errorsPasswordMismatch` |
+
+Generated class: `AppLocalizations` in `lib/assets/localization/`.
+
+Usage in widget:
+```dart
+final l10n = AppLocalizations.of(context);
+Text(l10n.navCalendar);
+```
+
+---
+
+### 18.5 AppRouter route tree
+
+```
+/splash                  → SplashRoute         (initial: true)
+
+// Auth (no bottom nav)
+/login                   → LoginRoute
+/register                → RegisterRoute
+/forgot-password         → ForgotPasswordRoute
+/auth/action             → AuthActionRoute      (OOB email codes)
+
+// Shell
+/                        → MainShellRoute
+  calendar               → CalendarRoute        (tab 0)
+  stats                  → StatsRoute           (tab 1)
+  health                 → HealthRoute          (tab 2)
+  profile                → ProfileRoute         (tab 3)
+  (empty)                → redirects to calendar
+
+// Profile sub-screens
+/workout-types           → WorkoutTypesRoute
+/settings                → SettingsRoute
+```
+
+---
+
+### 18.6 main.dart wiring
+
+```dart
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  configureDependencies();
+  await getIt.allReady();
+  // TODO(phase5): await Firebase.initializeApp(...) after flutterfire configure
+  runApp(const MyApp());
+}
+
+// MaterialApp.router:
+//   theme: CustomTheme.lightTheme
+//   darkTheme: CustomTheme.darkTheme
+//   themeMode: ThemeMode.dark
+//   localizationsDelegates: [AppLocalizations.delegate, GlobalMaterial..., ...]
+//   supportedLocales: AppLocalizations.supportedLocales
+//   routerConfig: _appRouter.config(...)
+```
+
+---
+
+### 18.7 LocaleHelper
+
+`lib/presentation/helpers/locale_helper.dart` — extends `ChangeNotifier`.
+
+```dart
+// Instantiate with SharedPreferences (inject or await in main):
+final prefs = await SharedPreferences.getInstance();
+final localeHelper = LocaleHelper(prefs);
+
+// Change locale (persisted):
+await localeHelper.setLocale(const Locale('ro'));
+
+// Listen for changes (e.g. in MyApp):
+localeHelper.addListener(() => setState(() {}));
+locale: localeHelper.locale,
+```
+
+`LocaleHelper.supportedLocales` = `[Locale('en'), Locale('ro')]`.
+
+> **Phase 5 note:** Wire `LocaleHelper` into `MyApp` so the Settings page can
+> hot-swap the language at runtime.
+
+---
+
+### 18.8 Design decisions & gotchas
+
+1. **Firebase init ordering** — `configureDependencies()` → `getIt.allReady()` →
+   `Firebase.initializeApp()` (TODO phase5) → `runApp()`. `FirebaseAuth` is
+   `@lazySingleton`, so it is NOT resolved at DI-init time; the first resolution
+   happens when a page/cubit is built, which is after Firebase is ready.
+
+2. **All page stubs implement `AutoRouteWrapper`** — even stubs return `this` from
+   `wrappedRoute()`. This satisfies the architecture rule uniformly and is safe
+   to override later with a real `BlocProvider`.
+
+3. **`MainShellPage` imports `app_router.gr.dart`** — the shell references
+   `CalendarRoute()`, `StatsRoute()`, etc. directly. These are generated classes
+   and must be imported explicitly in the shell file.
+
+4. **`app_router.gr.dart` was already current** when `build_runner` ran in Phase 4
+   because we had created all page files before running the generator. The
+   build completed in 2s with 0 outputs written (cache hit).
+
+---
+
+### 18.9 Test suite — 139/139 passing
+
+No new tests added in Phase 4 (page stubs are UI-only).
+
+```powershell
+cd "c:\cov\gym-tracker\gym_tracker"
+flutter test
+# → 00:02 +139: All tests passed!
+```
+
+---
+
+### 18.10 What Phase 5 should build
+
+1. **Run `flutterfire configure`** → generates `lib/firebase_options.dart`
+2. **Uncomment Firebase init** in `main.dart` (change `TODO(phase5)` → active code)
+3. **Wire `LocaleHelper`** into `MyApp` (currently locale is fixed to `ThemeMode.dark`)
+4. **Implement real `SplashPage`**: `AuthCubit` via `BlocProvider`, `watchAuthState()`,
+   navigate to `/login` or `/` based on auth state
+5. **Implement `LoginPage`**: email + password form, `LoginCubit`/`AuthCubit`, validation
+6. **Implement `RegisterPage`**: sign-up form, email verification flow
+7. **Implement `ForgotPasswordPage`**: send reset email form
+8. **Implement `AuthActionPage`**: handle OOB codes (email verify + password reset)
+9. **Add `AuthGuard`**: redirects unauthenticated users to `/login`
+10. **Apply `AuthGuard`** to the main shell route and sub-routes
+11. Write cubit unit tests for any new login/register cubits
+
