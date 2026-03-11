@@ -1871,3 +1871,203 @@ d65ab62  chore: initial Flutter project setup (iOS + Android), copy scripts, add
 ```
 
 Branch: `master`
+
+---
+
+## 16. Phase 3.5  Logic Integration Audit (COMPLETE)
+
+### Commit: `7d534dc fix: Phase 3.5 audit - add FirebaseModule, regenerate DI config, document Firebase init order`
+
+---
+
+### 16.1 Data flow traces
+
+#### Journey A: Marking attendance
+
+```
+UI
+   CalendarCubit.markDay(userId: uid, day: AttendanceDay(...))
+        safeEmit(PendingState())
+        await AttendanceService.upsertDay(userId: uid, model: day)
+              yearMonth = day.date.substring(0, 7)  // "YYYY-MM"
+              AttendanceDaySource.upsertDay(uid, yearMonth, day)
+                    mapper.mapModel(day)   AttendanceDayDto
+                    Firestore.set(
+                      "users/{uid}/attendances/{yearMonth}/days/{date}",
+                      dto
+                    )
+         success  safeEmit(CalendarDayMarkedState(day: day))
+         throws   safeEmit(SomethingWentWrongState())
+```
+
+**Note:** The Phase 3 prompt refers to `markAttendance()` but the implemented method is named `markDay()`  this is intentionally more descriptive. No rename required.
+
+---
+
+#### Journey B: Loading the calendar (app start)
+
+```
+main()
+  WidgetsFlutterBinding.ensureInitialized()
+  // TODO(phase4): await Firebase.initializeApp(...)
+  configureDependencies()    populates get_it container (all 16 factories registered)
+  await getIt.allReady()
+  runApp(MyApp())
+
+MyApp._MyAppState
+  _appRouter = getIt<AppRouter>()         lazySingleton, resolved once
+  MaterialApp.router(routerConfig: ...)
+
+   initial route: SplashRoute  SplashPage (placeholder)
+
+// Phase 4: SplashPage will do:
+SplashPage (future)
+  authCubit = getIt<AuthCubit>()          new factory instance each time
+  authCubit.watchAuthState()
+    _authService.currentUser$.listen(...)
+      Firebase emits AuthUser             safeEmit(AuthAuthenticatedState(user))
+      Firebase emits null                 safeEmit(AuthUnauthenticatedState)
+
+  // on AuthAuthenticatedState:
+  calendarCubit = getIt<CalendarCubit>()
+  calendarCubit.loadMonth(userId: user.uid, year: now.year, month: now.month)
+    safeEmit(PendingState())
+    AttendanceService.watchMonth(uid, year, month).listen(...)
+      AttendanceDaySource.watchMonth(uid, "YYYY-MM").listen(...)
+        Firestore stream: "users/{uid}/attendances/{yearMonth}/days" ordered by date
+           first event  safeEmit(CalendarMonthLoadedState(days, year, month))
+           error        safeEmit(SomethingWentWrongState())
+```
+
+---
+
+### 16.2 Issues found & fixed
+
+#### Issue 1  CRITICAL: `injection.config.dart` was stale  FIXED
+
+`build_runner` had not been re-run after Phases 2 and 3. The generated file only registered `AppRouter`. All 15 other `@injectable` classes were missing  any runtime call to `getIt<AuthCubit>()`, `getIt<WorkoutService>()`, etc. would have thrown.
+
+**Fix:** Ran `dart run build_runner build --delete-conflicting-outputs`. The config now registers all 16 classes in the correct order.
+
+---
+
+#### Issue 2  CRITICAL: No `FirebaseAuth` provider  FIXED
+
+`AuthService(FirebaseAuth _auth)` requires `FirebaseAuth` to be resolved by `get_it`. Without a `@module` class, build_runner cannot wire the dependency and would have thrown `ArgumentError: FirebaseAuth is not registered inside GetIt`.
+
+**Fix:** Created `lib/core/firebase_module.dart`:
+```dart
+@module
+abstract class FirebaseModule {
+  @lazySingleton
+  FirebaseAuth get firebaseAuth => FirebaseAuth.instance;
+}
+```
+`@lazySingleton` ensures `FirebaseAuth.instance` is called exactly once, after Firebase is initialized.
+
+---
+
+#### Issue 3  IMPORTANT: `main.dart` Firebase init ordering  DOCUMENTED
+
+`Firebase.initializeApp()` MUST be awaited before `configureDependencies()`, because when `AuthService` is first resolved `FirebaseAuth.instance` is called  Firebase must already be ready. The `main.dart` static analysis was clean, but the runtime ordering would have crashed.
+
+**Fix:** Added guarded TODO comments in `main.dart`:
+```dart
+// TODO(phase4): Must uncomment after flutterfire configure:
+// await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+configureDependencies();
+await getIt.allReady();
+```
+
+The actual `Firebase.initializeApp()` call will be added in Phase 4 (along with `firebase_options.dart`).
+
+---
+
+### 16.3 DI graph  final registration order
+
+```
+@lazySingleton  FirebaseAuth               FirebaseModule
+@factory        AttendanceDayMapper
+@factory        SupplementMapper
+@factory        TrainingTypeMapper
+@factory        TrainingTypeSource         (TrainingTypeMapper)
+@factory        AttendanceDaySource        (AttendanceDayMapper)
+@factory        HealthSource               (SupplementMapper)
+@factory        AuthService                (FirebaseAuth)
+@factory        WorkoutService             (TrainingTypeSource)
+@factory        AttendanceService          (AttendanceDaySource)
+@factory        HealthService              (HealthSource)
+@factory        AuthCubit                  (AuthService)
+@factory        WorkoutCubit               (WorkoutService)
+@factory        CalendarCubit              (AttendanceService)
+@factory        StatsCubit                 (AttendanceService, WorkoutService)
+@factory        HealthCubit                (HealthService)
+@lazySingleton  AppRouter
+```
+
+**Cycle check:** No cycles detected. The graph is a strict DAG.
+
+**`@factory` vs `@singleton` decision:** All cubits are `@factory` (new instance per `getIt<>()` call), which matches BLoC convention  each page/widget gets its own fresh cubit instance.
+
+---
+
+### 16.4 Items with NO issues
+
+- All mapper constructors: no DI dependencies, registered as `@factory` 
+- All sources: inject only their mapper, use `FirebaseFirestore.instance` directly 
+- All services: inject only their source(s) 
+- `WorkoutService.update` existence guard: correctly throws `TrainingTypeNotFoundException` 
+- `HealthService.updateProduct` existence guard: correctly throws `SupplementProductNotFoundException` 
+- `AttendanceService.upsertDay` yearMonth derivation: `date.substring(0, 7)` 
+- All cubits: `close()` cancels all `StreamSubscription`s 
+- `StatsCubit` streak calculation uses T12:00:00 noon time (DST-safe) 
+- `SomethingWentWrongState` is the uniform catch-all in every cubit 
+
+---
+
+### 16.5 Test suite  still 151/151 passing
+
+```powershell
+cd "c:\cov\gym-tracker\gym_tracker"
+flutter test
+```
+
+---
+
+### 16.6 What Phase 4 should build next
+
+**Phase 4  Firebase setup + Auth feature + App Shell**
+
+Prerequisites (must be done at start of Phase 4):
+1. Run `flutterfire configure` (requires Firebase project + logged-in CLI)  generates `lib/firebase_options.dart`
+2. Uncomment `Firebase.initializeApp()` in `main.dart`
+
+Then build:
+3. Add `firebase_core` init guard to prevent crash if called before init
+4. Implement real `SplashPage`:
+   - Creates `AuthCubit` via `BlocProvider`
+   - Calls `authCubit.watchAuthState()`
+   - `AuthAuthenticatedState`  navigate to main shell
+   - `AuthUnauthenticatedState`  navigate to `LoginPage`
+5. Create `LoginPage` (`@RoutePage()`, `BlocProvider<AuthCubit>`) with email+password form fields
+6. Create `RegisterPage` (`@RoutePage()`)  sign-up form
+7. Create `ForgotPasswordPage` (`@RoutePage()`)  email reset form
+8. Create `AuthActionPage` (`@RoutePage()`)  handles deep-link OOB codes (`verifyEmail`, `confirmPasswordReset`)
+9. Update `AppRouter` with all four auth routes
+10. Implement `AutoRouteGuard` (`AuthGuard`) that redirects to Login when not authenticated
+11. Add main shell page stub (tab bar or bottom navigation) protected by `AuthGuard`
+12. Unit-test: `SplashPage` navigation logic (if testable without full Firebase)
+
+---
+
+## 17. Git history
+
+```
+7d534dc  fix: Phase 3.5 audit - add FirebaseModule, regenerate DI config, document Firebase init order
+f6fb258  feat: Phase 3 - state management cubits and cubit tests
+2f76c6a  feat: Phase 2 - data layer services, mappers, sources, and service tests
+543b12f  feat: Phase 1 - boilerplate, domain models, DTOs, and serialisation tests
+d65ab62  chore: initial Flutter project setup (iOS + Android), copy scripts, add project_context.md
+```
+
+Branch: `master`
