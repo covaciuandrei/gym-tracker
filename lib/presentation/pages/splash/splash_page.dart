@@ -5,7 +5,6 @@ import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
-import 'package:gym_tracker/presentation/resources/app_colors.dart';
 
 @RoutePage()
 class SplashPage extends StatefulWidget implements AutoRouteWrapper {
@@ -50,38 +49,42 @@ class _SplashPageState extends State<SplashPage> {
           context.router.replaceAll([const LoginRoute()]);
         }
       },
-      child: Scaffold(
-        backgroundColor: AppColors.backgroundDark,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.fitness_center,
-                  size: 40,
-                  color: AppColors.primary,
-                ),
+      child: Builder(
+        builder: (context) {
+          final cs = Theme.of(context).colorScheme;
+          return Scaffold(
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: cs.primary.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.fitness_center,
+                      size: 40,
+                      color: cs.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Gym Tracker',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontSize: 28),
+                  ),
+                  const SizedBox(height: 48),
+                  CircularProgressIndicator(color: cs.primary),
+                ],
               ),
-              const SizedBox(height: 20),
-              Text(
-                'Gym Tracker',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleLarge
-                    ?.copyWith(fontSize: 28, color: AppColors.textPrimary),
-              ),
-              const SizedBox(height: 48),
-              const CircularProgressIndicator(color: AppColors.primary),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }

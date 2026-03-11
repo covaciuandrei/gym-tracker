@@ -7,7 +7,6 @@ import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/model/auth_user.dart';
-import 'package:gym_tracker/presentation/resources/app_colors.dart';
 
 @RoutePage()
 class ProfilePage extends StatefulWidget implements AutoRouteWrapper {
@@ -52,6 +51,7 @@ class _ProfilePageState extends State<ProfilePage> {
       builder: (context, state) {
         final user = state is AuthAuthenticatedState ? state.user : null;
         final isLoading = state is PendingState;
+        final cs = Theme.of(context).colorScheme;
 
         return Scaffold(
           appBar: AppBar(title: Text(l10n.profileTitle)),
@@ -81,7 +81,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 if (user?.email != null)
                   Text(
                     user!.email!,
-                    style: const TextStyle(color: AppColors.textSecondary),
+                    style: TextStyle(color: cs.onSurfaceVariant),
                   ),
                 const SizedBox(height: 10),
 
@@ -91,21 +91,21 @@ class _ProfilePageState extends State<ProfilePage> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.15),
+                      color: cs.primary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                          color: AppColors.primary.withValues(alpha: 0.4)),
+                          color: cs.primary.withValues(alpha: 0.4)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.verified,
-                            size: 14, color: AppColors.primary),
+                        Icon(Icons.verified,
+                            size: 14, color: cs.primary),
                         const SizedBox(width: 4),
                         Text(
                           l10n.profileEmailVerified,
-                          style: const TextStyle(
-                              fontSize: 12, color: AppColors.primary),
+                          style: TextStyle(
+                              fontSize: 12, color: cs.primary),
                         ),
                       ],
                     ),
@@ -133,8 +133,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 _MenuTile(
                   icon: Icons.logout,
                   label: l10n.profileSignOut,
-                  iconColor: AppColors.danger,
-                  textColor: AppColors.danger,
+                  iconColor: cs.error,
+                  textColor: cs.error,
                   isLoading: isLoading,
                   onTap: () => context.read<AuthCubit>().signOut(),
                 ),
@@ -170,21 +170,22 @@ class _Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: 88,
       height: 88,
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.2),
+        color: cs.primary.withValues(alpha: 0.2),
         shape: BoxShape.circle,
-        border: Border.all(color: AppColors.primary, width: 2),
+        border: Border.all(color: cs.primary, width: 2),
       ),
       child: Center(
         child: Text(
           _initial,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 36,
             fontWeight: FontWeight.bold,
-            color: AppColors.primary,
+            color: cs.primary,
           ),
         ),
       ),
@@ -207,8 +208,8 @@ class _SectionHeader extends StatelessWidget {
         padding: const EdgeInsets.only(bottom: 8),
         child: Text(
           title.toUpperCase(),
-          style: const TextStyle(
-            color: AppColors.textMuted,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.outline,
             fontSize: 11,
             fontWeight: FontWeight.w600,
             letterSpacing: 1.2,
@@ -240,6 +241,7 @@ class _MenuTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -249,14 +251,14 @@ class _MenuTile extends StatelessWidget {
                 height: 20,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
-            : Icon(icon, color: iconColor ?? AppColors.textSecondary, size: 22),
+            : Icon(icon, color: iconColor ?? cs.onSurfaceVariant, size: 22),
         title: Text(
           label,
-          style: TextStyle(color: textColor ?? AppColors.textPrimary),
+          style: TextStyle(color: textColor ?? cs.onSurface),
         ),
         trailing: isLoading
             ? null
-            : const Icon(Icons.chevron_right, color: AppColors.textMuted),
+            : Icon(Icons.chevron_right, color: cs.outline),
         onTap: isLoading ? null : onTap,
       ),
     );

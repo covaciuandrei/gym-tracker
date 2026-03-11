@@ -7,7 +7,6 @@ import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/presentation/controls/custom_text_field.dart';
 import 'package:gym_tracker/presentation/controls/primary_button.dart';
-import 'package:gym_tracker/presentation/resources/app_colors.dart';
 
 @RoutePage()
 class ForgotPasswordPage extends StatefulWidget implements AutoRouteWrapper {
@@ -57,6 +56,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       },
       builder: (context, state) {
         final isLoading = state is PendingState;
+        final cs = Theme.of(context).colorScheme;
 
         return Scaffold(
           appBar: AppBar(
@@ -76,8 +76,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             const SizedBox(height: 16),
                             Text(
                               'Enter your email address and we\'ll send you a link to reset your password.',
-                              style: const TextStyle(
-                                  color: AppColors.textSecondary, height: 1.5),
+                              style: TextStyle(
+                                  color: cs.onSurfaceVariant, height: 1.5),
                             ),
                             const SizedBox(height: 24),
                             CustomTextField(
@@ -119,6 +119,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   }
 
   Widget _buildSuccess(BuildContext context, AppLocalizations l10n) {
+    final cs = Theme.of(context).colorScheme;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -127,10 +128,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           width: 72,
           height: 72,
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.15),
+            color: cs.primary.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.send_outlined, size: 36, color: AppColors.primary),
+          child: Icon(Icons.send_outlined, size: 36, color: cs.primary),
         ),
         const SizedBox(height: 20),
         Text(
@@ -141,7 +142,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         Text(
           l10n.authForgotPasswordSent,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: AppColors.textSecondary, height: 1.5),
+          style: TextStyle(color: cs.onSurfaceVariant, height: 1.5),
         ),
         const SizedBox(height: 32),
         PrimaryButton(

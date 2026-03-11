@@ -7,7 +7,6 @@ import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/presentation/controls/custom_text_field.dart';
 import 'package:gym_tracker/presentation/controls/primary_button.dart';
-import 'package:gym_tracker/presentation/resources/app_colors.dart';
 
 @RoutePage()
 class RegisterPage extends StatefulWidget implements AutoRouteWrapper {
@@ -68,6 +67,7 @@ class _RegisterPageState extends State<RegisterPage> {
       },
       builder: (context, state) {
         final isLoading = state is PendingState;
+        final cs = Theme.of(context).colorScheme;
 
         return Scaffold(
           appBar: AppBar(
@@ -93,17 +93,17 @@ class _RegisterPageState extends State<RegisterPage> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 16, vertical: 12),
                                 decoration: BoxDecoration(
-                                  color: AppColors.danger
+                                  color: cs.error
                                       .withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                      color: AppColors.danger
+                                      color: cs.error
                                           .withValues(alpha: 0.4)),
                                 ),
                                 child: Text(
                                   _errorMessage!,
-                                  style: const TextStyle(
-                                      color: AppColors.danger),
+                                  style: TextStyle(
+                                      color: cs.error),
                                 ),
                               ),
                               const SizedBox(height: 16),
@@ -179,8 +179,8 @@ class _RegisterPageState extends State<RegisterPage> {
                                 children: [
                                   Text(
                                     l10n.authRegisterHaveAccount,
-                                    style: const TextStyle(
-                                        color: AppColors.textSecondary),
+                                    style: TextStyle(
+                                        color: cs.onSurfaceVariant),
                                   ),
                                   TextButton(
                                     onPressed: () => context.maybePop(),
@@ -201,6 +201,7 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Widget _buildSuccess(BuildContext context, AppLocalizations l10n) {
+    final cs = Theme.of(context).colorScheme;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -209,11 +210,11 @@ class _RegisterPageState extends State<RegisterPage> {
           width: 72,
           height: 72,
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.15),
+            color: cs.primary.withValues(alpha: 0.15),
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.mark_email_read_outlined,
-              size: 36, color: AppColors.primary),
+          child: Icon(Icons.mark_email_read_outlined,
+              size: 36, color: cs.primary),
         ),
         const SizedBox(height: 20),
         Text(
@@ -226,7 +227,7 @@ class _RegisterPageState extends State<RegisterPage> {
           'We sent a verification link to ${_emailController.text.trim()}.\n'
           'Please verify your email before logging in.',
           textAlign: TextAlign.center,
-          style: const TextStyle(color: AppColors.textSecondary, height: 1.5),
+          style: TextStyle(color: cs.onSurfaceVariant, height: 1.5),
         ),
         const SizedBox(height: 32),
         PrimaryButton(

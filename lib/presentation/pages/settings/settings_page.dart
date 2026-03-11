@@ -9,7 +9,6 @@ import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/presentation/controls/custom_text_field.dart';
 import 'package:gym_tracker/presentation/controls/primary_button.dart';
 import 'package:gym_tracker/presentation/helpers/locale_helper.dart';
-import 'package:gym_tracker/presentation/resources/app_colors.dart';
 
 // ── App version constant ──────────────────────────────────────────────────────
 
@@ -76,7 +75,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ..showSnackBar(
               SnackBar(
                 content: Text(l10n.settingsPasswordChangedSuccess),
-                backgroundColor: AppColors.primary,
+                backgroundColor: Theme.of(context).colorScheme.primary,
               ),
             );
         } else if (state is AuthInvalidCredentialsState) {
@@ -87,6 +86,7 @@ class _SettingsPageState extends State<SettingsPage> {
       },
       builder: (context, state) {
         final isLoading = state is PendingState;
+        final cs = Theme.of(context).colorScheme;
 
         return Scaffold(
           appBar: AppBar(title: Text(l10n.settingsTitle)),
@@ -125,7 +125,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   _SectionHeader(title: l10n.settingsSecurity),
                   Text(
                     l10n.settingsChangePassword,
-                    style: const TextStyle(color: AppColors.textSecondary),
+                    style: TextStyle(color: cs.onSurfaceVariant),
                   ),
                   const SizedBox(height: 12),
 
@@ -189,7 +189,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   const SizedBox(height: 8),
                   Text(
                     l10n.settingsBuiltWith,
-                    style: const TextStyle(color: AppColors.textMuted),
+                    style: TextStyle(color: cs.outline),
                   ),
 
                   const SizedBox(height: 40),
@@ -216,8 +216,8 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         title.toUpperCase(),
-        style: const TextStyle(
-          color: AppColors.textMuted,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.outline,
           fontSize: 11,
           fontWeight: FontWeight.w600,
           letterSpacing: 1.2,
@@ -251,11 +251,11 @@ class _ToggleTile extends StatelessWidget {
         title: Text(label),
         subtitle: Text(
           value ? trueLabel : falseLabel,
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12),
         ),
         value: value,
         onChanged: onChanged,
-        activeThumbColor: AppColors.primary,
+        activeThumbColor: Theme.of(context).colorScheme.primary,
       ),
     );
   }
@@ -310,11 +310,12 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(color: AppColors.textSecondary)),
-        Text(value, style: const TextStyle(color: AppColors.textPrimary)),
+        Text(label, style: TextStyle(color: cs.onSurfaceVariant)),
+        Text(value, style: TextStyle(color: cs.onSurface)),
       ],
     );
   }
@@ -329,18 +330,19 @@ class _ErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.danger.withValues(alpha: 0.12),
+        color: cs.error.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.danger.withValues(alpha: 0.4)),
+        border: Border.all(color: cs.error.withValues(alpha: 0.4)),
       ),
       child: Text(
         message,
-        style: const TextStyle(color: AppColors.danger, fontSize: 13),
+        style: TextStyle(color: cs.error, fontSize: 13),
       ),
     );
   }

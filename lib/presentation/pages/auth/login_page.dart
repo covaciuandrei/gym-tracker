@@ -8,7 +8,6 @@ import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/presentation/controls/custom_text_field.dart';
 import 'package:gym_tracker/presentation/controls/primary_button.dart';
-import 'package:gym_tracker/presentation/resources/app_colors.dart';
 
 @RoutePage()
 class LoginPage extends StatefulWidget implements AutoRouteWrapper {
@@ -66,6 +65,7 @@ class _LoginPageState extends State<LoginPage> {
       },
       builder: (context, state) {
         final isLoading = state is PendingState;
+        final cs = Theme.of(context).colorScheme;
 
         return Scaffold(
           body: SafeArea(
@@ -83,13 +83,13 @@ class _LoginPageState extends State<LoginPage> {
                         width: 72,
                         height: 72,
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.15),
+                          color: cs.primary.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.fitness_center,
                           size: 36,
-                          color: AppColors.primary,
+                          color: cs.primary,
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -109,15 +109,15 @@ class _LoginPageState extends State<LoginPage> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 12),
                           decoration: BoxDecoration(
-                            color: AppColors.danger.withValues(alpha: 0.15),
+                            color: cs.error.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                                color: AppColors.danger.withValues(alpha: 0.4)),
+                                color: cs.error.withValues(alpha: 0.4)),
                           ),
                           child: Text(
                             _errorMessage!,
-                            style: const TextStyle(
-                                color: AppColors.danger, fontSize: 14),
+                            style: TextStyle(
+                                color: cs.error, fontSize: 14),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -181,8 +181,8 @@ class _LoginPageState extends State<LoginPage> {
                         children: [
                           Text(
                             l10n.authLoginNoAccount,
-                            style: const TextStyle(
-                                color: AppColors.textSecondary),
+                            style: TextStyle(
+                                color: cs.onSurfaceVariant),
                           ),
                           TextButton(
                             onPressed: () =>

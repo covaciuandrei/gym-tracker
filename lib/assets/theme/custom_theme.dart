@@ -42,6 +42,8 @@ abstract final class CustomTheme {
       onError: AppColors.textPrimary,
       surface: AppColors.surfaceDark,
       onSurface: AppColors.textPrimary,
+      onSurfaceVariant: AppColors.textSecondary,
+      outline: AppColors.textMuted,
     );
 
     return ThemeData(
@@ -120,6 +122,8 @@ abstract final class CustomTheme {
       onError: AppColors.textPrimary,
       surface: AppColors.surfaceLight,
       onSurface: AppColors.textPrimaryLight,
+      onSurfaceVariant: AppColors.textSecondaryLight,
+      outline: AppColors.textMutedLight,
     );
 
     return ThemeData(
