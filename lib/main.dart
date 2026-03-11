@@ -9,13 +9,8 @@ import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/presentation/helpers/locale_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// TODO(phase6): Uncomment after running `flutterfire configure` to generate
-//   firebase_options.dart. Firebase is initialized AFTER DI because
-//   FirebaseAuth is a @lazySingleton — it resolves on first use, not at
-//   startup. Order: configureDependencies → getIt.allReady → Firebase.init.
-//
-// import 'package:firebase_core/firebase_core.dart';
-// import 'firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,8 +23,7 @@ void main() async {
   getIt.registerSingleton<LocaleHelper>(LocaleHelper(prefs));
   getIt.registerSingleton<ThemeHelper>(ThemeHelper(prefs));
 
-  // TODO(phase6): Uncomment after `flutterfire configure`:
-  // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(const MyApp());
 }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "998204591368",
+    "project_id": "gym-presence-tracker-16edc",
+    "storage_bucket": "gym-presence-tracker-16edc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:998204591368:android:ad0fe36ab89f82d146b0bd",
+        "android_client_info": {
+          "package_name": "com.gymtracker.gym_tracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDnPr9Tr2bqRvlbcFhD_Eo1DCXF6mnKDt4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
