@@ -159,7 +159,7 @@ class MainShellRoute extends _i13.PageRouteInfo<void> {
   static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return const _i6.MainShellPage();
+      return _i13.WrappedRoute(child: const _i6.MainShellPage());
     },
   );
 }

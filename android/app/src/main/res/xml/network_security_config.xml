@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+  <!-- Allow cleartext (HTTP) only to localhost for emulator testing -->
+  <domain-config cleartextTrafficPermitted="true">
+    <domain includeSubdomains="true">localhost</domain>
+    <domain includeSubdomains="true">127.0.0.1</domain>
+  </domain-config>
+  <!-- Enforce HTTPS for all other domains but trust system certificates -->
+  <domain-config cleartextTrafficPermitted="false">
+    <domain includeSubdomains="true">google.com</domain>
+    <domain includeSubdomains="true">googleapis.com</domain>
+    <domain includeSubdomains="true">recaptcha.net</domain>
+    <domain includeSubdomains="true">firebaseio.com</domain>
+    <domain includeSubdomains="true">recaptcha.net</domain>
+    <domain includeSubdomains="true">firebase.com</domain>
+    <domain includeSubdomains="true">firebaseio.com</domain>
+  </domain-config>
+</network-security-config>

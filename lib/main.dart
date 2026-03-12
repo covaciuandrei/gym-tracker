@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
@@ -8,7 +9,7 @@ import 'package:gym_tracker/core/app_router.dart';
 import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/presentation/helpers/locale_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
@@ -17,6 +18,11 @@ void main() async {
   configureDependencies();
   await getIt.allReady();
 
+  // Disable reCAPTCHA app-verification in debug mode BEFORE Firebase init.
+  // firebase_auth v5+ runs a reCAPTCHA Enterprise pre-check on every
+  // email/password sign-in. On Android emulators (especially API 35+) the
+  // reCAPTCHA network call fails. This must be set before any auth operations.
+
   // Register preference-backed helpers manually (they need SharedPreferences,
   // so they cannot be marked @injectable for build_runner code generation).
   final prefs = await SharedPreferences.getInstance();
@@ -24,6 +30,12 @@ void main() async {
   getIt.registerSingleton<ThemeHelper>(ThemeHelper(prefs));
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  if (kDebugMode) {
+    await FirebaseAuth.instance.setSettings(
+      appVerificationDisabledForTesting: true,
+    );
+  }
 
   runApp(const MyApp());
 }
@@ -86,4 +98,3 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-
