@@ -200,6 +200,90 @@ abstract class AppLocalizations {
   /// **'Already have an account?'**
   String get authRegisterHaveAccount;
 
+  /// No description provided for @authRegisterSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Start tracking your gym attendance today'**
+  String get authRegisterSubtitle;
+
+  /// No description provided for @authRegisterSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get authRegisterSignIn;
+
+  /// No description provided for @authRegisterSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Created!'**
+  String get authRegisterSuccess;
+
+  /// No description provided for @authRegisterSuccessMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Please check your email to verify your account before signing in.'**
+  String get authRegisterSuccessMessage;
+
+  /// No description provided for @authRegisterGoToLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Sign In'**
+  String get authRegisterGoToLogin;
+
+  /// No description provided for @authPasswordStrengthWeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Weak'**
+  String get authPasswordStrengthWeak;
+
+  /// No description provided for @authPasswordStrengthFair.
+  ///
+  /// In en, this message translates to:
+  /// **'Fair'**
+  String get authPasswordStrengthFair;
+
+  /// No description provided for @authPasswordStrengthStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong'**
+  String get authPasswordStrengthStrong;
+
+  /// No description provided for @authPasswordReqLength.
+  ///
+  /// In en, this message translates to:
+  /// **'8+ characters'**
+  String get authPasswordReqLength;
+
+  /// No description provided for @authPasswordReqUppercase.
+  ///
+  /// In en, this message translates to:
+  /// **'Uppercase'**
+  String get authPasswordReqUppercase;
+
+  /// No description provided for @authPasswordReqLowercase.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowercase'**
+  String get authPasswordReqLowercase;
+
+  /// No description provided for @authPasswordReqNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Number'**
+  String get authPasswordReqNumber;
+
+  /// No description provided for @authPasswordsMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords match'**
+  String get authPasswordsMatch;
+
+  /// No description provided for @authPasswordsNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords don\'t match'**
+  String get authPasswordsNoMatch;
+
   /// No description provided for @authForgotPasswordTitle.
   ///
   /// In en, this message translates to:

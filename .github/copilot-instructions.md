@@ -125,19 +125,54 @@ decoration: BoxDecoration(
   `AppColors.*` constants
 - **No hardcoded text styles** — always use `Theme.of(context).textTheme.*`
 
-**Reusable Controls Rule:**
+**State management in widgets (BlocBuilder / BlocConsumer):**
+
+- **Never use `setState` to store cubit state** (errors, loading flag, success
+  flag). Derive these directly inside `builder:` from the current bloc state:
+  ```dart
+  final isLoading = state is PendingState;
+  final isSuccess = state is SomeSuccessState;
+  String? errorMessage;
+  if (state is ErrorStateA) errorMessage = l10n.errorsKeyA;
+  else if (state is ErrorStateB) errorMessage = l10n.errorsKeyB;
+  ```
+- Use `buildWhen` to restrict rebuilds to states that affect UI:
+  ```dart
+  buildWhen: (previous, current) =>
+      current is PendingState ||
+      current is SomeSuccessState ||
+      current is SomeErrorState,
+  ```
+- Use `listenWhen` + `listener` only for side effects (navigation, snackbars)
+  not reflected in the widget tree.
+- For local live-feedback widgets (password strength, match indicator) use
+  `ListenableBuilder` or `ValueListenableBuilder` on `TextEditingController`
+  — not `setState`.
+- Expose the **inner view widget as a public class** (e.g. `RegisterView`)
+  so tests can inject a mock cubit via `BlocProvider.value` without `getIt`.
 
 - If a widget is likely to be reused across the app (examples: all kinds of
   buttons, form fields, cards, common list rows, chips, or scaled layout
   primitives), place the widget in `lib/presentation/controls/` as a public
-  widget (one public widget per file). Add a widget test under `test/` that
-  verifies basic rendering and loading states. The AI must follow this rule
-  when generating UI code — prefer extraction into `controls/` instead of
-  duplicating similar widgets across pages.
+  widget (one public widget per file). **Always add a matching widget test.**
+  Prefer extraction into `controls/` instead of duplicating similar widgets
+  across pages.
 
-Example: `GradientButton` is a reusable primary button (indigo gradient)
-placed in `lib/presentation/controls/gradient_button.dart` and should be used
-everywhere the Angular `.btn-primary` pattern appears.
+**Current controls inventory:**
+
+| File | What it is |
+|---|---|
+| `gradient_button.dart` | Full-width indigo-gradient button (Angular `.btn-primary`); shows spinner when `isLoading: true`. **Use for every primary submit action.** |
+| `primary_button.dart` | Material `ElevatedButton` wrapper; use only for secondary/outline actions that don't need gradient. |
+| `custom_text_field.dart` | Styled `TextFormField`; handles password-visibility toggle internally. Use for all form inputs. |
+| `error_banner.dart` | Inline red pill for form-level server errors. Use below form fields, above the submit button. |
+| `error_state.dart` | Full-section error (emoji + title + retry). Use for page-level load failures. |
+| `empty_state.dart` | No-data placeholder (emoji + title + optional CTA). Use when a list/section has zero items. |
+| `password_strength_indicator.dart` | Animated strength bar + 4 requirement bullets. Add below every new-password field. Uses `ListenableBuilder` — no setState. |
+| `password_match_indicator.dart` | Green/red match label below confirm-password field. Uses `ListenableBuilder.merge` — no setState. |
+| `form_card.dart` | Styled card container for auth forms (shadow, rounded corners, `surfaceContainerHigh` bg). Takes `formKey` + `children`; wraps them in `AutofillGroup > Form > Column`. **Use as the base for every form panel instead of duplicating the decoration.** |
+| `success_card.dart` | Green-tinted confirmation card. Takes `title`, `message`, `buttonLabel`, `onAction`, optional `icon` (default `✅`). **Use after any successful async action (sign-up, password reset, etc.).** |
+| `auth_footer_link.dart` | Divider + centred "prompt + action-link" row. Used at the bottom of every auth screen to switch between pages. Takes `prompt`, `actionLabel`, `onTap`, optional `enabled` (pass `!isLoading` to disable during requests). |
 
 ---
 
@@ -155,9 +190,13 @@ everywhere the Angular `.btn-primary` pattern appears.
 ## 8. Testing
 
 - Unit tests for all cubit state transitions
-- Widget tests for all reusable controls (`lib/presentation/controls/`)
+- **Widget test required for every file added to `lib/presentation/controls/`** — mirror path under `test/presentation/controls/`
+- Widget tests for pages go under `test/presentation/pages/<feature>/`
 - Test files mirror the `lib/` structure under `test/`
 - Never break existing tests — `flutter test` must stay green
+- Use `mocktail` (already in `dev_dependencies`) for mocking; no code generation needed
+- For page tests that use a cubit, inject via `BlocProvider<MyCubit>.value(value: mockCubit, child: const MyView())` — expose `MyView` as a public class so tests bypass `getIt`
+- Minimum coverage per widget test: renders label/content, loading/spinner state, disabled/null-tap state, reactive updates if the widget uses `ListenableBuilder`
 
 ---
 

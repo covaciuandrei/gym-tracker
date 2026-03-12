@@ -61,6 +61,50 @@ class AppLocalizationsRo extends AppLocalizations {
   String get authRegisterHaveAccount => 'Ai deja cont?';
 
   @override
+  String get authRegisterSubtitle =>
+      'Începe să îți urmărești prezența la sală astăzi';
+
+  @override
+  String get authRegisterSignIn => 'Autentifică-te';
+
+  @override
+  String get authRegisterSuccess => 'Cont creat!';
+
+  @override
+  String get authRegisterSuccessMessage =>
+      'Verifică-ți emailul pentru a activa contul înainte de autentificare.';
+
+  @override
+  String get authRegisterGoToLogin => 'Mergi la autentificare';
+
+  @override
+  String get authPasswordStrengthWeak => 'Slabă';
+
+  @override
+  String get authPasswordStrengthFair => 'Medie';
+
+  @override
+  String get authPasswordStrengthStrong => 'Puternică';
+
+  @override
+  String get authPasswordReqLength => '8+ caractere';
+
+  @override
+  String get authPasswordReqUppercase => 'Majusculă';
+
+  @override
+  String get authPasswordReqLowercase => 'Minusculă';
+
+  @override
+  String get authPasswordReqNumber => 'Cifră';
+
+  @override
+  String get authPasswordsMatch => 'Parolele coincid';
+
+  @override
+  String get authPasswordsNoMatch => 'Parolele nu coincid';
+
+  @override
   String get authForgotPasswordTitle => 'Resetare Parolă';
 
   @override

@@ -60,6 +60,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authRegisterHaveAccount => 'Already have an account?';
 
   @override
+  String get authRegisterSubtitle => 'Start tracking your gym attendance today';
+
+  @override
+  String get authRegisterSignIn => 'Sign in';
+
+  @override
+  String get authRegisterSuccess => 'Account Created!';
+
+  @override
+  String get authRegisterSuccessMessage =>
+      'Please check your email to verify your account before signing in.';
+
+  @override
+  String get authRegisterGoToLogin => 'Go to Sign In';
+
+  @override
+  String get authPasswordStrengthWeak => 'Weak';
+
+  @override
+  String get authPasswordStrengthFair => 'Fair';
+
+  @override
+  String get authPasswordStrengthStrong => 'Strong';
+
+  @override
+  String get authPasswordReqLength => '8+ characters';
+
+  @override
+  String get authPasswordReqUppercase => 'Uppercase';
+
+  @override
+  String get authPasswordReqLowercase => 'Lowercase';
+
+  @override
+  String get authPasswordReqNumber => 'Number';
+
+  @override
+  String get authPasswordsMatch => 'Passwords match';
+
+  @override
+  String get authPasswordsNoMatch => 'Passwords don\'t match';
+
+  @override
   String get authForgotPasswordTitle => 'Reset Password';
 
   @override
