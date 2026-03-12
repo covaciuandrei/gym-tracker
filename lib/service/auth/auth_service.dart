@@ -96,6 +96,17 @@ class AuthService {
     }
   }
 
+  /// Verifies a password-reset [oobCode] from a deep link and returns the
+  /// email address the link was issued for.
+  /// Throws [InvalidActionCodeException] if the code is expired or invalid.
+  Future<String> verifyPasswordResetCode(String oobCode) async {
+    try {
+      return await _auth.verifyPasswordResetCode(oobCode);
+    } on FirebaseAuthException catch (e) {
+      throw _mapFirebaseException(e);
+    }
+  }
+
   /// Confirms a password reset using the [oobCode] from a deep link and sets
   /// [newPassword] as the new password.
   Future<void> confirmPasswordReset({

@@ -95,6 +95,20 @@ class AuthCubit extends BaseCubit {
     }
   }
 
+  // ─── Verify password reset code ──────────────────────────────────────────
+
+  Future<void> verifyPasswordResetCode(String oobCode) async {
+    safeEmit(const PendingState());
+    try {
+      final email = await _authService.verifyPasswordResetCode(oobCode);
+      safeEmit(AuthPasswordResetCodeVerifiedState(email: email));
+    } on InvalidActionCodeException {
+      safeEmit(const AuthInvalidActionCodeState());
+    } catch (_) {
+      safeEmit(const SomethingWentWrongState());
+    }
+  }
+
   // ─── Change password ──────────────────────────────────────────────────────
 
   Future<void> changePassword({

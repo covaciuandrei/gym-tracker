@@ -60,6 +60,17 @@ class AuthPasswordResetSentState extends BaseState {
   const AuthPasswordResetSentState();
 }
 
+/// The password-reset OOB code was verified; [email] is the account address
+/// the link was sent to.
+class AuthPasswordResetCodeVerifiedState extends BaseState {
+  const AuthPasswordResetCodeVerifiedState({required this.email});
+
+  final String email;
+
+  @override
+  List<Object?> get props => [email];
+}
+
 /// The authenticated user's password was changed successfully.
 class AuthPasswordChangedState extends BaseState {
   const AuthPasswordChangedState();

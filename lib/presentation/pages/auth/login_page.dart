@@ -7,7 +7,6 @@ import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
-import 'package:gym_tracker/presentation/controls/auth_footer_link.dart';
 import 'package:gym_tracker/presentation/controls/custom_text_field.dart';
 import 'package:gym_tracker/presentation/controls/error_banner.dart';
 import 'package:gym_tracker/presentation/controls/form_card.dart';
@@ -15,38 +14,34 @@ import 'package:gym_tracker/presentation/controls/gradient_button.dart';
 
 
 @RoutePage()
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key, this.testCubit});
-
-  /// Inject an [AuthCubit] in tests instead of going through [getIt].
-  @visibleForTesting
-  final AuthCubit? testCubit;
+class LoginPage extends StatefulWidget implements AutoRouteWrapper {
+  const LoginPage({super.key});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
+
+  @override
+  Widget wrappedRoute(BuildContext context) {
+    return BlocProvider<AuthCubit>(
+      create: (_) => getIt<AuthCubit>(),
+      child: this,
+    );
+  }
 }
 
 class _LoginPageState extends State<LoginPage> {
-  late final AuthCubit _cubit;
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-    _cubit = widget.testCubit ?? getIt<AuthCubit>();
-  }
-
-  @override
   void dispose() {
-    if (widget.testCubit == null) _cubit.close();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
   }
 
-  void _onSignIn() {
-    _cubit.signIn(
+  void _onSignIn(BuildContext ctx) {
+    ctx.read<AuthCubit>().signIn(
       email: _emailCtrl.text.trim(),
       password: _passwordCtrl.text,
     );
@@ -63,9 +58,7 @@ class _LoginPageState extends State<LoginPage> {
       color: cs.onSurface,
     );
 
-    return BlocProvider.value(
-      value: _cubit,
-      child: BlocConsumer<AuthCubit, BaseState>(
+    return BlocConsumer<AuthCubit, BaseState>(
       listenWhen: (prev, curr) => curr is AuthSignInSuccessState,
       listener: (ctx, state) {
         if (state is AuthSignInSuccessState) {
@@ -167,7 +160,7 @@ class _LoginPageState extends State<LoginPage> {
                             textInputAction: TextInputAction.done,
                             autofillHints: const [AutofillHints.password],
                             onFieldSubmitted:
-                                isLoading ? null : (_) => _onSignIn(),
+                                isLoading ? null : (_) => _onSignIn(ctx),
                             enabled: !isLoading,
                           ),
                           const SizedBox(height: 20),
@@ -188,7 +181,7 @@ class _LoginPageState extends State<LoginPage> {
                           GradientButton(
                             label: l10n.authLoginButton,
                             isLoading: isLoading,
-                            onTap: _onSignIn,
+                            onTap: () => _onSignIn(ctx),
                           ),
                         ],
                       ),
@@ -216,7 +209,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             onPressed: isLoading
                                 ? null
-                                : () => context.router
+                                : () => ctx.router
                                     .replace(const RegisterRoute()),
                             child: Text(
                               l10n.authLoginSignUp,
@@ -237,7 +230,6 @@ class _LoginPageState extends State<LoginPage> {
           ),
         );
       },
-      ),
     );
   }
 }

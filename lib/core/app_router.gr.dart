@@ -10,6 +10,7 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:auto_route/auto_route.dart' as _i13;
+import 'package:flutter/material.dart' as _i14;
 import 'package:gym_tracker/presentation/pages/auth/auth_action_page.dart'
     as _i1;
 import 'package:gym_tracker/presentation/pages/auth/forgot_password_page.dart'
@@ -32,18 +33,55 @@ import 'package:gym_tracker/presentation/pages/workout_types/workout_types_page.
 
 /// generated route for
 /// [_i1.AuthActionPage]
-class AuthActionRoute extends _i13.PageRouteInfo<void> {
-  const AuthActionRoute({List<_i13.PageRouteInfo>? children})
-    : super(AuthActionRoute.name, initialChildren: children);
+class AuthActionRoute extends _i13.PageRouteInfo<AuthActionRouteArgs> {
+  AuthActionRoute({
+    _i14.Key? key,
+    String mode = '',
+    String oobCode = '',
+    List<_i13.PageRouteInfo>? children,
+  }) : super(
+         AuthActionRoute.name,
+         args: AuthActionRouteArgs(key: key, mode: mode, oobCode: oobCode),
+         rawQueryParams: {'mode': mode, 'oobCode': oobCode},
+         initialChildren: children,
+       );
 
   static const String name = 'AuthActionRoute';
 
   static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return const _i1.AuthActionPage();
+      final queryParams = data.queryParams;
+      final args = data.argsAs<AuthActionRouteArgs>(
+        orElse: () => AuthActionRouteArgs(
+          mode: queryParams.getString('mode', ''),
+          oobCode: queryParams.getString('oobCode', ''),
+        ),
+      );
+      return _i13.WrappedRoute(
+        child: _i1.AuthActionPage(
+          key: args.key,
+          mode: args.mode,
+          oobCode: args.oobCode,
+        ),
+      );
     },
   );
+}
+
+class AuthActionRouteArgs {
+  const AuthActionRouteArgs({this.key, this.mode = '', this.oobCode = ''});
+
+  final _i14.Key? key;
+
+  final String mode;
+
+  final String oobCode;
+
+  @override
+  String toString() {
+    return 'AuthActionRouteArgs{key: $key, mode: $mode, oobCode: $oobCode}';
+  }
 }
 
 /// generated route for
@@ -73,7 +111,7 @@ class ForgotPasswordRoute extends _i13.PageRouteInfo<void> {
   static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return const _i3.ForgotPasswordPage();
+      return _i13.WrappedRoute(child: const _i3.ForgotPasswordPage());
     },
   );
 }
@@ -105,7 +143,7 @@ class LoginRoute extends _i13.PageRouteInfo<void> {
   static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return const _i5.LoginPage();
+      return _i13.WrappedRoute(child: const _i5.LoginPage());
     },
   );
 }
@@ -153,7 +191,7 @@ class RegisterRoute extends _i13.PageRouteInfo<void> {
   static _i13.PageInfo page = _i13.PageInfo(
     name,
     builder: (data) {
-      return const _i8.RegisterPage();
+      return _i13.WrappedRoute(child: const _i8.RegisterPage());
     },
   );
 }

@@ -7,7 +7,6 @@ import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
-import 'package:gym_tracker/presentation/controls/auth_footer_link.dart';
 import 'package:gym_tracker/presentation/controls/custom_text_field.dart';
 import 'package:gym_tracker/presentation/controls/error_banner.dart';
 import 'package:gym_tracker/presentation/controls/form_card.dart';
@@ -17,42 +16,38 @@ import 'package:gym_tracker/presentation/controls/password_strength_indicator.da
 import 'package:gym_tracker/presentation/controls/success_card.dart';
 
 @RoutePage()
-class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key, this.testCubit});
-
-  /// Inject an [AuthCubit] in tests instead of going through [getIt].
-  @visibleForTesting
-  final AuthCubit? testCubit;
+class RegisterPage extends StatefulWidget implements AutoRouteWrapper {
+  const RegisterPage({super.key});
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
+
+  @override
+  Widget wrappedRoute(BuildContext context) {
+    return BlocProvider<AuthCubit>(
+      create: (_) => getIt<AuthCubit>(),
+      child: this,
+    );
+  }
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  late final AuthCubit _cubit;
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-    _cubit = widget.testCubit ?? getIt<AuthCubit>();
-  }
-
-  @override
   void dispose() {
-    if (widget.testCubit == null) _cubit.close();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     _confirmCtrl.dispose();
     super.dispose();
   }
 
-  void _onSubmit() {
+  void _onSubmit(BuildContext ctx) {
     if (_formKey.currentState?.validate() != true) return;
-    _cubit.signUp(
+    ctx.read<AuthCubit>().signUp(
       email: _emailCtrl.text.trim(),
       password: _passwordCtrl.text,
     );
@@ -64,9 +59,7 @@ class _RegisterPageState extends State<RegisterPage> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return BlocProvider.value(
-      value: _cubit,
-      child: BlocBuilder<AuthCubit, BaseState>(
+    return BlocBuilder<AuthCubit, BaseState>(
       buildWhen: (previous, current) =>
           current is PendingState ||
           current is AuthSignUpSuccessState ||
@@ -139,7 +132,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 confirmCtrl: _confirmCtrl,
                                 isLoading: isLoading,
                                 errorMessage: errorMessage,
-                                onSubmit: _onSubmit,
+                                onSubmit: () => _onSubmit(ctx),
                               ),
                       ),
                       // ── Footer (hidden on success) ──────────────────────
@@ -190,7 +183,6 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         );
       },
-      ),
     );
   }
 }

@@ -108,6 +108,13 @@ class AppLocalizationsRo extends AppLocalizations {
   String get authForgotPasswordTitle => 'Resetare Parolă';
 
   @override
+  String get authForgotPasswordSubtitle =>
+      'Introdu email-ul şi îți vom trimite un link de resetare';
+
+  @override
+  String get authForgotPasswordSuccessTitle => 'Verifică Inbox-ul';
+
+  @override
   String get authForgotPasswordEmail => 'Email';
 
   @override
@@ -132,6 +139,45 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get authEmailVerificationHandled => 'Email verificat cu succes.';
+
+  @override
+  String get authActionVerifyingEmail => 'Se verifică emailul...';
+
+  @override
+  String get authActionValidatingLink => 'Se validează link-ul de resetare...';
+
+  @override
+  String get authActionEmailVerifiedTitle => 'Email Verificat!';
+
+  @override
+  String get authActionEmailVerifiedMessage =>
+      'Emailul tău a fost verificat. Te poți autentifica acum.';
+
+  @override
+  String get authActionSetNewPasswordTitle => 'Setează Parola Nouă';
+
+  @override
+  String get authActionNewPassword => 'Parolă Nouă';
+
+  @override
+  String get authActionResetPasswordButton => 'Resetează Parola';
+
+  @override
+  String get authActionPasswordResetTitle => 'Parolă Resetată!';
+
+  @override
+  String get authActionPasswordResetMessage =>
+      'Parola ta a fost resetată. Te poți autentifica cu noua parolă.';
+
+  @override
+  String get authActionRequestNewLink => 'Solicită Link Nou';
+
+  @override
+  String get authActionBackToSignIn => 'Înapoi la Autentificare';
+
+  @override
+  String get errorsInvalidActionCode =>
+      'Acest link a expirat sau a fost deja folosit. Te rugăm să soliciți unul nou.';
 
   @override
   String get navCalendar => 'Calendar';

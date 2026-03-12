@@ -106,6 +106,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authForgotPasswordTitle => 'Reset Password';
 
   @override
+  String get authForgotPasswordSubtitle =>
+      'Enter your email and we\'ll send you a reset link';
+
+  @override
+  String get authForgotPasswordSuccessTitle => 'Check Your Inbox';
+
+  @override
   String get authForgotPasswordEmail => 'Email';
 
   @override
@@ -129,6 +136,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authEmailVerificationHandled => 'Email verified successfully.';
+
+  @override
+  String get authActionVerifyingEmail => 'Verifying your email...';
+
+  @override
+  String get authActionValidatingLink => 'Validating reset link...';
+
+  @override
+  String get authActionEmailVerifiedTitle => 'Email Verified!';
+
+  @override
+  String get authActionEmailVerifiedMessage =>
+      'Your email has been verified. You can now sign in.';
+
+  @override
+  String get authActionSetNewPasswordTitle => 'Set New Password';
+
+  @override
+  String get authActionNewPassword => 'New Password';
+
+  @override
+  String get authActionResetPasswordButton => 'Reset Password';
+
+  @override
+  String get authActionPasswordResetTitle => 'Password Reset!';
+
+  @override
+  String get authActionPasswordResetMessage =>
+      'Your password has been reset. You can now sign in with your new password.';
+
+  @override
+  String get authActionRequestNewLink => 'Request New Link';
+
+  @override
+  String get authActionBackToSignIn => 'Back to Sign In';
+
+  @override
+  String get errorsInvalidActionCode =>
+      'This link has expired or has already been used. Please request a new one.';
 
   @override
   String get navCalendar => 'Calendar';
