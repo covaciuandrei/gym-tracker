@@ -9,6 +9,9 @@ import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/cubit/settings/settings_cubit.dart';
+import 'package:gym_tracker/presentation/controls/labeled_value_tile.dart';
+import 'package:gym_tracker/presentation/controls/option_toggle.dart';
+import 'package:gym_tracker/presentation/controls/surface_section_card.dart';
 import 'package:gym_tracker/presentation/helpers/locale_helper.dart';
 
 @RoutePage()
@@ -95,9 +98,9 @@ class _SettingsPageState extends State<SettingsPage> {
                               _SectionHeader(
                                 title: l10n.settingsAbout.toUpperCase(),
                               ),
-                              _SettingsCard(
+                              SurfaceSectionCard(
                                 children: [
-                                  _InfoTile(
+                                  LabeledValueTile(
                                     icon: Icons.info_outline,
                                     label: l10n.settingsAppVersion,
                                     value: version,
@@ -108,7 +111,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     color: cs.outline,
                                     height: 1,
                                   ),
-                                  _InfoTile(
+                                  LabeledValueTile(
                                     icon: Icons.code,
                                     label: l10n.settingsBuiltWith,
                                     value: 'Flutter + Firebase',
@@ -119,7 +122,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               _SectionHeader(
                                 title: l10n.settingsSecurity.toUpperCase(),
                               ),
-                              _SettingsCard(
+                              SurfaceSectionCard(
                                 children: [
                                   ListTile(
                                     leading: Icon(
@@ -146,7 +149,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               _SectionHeader(
                                 title: l10n.settingsGeneral.toUpperCase(),
                               ),
-                              _SettingsCard(
+                              SurfaceSectionCard(
                                 children: [
                                   ListTile(
                                     leading: Icon(
@@ -190,11 +193,22 @@ class _SettingsPageState extends State<SettingsPage> {
                                         color: cs.onSurfaceVariant,
                                       ),
                                     ),
-                                    trailing: _LanguageToggle(
-                                      currentCode:
+                                    trailing: OptionToggle(
+                                      selectedValue:
                                           _localeHelper.locale.languageCode,
-                                      onSelect: (code) =>
-                                          _localeHelper.setLocale(Locale(code)),
+                                      items: [
+                                        OptionToggleItem(
+                                          value: 'en',
+                                          label: l10n.settingsLanguageEn,
+                                        ),
+                                        OptionToggleItem(
+                                          value: 'ro',
+                                          label: l10n.settingsLanguageRo,
+                                        ),
+                                      ],
+                                      onSelect: (code) {
+                                        _localeHelper.setLocale(Locale(code));
+                                      },
                                     ),
                                   ),
                                 ],
@@ -256,92 +270,6 @@ class _SectionHeader extends StatelessWidget {
           letterSpacing: 1.2,
         ),
       ),
-    );
-  }
-}
-
-class _SettingsCard extends StatelessWidget {
-  const _SettingsCard({required this.children});
-
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return Card(
-      margin: EdgeInsets.zero,
-      elevation: 0,
-      color: cs.surfaceContainerHigh,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Column(children: children),
-    );
-  }
-}
-
-class _InfoTile extends StatelessWidget {
-  const _InfoTile({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return ListTile(
-      leading: Icon(icon, color: cs.onSurfaceVariant),
-      title: Text(label),
-      trailing: Text(value, style: TextStyle(color: cs.onSurfaceVariant)),
-    );
-  }
-}
-
-class _LanguageToggle extends StatelessWidget {
-  const _LanguageToggle({required this.currentCode, required this.onSelect});
-
-  final String currentCode;
-  final ValueChanged<String> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final cs = Theme.of(context).colorScheme;
-
-    Widget langButton({required String code, required String label}) {
-      final selected = currentCode == code;
-      return InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: () => onSelect(code),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: selected ? cs.primaryContainer : cs.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: selected ? cs.onPrimaryContainer : cs.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      );
-    }
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        langButton(code: 'en', label: l10n.settingsLanguageEn),
-        const SizedBox(width: 8),
-        langButton(code: 'ro', label: l10n.settingsLanguageRo),
-      ],
     );
   }
 }

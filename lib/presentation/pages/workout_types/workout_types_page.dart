@@ -9,7 +9,11 @@ import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/cubit/workout/workout_cubit.dart';
 import 'package:gym_tracker/model/training_type.dart';
+import 'package:gym_tracker/presentation/controls/action_bottom_sheet.dart';
+import 'package:gym_tracker/presentation/controls/confirmation_dialog.dart';
 import 'package:gym_tracker/presentation/controls/empty_state.dart';
+import 'package:gym_tracker/presentation/controls/main_list_item.dart';
+import 'package:gym_tracker/presentation/controls/primary_fab.dart';
 import 'package:gym_tracker/presentation/controls/primary_button.dart';
 
 @RoutePage()
@@ -122,43 +126,16 @@ class _WorkoutTypesViewState extends State<WorkoutTypesView> {
     TrainingType type,
   ) async {
     final l10n = AppLocalizations.of(context);
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    final shouldDelete = await showDialog<bool>(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          title: Text(l10n.workoutTypesDeleteTitle),
-          content: RichText(
-            text: TextSpan(
-              style: tt.bodyMedium?.copyWith(color: cs.onSurface),
-              children: [
-                TextSpan(text: '${l10n.workoutTypesDelete} '),
-                TextSpan(
-                  text: type.name,
-                  style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
-                ),
-                TextSpan(text: '? ${l10n.workoutTypesDeleteWarning}'),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(l10n.workoutTypesCancel),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              style: TextButton.styleFrom(foregroundColor: cs.error),
-              child: Text(l10n.workoutTypesDelete),
-            ),
-          ],
-        );
-      },
+    final shouldDelete = await ConfirmationDialog.show(
+      context,
+      title: l10n.workoutTypesDeleteTitle,
+      message:
+          '${l10n.workoutTypesDelete} ${type.name}? ${l10n.workoutTypesDeleteWarning}',
+      cancelLabel: l10n.workoutTypesCancel,
+      confirmLabel: l10n.workoutTypesDelete,
     );
 
-    if (shouldDelete != true) return;
+    if (!shouldDelete) return;
     await context.read<WorkoutCubit>().deleteType(widget.userId, type.id);
   }
 
@@ -213,9 +190,8 @@ class _WorkoutTypesViewState extends State<WorkoutTypesView> {
                   ),
                 ],
               ),
-              floatingActionButton: FloatingActionButton(
+              floatingActionButton: PrimaryFab(
                 onPressed: () => _openCreateModal(context),
-                child: const Icon(Icons.add),
               ),
               body: showInitialLoading
                   ? Center(
@@ -250,36 +226,27 @@ class _WorkoutTypesViewState extends State<WorkoutTypesView> {
                       itemBuilder: (_, index) {
                         final type = types[index];
                         final color = _safeColorFromHex(type.color);
-                        return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 4),
-                          elevation: 0,
-                          color: cs.surfaceContainerHigh,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: ListTile(
-                            leading: Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: color.withValues(alpha: 0.2),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  type.icon ?? _workoutTypeIcons.first,
-                                  style: const TextStyle(fontSize: 24),
-                                ),
+                        return MainListItem(
+                          title: type.name,
+                          leading: Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Center(
+                              child: Text(
+                                type.icon ?? _workoutTypeIcons.first,
+                                style: const TextStyle(fontSize: 24),
                               ),
                             ),
-                            title: Text(type.name, style: tt.titleMedium),
-                            trailing: IconButton(
-                              icon: Icon(Icons.delete_outline, color: cs.error),
-                              onPressed: () =>
-                                  _showDeleteConfirm(context, type),
-                            ),
-                            onTap: () => _openEditModal(context, type),
                           ),
+                          trailing: IconButton(
+                            icon: Icon(Icons.delete_outline, color: cs.error),
+                            onPressed: () => _showDeleteConfirm(context, type),
+                          ),
+                          onTap: () => _openEditModal(context, type),
                         );
                       },
                     ),
@@ -351,219 +318,178 @@ class _TypeEditorSheetState extends State<_TypeEditorSheet> {
       return const SizedBox.shrink();
     }
 
-    return DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: 0.85,
-      maxChildSize: 0.95,
-      builder: (context, scrollCtrl) {
-        return Container(
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+    return ActionBottomSheet(
+      title: widget.title,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.workoutTypesName, style: tt.titleMedium),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: nameCtrl,
+            maxLength: 30,
+            onChanged: (value) => nameValue.value = value,
+            decoration: InputDecoration(
+              hintText: l10n.workoutTypesNamePlaceholder,
+            ),
           ),
-          child: SingleChildScrollView(
-            controller: scrollCtrl,
-            padding: const EdgeInsets.only(left: 24, right: 24, bottom: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 12),
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: cs.outline,
-                      borderRadius: BorderRadius.circular(2),
+          const SizedBox(height: 16),
+          Text(l10n.workoutTypesIcon, style: tt.titleMedium),
+          const SizedBox(height: 8),
+          ValueListenableBuilder<String>(
+            valueListenable: selectedIcon,
+            builder: (_, activeIcon, __) {
+              return Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _workoutTypeIcons.map((icon) {
+                  final isSelected = icon == activeIcon;
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => selectedIcon.value = icon,
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? cs.primaryContainer
+                            : cs.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                        border: isSelected
+                            ? Border.all(color: cs.primary, width: 2)
+                            : null,
+                      ),
+                      child: Center(
+                        child: Text(icon, style: const TextStyle(fontSize: 24)),
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(widget.title, style: tt.headlineSmall),
-                const SizedBox(height: 24),
-                Text(l10n.workoutTypesName, style: tt.titleMedium),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: nameCtrl,
-                  maxLength: 30,
-                  onChanged: (value) => nameValue.value = value,
-                  decoration: InputDecoration(
-                    hintText: l10n.workoutTypesNamePlaceholder,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(l10n.workoutTypesIcon, style: tt.titleMedium),
-                const SizedBox(height: 8),
-                ValueListenableBuilder<String>(
-                  valueListenable: selectedIcon,
-                  builder: (_, activeIcon, __) {
-                    return Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _workoutTypeIcons.map((icon) {
-                        final isSelected = icon == activeIcon;
-                        return InkWell(
-                          borderRadius: BorderRadius.circular(12),
-                          onTap: () => selectedIcon.value = icon,
-                          child: Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? cs.primaryContainer
-                                  : cs.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(12),
-                              border: isSelected
-                                  ? Border.all(color: cs.primary, width: 2)
-                                  : null,
-                            ),
-                            child: Center(
-                              child: Text(
-                                icon,
-                                style: const TextStyle(fontSize: 24),
-                              ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+          Text(l10n.workoutTypesColor, style: tt.titleMedium),
+          const SizedBox(height: 8),
+          ValueListenableBuilder<String>(
+            valueListenable: selectedColor,
+            builder: (_, activeColor, __) {
+              return Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: _workoutTypeColors.map((hex) {
+                  final isSelected = hex == activeColor;
+                  return InkWell(
+                    onTap: () => selectedColor.value = hex,
+                    borderRadius: BorderRadius.circular(18),
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: _safeColorFromHex(hex),
+                        shape: BoxShape.circle,
+                        border: isSelected
+                            ? Border.all(color: cs.onSurface, width: 2)
+                            : null,
+                      ),
+                      child: isSelected
+                          ? const Icon(
+                              Icons.check,
+                              size: 18,
+                              color: Colors.white,
+                            )
+                          : null,
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+          const SizedBox(height: 24),
+          Text(l10n.workoutTypesPreview, style: tt.titleMedium),
+          const SizedBox(height: 8),
+          ValueListenableBuilder<String>(
+            valueListenable: selectedColor,
+            builder: (_, activeColor, __) {
+              return ValueListenableBuilder<String>(
+                valueListenable: selectedIcon,
+                builder: (_, activeIcon, __) {
+                  return ValueListenableBuilder<String>(
+                    valueListenable: nameValue,
+                    builder: (_, activeName, __) {
+                      return MainListItem(
+                        margin: EdgeInsets.zero,
+                        title: activeName.trim().isEmpty
+                            ? l10n.workoutTypesPreviewName
+                            : activeName.trim(),
+                        leading: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: _safeColorFromHex(
+                              activeColor,
+                            ).withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Center(
+                            child: Text(
+                              activeIcon,
+                              style: const TextStyle(fontSize: 24),
                             ),
                           ),
-                        );
-                      }).toList(),
-                    );
-                  },
-                ),
-                const SizedBox(height: 24),
-                Text(l10n.workoutTypesColor, style: tt.titleMedium),
-                const SizedBox(height: 8),
-                ValueListenableBuilder<String>(
+                        ),
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+      footer: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l10n.workoutTypesCancel),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: ValueListenableBuilder<String>(
+              valueListenable: selectedIcon,
+              builder: (_, icon, __) {
+                return ValueListenableBuilder<String>(
                   valueListenable: selectedColor,
-                  builder: (_, activeColor, __) {
-                    return Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: _workoutTypeColors.map((hex) {
-                        final isSelected = hex == activeColor;
-                        return InkWell(
-                          onTap: () => selectedColor.value = hex,
-                          borderRadius: BorderRadius.circular(18),
-                          child: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: _safeColorFromHex(hex),
-                              shape: BoxShape.circle,
-                              border: isSelected
-                                  ? Border.all(color: cs.onSurface, width: 2)
-                                  : null,
-                            ),
-                            child: isSelected
-                                ? const Icon(
-                                    Icons.check,
-                                    size: 18,
-                                    color: Colors.white,
-                                  )
-                                : null,
-                          ),
-                        );
-                      }).toList(),
-                    );
-                  },
-                ),
-                const SizedBox(height: 24),
-                Text(l10n.workoutTypesPreview, style: tt.titleMedium),
-                const SizedBox(height: 8),
-                ValueListenableBuilder<String>(
-                  valueListenable: selectedColor,
-                  builder: (_, activeColor, __) {
+                  builder: (_, color, __) {
                     return ValueListenableBuilder<String>(
-                      valueListenable: selectedIcon,
-                      builder: (_, activeIcon, __) {
-                        return ValueListenableBuilder<String>(
-                          valueListenable: nameValue,
-                          builder: (_, activeName, __) {
-                            return Card(
-                              margin: EdgeInsets.zero,
-                              elevation: 0,
-                              color: cs.surfaceContainerHigh,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: ListTile(
-                                leading: Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: _safeColorFromHex(
-                                      activeColor,
-                                    ).withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Center(
-                                    child: Text(
-                                      activeIcon,
-                                      style: const TextStyle(fontSize: 24),
+                      valueListenable: nameValue,
+                      builder: (_, activeName, __) {
+                        return PrimaryButton(
+                          label: widget.actionLabel,
+                          isLoading: false,
+                          onPressed: activeName.trim().isEmpty
+                              ? null
+                              : () {
+                                  Navigator.of(context).pop(
+                                    _TypeDraft(
+                                      name: activeName.trim(),
+                                      icon: icon,
+                                      color: color,
                                     ),
-                                  ),
-                                ),
-                                title: Text(
-                                  activeName.trim().isEmpty
-                                      ? l10n.workoutTypesPreviewName
-                                      : activeName.trim(),
-                                ),
-                              ),
-                            );
-                          },
+                                  );
+                                },
                         );
                       },
                     );
                   },
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: Text(l10n.workoutTypesCancel),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ValueListenableBuilder<String>(
-                        valueListenable: selectedIcon,
-                        builder: (_, icon, __) {
-                          return ValueListenableBuilder<String>(
-                            valueListenable: selectedColor,
-                            builder: (_, color, __) {
-                              return ValueListenableBuilder<String>(
-                                valueListenable: nameValue,
-                                builder: (_, activeName, __) {
-                                  return PrimaryButton(
-                                    label: widget.actionLabel,
-                                    isLoading: false,
-                                    onPressed: activeName.trim().isEmpty
-                                        ? null
-                                        : () {
-                                            Navigator.of(context).pop(
-                                              _TypeDraft(
-                                                name: activeName.trim(),
-                                                icon: icon,
-                                                color: color,
-                                              ),
-                                            );
-                                          },
-                                  );
-                                },
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                );
+              },
             ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }
