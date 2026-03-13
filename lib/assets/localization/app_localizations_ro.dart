@@ -512,6 +512,68 @@ class AppLocalizationsRo extends AppLocalizations {
   String get healthServingsPerDay => 'Porții pe zi';
 
   @override
+  String get healthProductCreated => 'Supliment creat.';
+
+  @override
+  String get healthProductUpdated => 'Supliment actualizat.';
+
+  @override
+  String get healthDeleteSupplementTitle => 'Șterge suplimentul';
+
+  @override
+  String get healthDeleteWarning => 'Această acțiune nu poate fi anulată.';
+
+  @override
+  String get healthDeleteLogTitle => 'Șterge înregistrarea';
+
+  @override
+  String get healthDeleteLogMessage =>
+      'Sigur vrei să ștergi această înregistrare de supliment?';
+
+  @override
+  String get healthMySearchHint => 'Caută în suplimentele mele...';
+
+  @override
+  String get healthAllSearchHint => 'Caută în toate suplimentele...';
+
+  @override
+  String get healthNoPersonalSupplements => 'Nu ai suplimente personale';
+
+  @override
+  String get healthNoPersonalSupplementsMessage =>
+      'Nu ai adăugat încă suplimente personalizate.';
+
+  @override
+  String get healthNoSupplementsFound => 'Nu au fost găsite suplimente';
+
+  @override
+  String get healthNoSupplementsFoundMessage =>
+      'Încearcă un alt termen de căutare.';
+
+  @override
+  String get healthNoSupplementsToday =>
+      'Nu există suplimente înregistrate azi';
+
+  @override
+  String get healthNoSupplementsTodayMessage =>
+      'Începe ziua prin înregistrarea suplimentelor.';
+
+  @override
+  String get healthEditAction => 'Editează';
+
+  @override
+  String get healthEditSupplement => 'Editează suplimentul';
+
+  @override
+  String get healthIngredientName => 'Ingredient';
+
+  @override
+  String get healthAmount => 'Cantitate';
+
+  @override
+  String get healthNoIngredientsYet => 'Nu au fost adăugate ingrediente.';
+
+  @override
   String get settingsTitle => 'Setări';
 
   @override

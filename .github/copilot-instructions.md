@@ -173,20 +173,107 @@ decoration: BoxDecoration(
   Prefer extraction into `controls/` instead of duplicating similar widgets
   across pages.
 
+## State Management Rules (Bloc Architecture)
+
+This project follows strict Bloc architecture.
+
+### Do NOT use ValueNotifier for:
+
+- Backend/domain data
+- Data coming from repositories
+- Data coming from Cubits/Blocs
+- Lists of models retrieved from Firebase or APIs
+- Application state shared across screens
+
+Examples of state that MUST stay inside Cubit state:
+
+- `List<SupplementLog>`
+- `List<SupplementProduct>`
+- user data
+- health logs
+- workout logs
+- settings loaded from backend
+
+Reason:
+Bloc/Cubit is the single source of truth for application state.
+Duplicating Bloc state inside ValueNotifier introduces unnecessary state layers
+and violates clean architecture.
+
+Incorrect pattern:
+
+```dart
+Cubit -> BlocConsumer listener -> ValueNotifier -> UI
+```
+
+Correct pattern:
+
+```dart
+Cubit -> BlocBuilder -> UI
+```
+
+The UI must read state directly from the Cubit state.
+
+### It IS OK to use ValueNotifier for:
+
+Local ephemeral UI state only, meaning state that:
+
+- exists only inside a widget
+- does not come from the backend
+- does not belong to business logic
+- does not need to persist
+
+Examples of acceptable usage:
+
+- selected tab index
+- search query text
+- form validation state
+- temporary form values
+- dropdown selections
+- toggles that only affect local UI
+
+Examples:
+
+```dart
+ValueNotifier<HealthTab> activeTab
+ValueNotifier<String> searchQuery
+ValueNotifier<List<ProductIngredient>> ingredientsDraft
+```
+
+These are UI concerns, not domain state.
+
+### Prefer these tools instead of ValueNotifier
+
+For application state:
+
+- `BlocBuilder`
+- `BlocSelector`
+- `buildWhen`
+
+Never duplicate Bloc state into ValueNotifier.
+
 **Current controls inventory:**
 
 | File | What it is |
 |---|---|
 | `gradient_button.dart` | Full-width indigo-gradient button (Angular `.btn-primary`); shows spinner when `isLoading: true`. **Use for every primary submit action.** |
 | `primary_button.dart` | Material `ElevatedButton` wrapper; use only for secondary/outline actions that don't need gradient. |
+| `primary_fab.dart` | Standard reusable FloatingActionButton wrapper for add/create actions across tabs/pages. |
 | `custom_text_field.dart` | Styled `TextFormField`; handles password-visibility toggle internally. Use for all form inputs. |
+| `search_input.dart` | Reusable search field with search icon and clear action; use for searchable list/catalog pages. |
 | `error_banner.dart` | Inline red pill for form-level server errors. Use below form fields, above the submit button. |
 | `error_state.dart` | Full-section error (emoji + title + retry). Use for page-level load failures. |
 | `empty_state.dart` | No-data placeholder (emoji + title + optional CTA). Use when a list/section has zero items. |
+| `confirmation_dialog.dart` | Generic yes/no destructive confirmation dialog with customizable labels and confirm color. |
+| `action_bottom_sheet.dart` | Reusable draggable modal-sheet scaffold (handle, title, body, footer). Use for create/edit forms and action sheets. |
 | `password_strength_indicator.dart` | Animated strength bar + 4 requirement bullets. Add below every new-password field. Uses `ListenableBuilder` — no setState. |
 | `password_match_indicator.dart` | Green/red match label below confirm-password field. Uses `ListenableBuilder.merge` — no setState. |
 | `form_card.dart` | Styled card container for auth forms (shadow, rounded corners, `surfaceContainerHigh` bg). Takes `formKey` + `children`; wraps them in `AutofillGroup > Form > Column`. **Use as the base for every form panel instead of duplicating the decoration.** |
 | `success_card.dart` | Green-tinted confirmation card. Takes `title`, `message`, `buttonLabel`, `onAction`, optional `icon` (default `✅`). **Use after any successful async action (sign-up, password reset, etc.).** |
+| `surface_section_card.dart` | Generic elevated surface card for settings/section blocks with shared styling and rounded corners. |
+| `main_list_item.dart` | Reusable list item card (title + optional leading/trailing + tap) for simple entity rows. |
+| `summary_action_card.dart` | Reusable entity summary card (subtitle/title/description + optional action row + optional onTap). Use for catalog and summary lists. |
+| `labeled_value_tile.dart` | Reusable list tile for static key-value rows (for example app version/about rows). |
+| `option_toggle.dart` | Generic segmented option toggle using chips/buttons for language/view-mode filters. |
 | `auth_footer_link.dart` | Divider + centred "prompt + action-link" row. Used at the bottom of every auth screen to switch between pages. Takes `prompt`, `actionLabel`, `onTap`, optional `enabled` (pass `!isLoading` to disable during requests). |
 
 ---

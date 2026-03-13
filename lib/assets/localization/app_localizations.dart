@@ -1076,6 +1076,120 @@ abstract class AppLocalizations {
   /// **'Servings per day'**
   String get healthServingsPerDay;
 
+  /// No description provided for @healthProductCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Supplement created.'**
+  String get healthProductCreated;
+
+  /// No description provided for @healthProductUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Supplement updated.'**
+  String get healthProductUpdated;
+
+  /// No description provided for @healthDeleteSupplementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete supplement'**
+  String get healthDeleteSupplementTitle;
+
+  /// No description provided for @healthDeleteWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone.'**
+  String get healthDeleteWarning;
+
+  /// No description provided for @healthDeleteLogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete log'**
+  String get healthDeleteLogTitle;
+
+  /// No description provided for @healthDeleteLogMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this supplement log?'**
+  String get healthDeleteLogMessage;
+
+  /// No description provided for @healthMySearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search my supplements...'**
+  String get healthMySearchHint;
+
+  /// No description provided for @healthAllSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search all supplements...'**
+  String get healthAllSearchHint;
+
+  /// No description provided for @healthNoPersonalSupplements.
+  ///
+  /// In en, this message translates to:
+  /// **'No personal supplements'**
+  String get healthNoPersonalSupplements;
+
+  /// No description provided for @healthNoPersonalSupplementsMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You have not added any custom supplements yet.'**
+  String get healthNoPersonalSupplementsMessage;
+
+  /// No description provided for @healthNoSupplementsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No supplements found'**
+  String get healthNoSupplementsFound;
+
+  /// No description provided for @healthNoSupplementsFoundMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Try changing the search term.'**
+  String get healthNoSupplementsFoundMessage;
+
+  /// No description provided for @healthNoSupplementsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'No supplements logged today'**
+  String get healthNoSupplementsToday;
+
+  /// No description provided for @healthNoSupplementsTodayMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Start your day by logging your supplements.'**
+  String get healthNoSupplementsTodayMessage;
+
+  /// No description provided for @healthEditAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get healthEditAction;
+
+  /// No description provided for @healthEditSupplement.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Supplement'**
+  String get healthEditSupplement;
+
+  /// No description provided for @healthIngredientName.
+  ///
+  /// In en, this message translates to:
+  /// **'Ingredient'**
+  String get healthIngredientName;
+
+  /// No description provided for @healthAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get healthAmount;
+
+  /// No description provided for @healthNoIngredientsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No ingredients added yet.'**
+  String get healthNoIngredientsYet;
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:

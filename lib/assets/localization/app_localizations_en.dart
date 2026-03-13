@@ -507,6 +507,66 @@ class AppLocalizationsEn extends AppLocalizations {
   String get healthServingsPerDay => 'Servings per day';
 
   @override
+  String get healthProductCreated => 'Supplement created.';
+
+  @override
+  String get healthProductUpdated => 'Supplement updated.';
+
+  @override
+  String get healthDeleteSupplementTitle => 'Delete supplement';
+
+  @override
+  String get healthDeleteWarning => 'This action cannot be undone.';
+
+  @override
+  String get healthDeleteLogTitle => 'Delete log';
+
+  @override
+  String get healthDeleteLogMessage =>
+      'Are you sure you want to delete this supplement log?';
+
+  @override
+  String get healthMySearchHint => 'Search my supplements...';
+
+  @override
+  String get healthAllSearchHint => 'Search all supplements...';
+
+  @override
+  String get healthNoPersonalSupplements => 'No personal supplements';
+
+  @override
+  String get healthNoPersonalSupplementsMessage =>
+      'You have not added any custom supplements yet.';
+
+  @override
+  String get healthNoSupplementsFound => 'No supplements found';
+
+  @override
+  String get healthNoSupplementsFoundMessage => 'Try changing the search term.';
+
+  @override
+  String get healthNoSupplementsToday => 'No supplements logged today';
+
+  @override
+  String get healthNoSupplementsTodayMessage =>
+      'Start your day by logging your supplements.';
+
+  @override
+  String get healthEditAction => 'Edit';
+
+  @override
+  String get healthEditSupplement => 'Edit Supplement';
+
+  @override
+  String get healthIngredientName => 'Ingredient';
+
+  @override
+  String get healthAmount => 'Amount';
+
+  @override
+  String get healthNoIngredientsYet => 'No ingredients added yet.';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override

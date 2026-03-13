@@ -23,12 +23,16 @@ class HealthMonthEntriesLoadedState extends BaseState {
 }
 
 class HealthProductsLoadedState extends BaseState {
-  const HealthProductsLoadedState({required this.products});
+  const HealthProductsLoadedState({
+    required this.products,
+    required this.myProducts,
+  });
 
   final List<SupplementProduct> products;
+  final List<SupplementProduct> myProducts;
 
   @override
-  List<Object?> get props => [products];
+  List<Object?> get props => [products, myProducts];
 }
 
 class HealthEntryLoggedState extends BaseState {
@@ -42,4 +46,17 @@ class HealthEntryLoggedState extends BaseState {
 
 class HealthEntryDeletedState extends BaseState {
   const HealthEntryDeletedState();
+}
+
+class HealthProductSavedState extends BaseState {
+  const HealthProductSavedState({required this.id});
+
+  final String id;
+
+  @override
+  List<Object?> get props => [id];
+}
+
+class HealthProductDeletedState extends BaseState {
+  const HealthProductDeletedState();
 }

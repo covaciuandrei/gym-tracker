@@ -25,10 +25,12 @@ class HealthCubit extends BaseCubit {
   void loadDayEntries({required String userId, required String date}) {
     _dayEntriesSubscription?.cancel();
     safeEmit(const PendingState());
-    _dayEntriesSubscription =
-        _healthService.watchDayEntries(userId: userId, date: date).listen(
-          (entries) =>
-              safeEmit(HealthDayEntriesLoadedState(entries: entries, date: date)),
+    _dayEntriesSubscription = _healthService
+        .watchDayEntries(userId: userId, date: date)
+        .listen(
+          (entries) => safeEmit(
+            HealthDayEntriesLoadedState(entries: entries, date: date),
+          ),
           onError: (_) => safeEmit(const SomethingWentWrongState()),
         );
   }
@@ -56,10 +58,56 @@ class HealthCubit extends BaseCubit {
   void loadProducts(String userId) {
     _productsSubscription?.cancel();
     safeEmit(const PendingState());
-    _productsSubscription = _healthService.watchAllProducts().listen(
-      (products) => safeEmit(HealthProductsLoadedState(products: products)),
-      onError: (_) => safeEmit(const SomethingWentWrongState()),
-    );
+    _productsSubscription = _healthService.watchAllProducts().listen((
+      products,
+    ) {
+      final myProducts = products
+          .where((product) => product.createdBy == userId)
+          .toList(growable: false);
+      safeEmit(
+        HealthProductsLoadedState(products: products, myProducts: myProducts),
+      );
+    }, onError: (_) => safeEmit(const SomethingWentWrongState()));
+  }
+
+  Future<void> saveProduct({
+    required String userId,
+    required SupplementProduct model,
+    required bool isEdit,
+  }) async {
+    safeEmit(const PendingState());
+    try {
+      if (isEdit) {
+        await _healthService.updateProduct(model);
+        safeEmit(HealthProductSavedState(id: model.id));
+        return;
+      }
+
+      final id = await _healthService.createProduct(
+        SupplementProduct(
+          id: '',
+          name: model.name,
+          brand: model.brand,
+          ingredients: model.ingredients,
+          servingsPerDayDefault: model.servingsPerDayDefault,
+          createdBy: userId,
+          verified: model.verified,
+        ),
+      );
+      safeEmit(HealthProductSavedState(id: id));
+    } catch (_) {
+      safeEmit(const SomethingWentWrongState());
+    }
+  }
+
+  Future<void> deleteProduct(String productId) async {
+    safeEmit(const PendingState());
+    try {
+      await _healthService.deleteProduct(productId);
+      safeEmit(const HealthProductDeletedState());
+    } catch (_) {
+      safeEmit(const SomethingWentWrongState());
+    }
   }
 
   /// Logs a supplement entry and emits [HealthEntryLoggedState] with the
