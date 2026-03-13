@@ -1,14 +1,1204 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:gym_tracker/assets/localization/app_localizations.dart';
+import 'package:gym_tracker/core/app_router.gr.dart';
+import 'package:gym_tracker/core/injection.dart';
+import 'package:gym_tracker/cubit/base_state.dart';
+import 'package:gym_tracker/cubit/stats/stats_cubit.dart';
+import 'package:gym_tracker/model/attendance_stats.dart';
+import 'package:gym_tracker/model/training_type.dart';
+import 'package:gym_tracker/presentation/controls/empty_state.dart';
+import 'package:gym_tracker/presentation/controls/error_state.dart';
+import 'package:gym_tracker/presentation/resources/app_colors.dart';
 
 @RoutePage()
-class StatsPage extends StatelessWidget {
+class StatsPage extends StatelessWidget implements AutoRouteWrapper {
   const StatsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text('Stats — coming soon')),
+  Widget wrappedRoute(BuildContext context) {
+    return BlocProvider<StatsCubit>(
+      create: (_) => getIt<StatsCubit>(),
+      child: this,
     );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          context.router.replace(const LoginRoute());
+        }
+      });
+      return const Scaffold(body: SizedBox.shrink());
+    }
+
+    return StatsView(userId: userId);
+  }
+}
+
+class StatsView extends StatefulWidget {
+  const StatsView({super.key, required this.userId});
+
+  final String userId;
+
+  @override
+  State<StatsView> createState() => _StatsViewState();
+}
+
+class _StatsViewState extends State<StatsView> {
+  final ValueNotifier<int> _selectedYear = ValueNotifier<int>(
+    DateTime.now().year,
+  );
+  final ValueNotifier<int> _selectedWorkoutMonth = ValueNotifier<int>(
+    DateTime.now().month,
+  );
+  final ValueNotifier<int> _selectedDurationMonth = ValueNotifier<int>(
+    DateTime.now().month,
+  );
+  final ValueNotifier<int> _selectedHealthMonth = ValueNotifier<int>(
+    DateTime.now().month,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _loadYear(_selectedYear.value);
+  }
+
+  @override
+  void dispose() {
+    _selectedYear.dispose();
+    _selectedWorkoutMonth.dispose();
+    _selectedDurationMonth.dispose();
+    _selectedHealthMonth.dispose();
+    super.dispose();
+  }
+
+  void _loadYear(int year) {
+    context.read<StatsCubit>().load(userId: widget.userId, year: year);
+  }
+
+  void _changeYear(int delta) {
+    final nextYear = _selectedYear.value + delta;
+    _selectedYear.value = nextYear;
+    _loadYear(nextYear);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final cs = Theme.of(context).colorScheme;
+
+    return DefaultTabController(
+      length: 4,
+      child: Scaffold(
+        backgroundColor: cs.surfaceContainerLow,
+        appBar: AppBar(title: Text(l10n.statsTitle)),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Column(
+              children: [
+                ValueListenableBuilder<int>(
+                  valueListenable: _selectedYear,
+                  builder: (_, year, __) {
+                    return _YearHeader(
+                      title: '${l10n.statsTitle} $year',
+                      onPrevious: () => _changeYear(-1),
+                      onNext: () => _changeYear(1),
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                TabBar(
+                  isScrollable: true,
+                  tabs: [
+                    Tab(text: l10n.statsAttendances),
+                    Tab(text: l10n.statsWorkouts),
+                    Tab(text: l10n.statsDuration),
+                    Tab(text: l10n.statsHealth),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: BlocConsumer<StatsCubit, BaseState>(
+                    listenWhen: (_, curr) => curr is SomethingWentWrongState,
+                    listener: (ctx, state) {
+                      if (state is SomethingWentWrongState) {
+                        ScaffoldMessenger.of(ctx).showSnackBar(
+                          SnackBar(content: Text(l10n.errorsUnknown)),
+                        );
+                      }
+                    },
+                    builder: (ctx, state) {
+                      final currentYear = _selectedYear.value;
+
+                      if (state is PendingState || state is InitialState) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      if (state is SomethingWentWrongState) {
+                        return ErrorStateWidget(
+                          message: l10n.errorsUnknown,
+                          onRetry: () => _loadYear(currentYear),
+                        );
+                      }
+
+                      if (state is! StatsLoadedState ||
+                          state.year != currentYear) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      return TabBarView(
+                        children: [
+                          _AttendancesTab(stats: state.stats),
+                          _WorkoutsTab(
+                            stats: state.stats,
+                            types: state.types,
+                            selectedMonth: _selectedWorkoutMonth,
+                          ),
+                          _DurationTab(
+                            stats: state.stats,
+                            types: state.types,
+                            selectedMonth: _selectedDurationMonth,
+                          ),
+                          _HealthTab(
+                            stats: state.stats,
+                            selectedMonth: _selectedHealthMonth,
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _YearHeader extends StatelessWidget {
+  const _YearHeader({
+    required this.title,
+    required this.onPrevious,
+    required this.onNext,
+  });
+
+  final String title;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Row(
+      children: [
+        _NavIconButton(icon: Icons.chevron_left, onTap: onPrevious),
+        Expanded(
+          child: Text(
+            title,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+        ),
+        _NavIconButton(icon: Icons.chevron_right, onTap: onNext),
+      ],
+    );
+  }
+}
+
+class _NavIconButton extends StatelessWidget {
+  const _NavIconButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: onTap,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: cs.outline),
+        ),
+        child: Icon(icon),
+      ),
+    );
+  }
+}
+
+class _AttendancesTab extends StatelessWidget {
+  const _AttendancesTab({required this.stats});
+
+  final AttendanceStats stats;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final weekdayMax = _maxOrOne(stats.weekdayAttendanceCounts);
+    final monthMax = _maxOrOne(stats.monthlyAttendanceCounts);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _GradientStatCard(
+                  icon: '📅',
+                  value: '${stats.monthlyCount}',
+                  label: l10n.statsThisMonth,
+                  colors: const [AppColors.primary, AppColors.primaryDark],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _GradientStatCard(
+                  icon: '🎯',
+                  value: '${stats.yearlyCount}',
+                  label: l10n.statsThisYear,
+                  colors: const [AppColors.statsPink, AppColors.statsPinkDark],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _GradientStatCard(
+                  icon: '🏆',
+                  value: '${stats.totalCount}',
+                  label: l10n.statsAllTime,
+                  colors: const [AppColors.primary, AppColors.primaryDark],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _SurfaceStatCard(
+                  icon: '🔥',
+                  value: '${stats.currentWeekStreak}',
+                  label: l10n.statsCurrentStreak,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _SurfaceStatCard(
+                  icon: '🏅',
+                  value: '${stats.bestWeekStreak}',
+                  label: l10n.statsBestStreak,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _SurfaceStatCard(
+                  icon: '⭐',
+                  value: _favoriteDayLabel(context, stats.favoriteDaysOfWeek),
+                  label: l10n.statsFavoriteDay,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _ChartSection(
+            title: l10n.statsFavoriteDay,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                for (int i = 0; i < 7; i++) ...[
+                  Expanded(
+                    child: _VerticalBar(
+                      value: stats.weekdayAttendanceCounts[i].toDouble(),
+                      max: weekdayMax.toDouble(),
+                      label: _weekdayShort(context, i + 1),
+                      highlighted: stats.favoriteDaysOfWeek.contains(i + 1),
+                    ),
+                  ),
+                  if (i < 6) const SizedBox(width: 8),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _ChartSection(
+            title: l10n.statsAttendances,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                for (int i = 0; i < 12; i++) ...[
+                  Expanded(
+                    child: _VerticalBar(
+                      value: stats.monthlyAttendanceCounts[i].toDouble(),
+                      max: monthMax.toDouble(),
+                      label: _monthShort(context, i + 1),
+                    ),
+                  ),
+                  if (i < 11) const SizedBox(width: 6),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WorkoutsTab extends StatelessWidget {
+  const _WorkoutsTab({
+    required this.stats,
+    required this.types,
+    required this.selectedMonth,
+  });
+
+  final AttendanceStats stats;
+  final List<TrainingType> types;
+  final ValueNotifier<int> selectedMonth;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    final sortedTypes = stats.typeDistribution.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    final mostUsed = sortedTypes.isEmpty ? null : sortedTypes.first;
+    final totalTracked = sortedTypes.fold(0, (sum, e) => sum + e.value);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _GradientStatCard(
+                  icon: '🏋️',
+                  value: mostUsed == null
+                      ? '-'
+                      : _typeFor(types, mostUsed.key)?.name ?? '-',
+                  label: l10n.statsMostUsed,
+                  colors: const [AppColors.primary, AppColors.primaryDark],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _GradientStatCard(
+                  icon: '📊',
+                  value: '$totalTracked',
+                  label: l10n.statsTotalTracked,
+                  colors: const [AppColors.statsTeal, AppColors.statsTealDark],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ValueListenableBuilder<int>(
+            valueListenable: selectedMonth,
+            builder: (_, month, __) {
+              final monthData =
+                  stats.monthlyTypeDistribution[month] ?? const <String, int>{};
+              final entries = monthData.entries.toList()
+                ..sort((a, b) => b.value.compareTo(a.value));
+              final maxCount = entries.isEmpty ? 1 : entries.first.value;
+
+              return _ChartSection(
+                title: '${_monthLong(context, month)} ${DateTime.now().year}',
+                trailing: _MonthSwitcher(
+                  selectedMonth: month,
+                  onPrevious: () =>
+                      selectedMonth.value = month == 1 ? 12 : month - 1,
+                  onNext: () =>
+                      selectedMonth.value = month == 12 ? 1 : month + 1,
+                ),
+                child: entries.isEmpty
+                    ? EmptyStateWidget(
+                        title: l10n.statsWorkouts,
+                        message: l10n.statsThisMonth,
+                        emoji: '🏋️',
+                      )
+                    : Column(
+                        children: entries
+                            .map((entry) {
+                              final type = _typeFor(types, entry.key);
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: _HorizontalProgress(
+                                  icon: type?.icon ?? '🏋️',
+                                  name: type?.name ?? '-',
+                                  value: entry.value.toDouble(),
+                                  max: maxCount.toDouble(),
+                                  color: _parseHexColor(type?.color),
+                                  trailing: '${entry.value}',
+                                ),
+                              );
+                            })
+                            .toList(growable: false),
+                      ),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+          _ChartSection(
+            title: l10n.statsThisYear,
+            child: sortedTypes.isEmpty
+                ? EmptyStateWidget(
+                    title: l10n.statsWorkouts,
+                    message: l10n.statsThisYear,
+                    emoji: '🏋️',
+                  )
+                : Column(
+                    children: sortedTypes
+                        .map((entry) {
+                          final type = _typeFor(types, entry.key);
+                          final maxCount = sortedTypes.first.value.toDouble();
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 10),
+                            child: _HorizontalProgress(
+                              icon: type?.icon ?? '🏋️',
+                              name: type?.name ?? '-',
+                              value: entry.value.toDouble(),
+                              max: maxCount,
+                              color: _parseHexColor(type?.color),
+                              trailing: '${entry.value}',
+                            ),
+                          );
+                        })
+                        .toList(growable: false),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DurationTab extends StatelessWidget {
+  const _DurationTab({
+    required this.stats,
+    required this.types,
+    required this.selectedMonth,
+  });
+
+  final AttendanceStats stats;
+  final List<TrainingType> types;
+  final ValueNotifier<int> selectedMonth;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        children: [
+          ValueListenableBuilder<int>(
+            valueListenable: selectedMonth,
+            builder: (_, month, __) {
+              final monthAvg = stats.monthlyDurationAverages[month] ?? 0;
+              final untracked = stats.monthlyUntrackedDurationCounts[month - 1];
+
+              return Row(
+                children: [
+                  Expanded(
+                    child: _GradientStatCard(
+                      icon: '⏱️',
+                      value: _durationLabel(context, monthAvg),
+                      label: l10n.statsAvgThisMonth,
+                      colors: const [AppColors.primary, AppColors.primaryDark],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _GradientStatCard(
+                      icon: '📊',
+                      value: _durationLabel(
+                        context,
+                        stats.yearlyAverageDurationMinutes,
+                      ),
+                      label: l10n.statsAvgThisYear,
+                      colors: const [
+                        AppColors.statsViolet,
+                        AppColors.statsVioletDark,
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _SurfaceStatCard(
+                      icon: '📝',
+                      value: '$untracked',
+                      label: l10n.statsUntrackedCount,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+          ValueListenableBuilder<int>(
+            valueListenable: selectedMonth,
+            builder: (_, month, __) {
+              final monthData =
+                  stats.monthlyTypeDurationAverages[month] ??
+                  const <String, double>{};
+              final entries = monthData.entries.toList()
+                ..sort((a, b) => b.value.compareTo(a.value));
+              final maxValue = entries.isEmpty ? 1.0 : entries.first.value;
+
+              return _ChartSection(
+                title: _monthLong(context, month),
+                trailing: _MonthSwitcher(
+                  selectedMonth: month,
+                  onPrevious: () =>
+                      selectedMonth.value = month == 1 ? 12 : month - 1,
+                  onNext: () =>
+                      selectedMonth.value = month == 12 ? 1 : month + 1,
+                ),
+                child: entries.isEmpty
+                    ? EmptyStateWidget(
+                        title: l10n.statsDuration,
+                        message: l10n.statsThisMonth,
+                        emoji: '⏱️',
+                      )
+                    : Column(
+                        children: entries
+                            .map((entry) {
+                              final type = _typeFor(types, entry.key);
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: _HorizontalProgress(
+                                  icon: type?.icon ?? '⏱️',
+                                  name: type?.name ?? '-',
+                                  value: entry.value,
+                                  max: maxValue,
+                                  color: _parseHexColor(type?.color),
+                                  trailing: _durationLabel(
+                                    context,
+                                    entry.value,
+                                  ),
+                                ),
+                              );
+                            })
+                            .toList(growable: false),
+                      ),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+          _ChartSection(
+            title: l10n.statsDuration,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                for (int i = 1; i <= 12; i++) ...[
+                  Expanded(
+                    child: _VerticalBar(
+                      value: stats.monthlyDurationAverages[i] ?? 0,
+                      max: _maxDoubleOrOne(
+                        stats.monthlyDurationAverages.values,
+                      ),
+                      label: _monthShort(context, i),
+                    ),
+                  ),
+                  if (i < 12) const SizedBox(width: 6),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HealthTab extends StatelessWidget {
+  const _HealthTab({required this.stats, required this.selectedMonth});
+
+  final AttendanceStats stats;
+  final ValueNotifier<int> selectedMonth;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        children: [
+          ValueListenableBuilder<int>(
+            valueListenable: selectedMonth,
+            builder: (_, month, __) {
+              final monthSupp =
+                  stats.monthlySupplementServings[month] ??
+                  const <String, double>{};
+              final sortedMonthSupp = monthSupp.entries.toList()
+                ..sort((a, b) => b.value.compareTo(a.value));
+              final topMonth = sortedMonthSupp.isEmpty
+                  ? null
+                  : sortedMonthSupp.first;
+
+              return Row(
+                children: [
+                  Expanded(
+                    child: _GradientStatCard(
+                      icon: '💊',
+                      value: topMonth == null
+                          ? '-'
+                          : stats.productNames[topMonth.key] ?? '-',
+                      label: l10n.statsThisMonth,
+                      subtitle: topMonth == null
+                          ? null
+                          : '${topMonth.value.toStringAsFixed(0)}x',
+                      colors: const [
+                        AppColors.statsEmerald,
+                        AppColors.statsEmeraldDark,
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _GradientStatCard(
+                      icon: '🏆',
+                      value: stats.mostTakenSupplementName ?? '-',
+                      label: l10n.statsMostUsed,
+                      subtitle: stats.mostTakenSupplementCount <= 0
+                          ? null
+                          : '${stats.mostTakenSupplementCount.toStringAsFixed(0)}x',
+                      colors: const [
+                        AppColors.statsTeal,
+                        AppColors.statsTealDark,
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _GradientStatCard(
+                      icon: '🎯',
+                      value: '${stats.healthConsistencyPct.round()}%',
+                      label: l10n.statsHealth,
+                      colors: const [
+                        AppColors.statsCyan,
+                        AppColors.statsCyanDark,
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+          ValueListenableBuilder<int>(
+            valueListenable: selectedMonth,
+            builder: (_, month, __) {
+              final monthSupp =
+                  stats.monthlySupplementServings[month] ??
+                  const <String, double>{};
+              final entries = monthSupp.entries.toList()
+                ..sort((a, b) => b.value.compareTo(a.value));
+
+              return _ChartSection(
+                title: _monthLong(context, month),
+                trailing: _MonthSwitcher(
+                  selectedMonth: month,
+                  onPrevious: () =>
+                      selectedMonth.value = month == 1 ? 12 : month - 1,
+                  onNext: () =>
+                      selectedMonth.value = month == 12 ? 1 : month + 1,
+                ),
+                child: entries.isEmpty
+                    ? EmptyStateWidget(
+                        title: l10n.statsHealth,
+                        message: l10n.statsThisMonth,
+                        emoji: '💊',
+                      )
+                    : Column(
+                        children: entries
+                            .take(8)
+                            .map((entry) {
+                              final max = entries.first.value;
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: _HorizontalProgress(
+                                  icon: '💊',
+                                  name: stats.productNames[entry.key] ?? '-',
+                                  value: entry.value,
+                                  max: max,
+                                  color: AppColors.statsEmerald,
+                                  trailing: '${entry.value.toStringAsFixed(0)}',
+                                ),
+                              );
+                            })
+                            .toList(growable: false),
+                      ),
+              );
+            },
+          ),
+          const SizedBox(height: 16),
+          _ChartSection(
+            title: l10n.statsTotalLogs,
+            child: Column(
+              children: [
+                _SurfaceStatCard(
+                  icon: '🧾',
+                  value: '${stats.healthTotalLogs}',
+                  label: l10n.statsTotalLogs,
+                ),
+                const SizedBox(height: 12),
+                if (stats.topNutrients.isEmpty)
+                  EmptyStateWidget(
+                    title: l10n.statsHealth,
+                    message: l10n.statsTotalTracked,
+                    emoji: '🥦',
+                  )
+                else
+                  Column(
+                    children: stats.topNutrients
+                        .map(
+                          (nutrient) => Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    nutrient.name,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium,
+                                  ),
+                                ),
+                                Text(
+                                  '${nutrient.amount.toStringAsFixed(1)} ${nutrient.unit}',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                        .toList(growable: false),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChartSection extends StatelessWidget {
+  const _ChartSection({
+    required this.title,
+    required this.child,
+    this.trailing,
+  });
+
+  final String title;
+  final Widget child;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Card(
+      margin: EdgeInsets.zero,
+      elevation: 0,
+      color: cs.surfaceContainerHigh,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                if (trailing != null) trailing!,
+              ],
+            ),
+            const SizedBox(height: 12),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GradientStatCard extends StatelessWidget {
+  const _GradientStatCard({
+    required this.icon,
+    required this.value,
+    required this.label,
+    required this.colors,
+    this.subtitle,
+  });
+
+  final String icon;
+  final String value;
+  final String label;
+  final List<Color> colors;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: colors,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 20)),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: Colors.white.withValues(alpha: 0.9),
+            ),
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              subtitle!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: Colors.white.withValues(alpha: 0.8),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _SurfaceStatCard extends StatelessWidget {
+  const _SurfaceStatCard({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
+
+  final String icon;
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: cs.surface,
+        border: Border.all(color: cs.outline.withValues(alpha: 0.6)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 18)),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VerticalBar extends StatelessWidget {
+  const _VerticalBar({
+    required this.value,
+    required this.max,
+    required this.label,
+    this.highlighted = false,
+  });
+
+  final double value;
+  final double max;
+  final String label;
+  final bool highlighted;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final ratio = max <= 0 ? 0.0 : (value / max).clamp(0.0, 1.0);
+
+    return Column(
+      children: [
+        SizedBox(
+          height: 120,
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              width: 20,
+              height: 8 + (ratio * 112),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                color: highlighted ? AppColors.statsPink : cs.primary,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: highlighted ? AppColors.statsPink : cs.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HorizontalProgress extends StatelessWidget {
+  const _HorizontalProgress({
+    required this.icon,
+    required this.name,
+    required this.value,
+    required this.max,
+    required this.color,
+    required this.trailing,
+  });
+
+  final String icon;
+  final String name;
+  final double value;
+  final double max;
+  final Color color;
+  final String trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final ratio = max <= 0 ? 0.0 : (value / max).clamp(0.0, 1.0);
+
+    return Row(
+      children: [
+        Text(icon),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          flex: 2,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              height: 12,
+              color: cs.outline.withValues(alpha: 0.25),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: FractionallySizedBox(
+                  widthFactor: ratio,
+                  child: Container(color: color),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(trailing, style: Theme.of(context).textTheme.labelLarge),
+      ],
+    );
+  }
+}
+
+class _MonthSwitcher extends StatelessWidget {
+  const _MonthSwitcher({
+    required this.selectedMonth,
+    required this.onPrevious,
+    required this.onNext,
+  });
+
+  final int selectedMonth;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: onPrevious,
+          child: Container(
+            width: 30,
+            height: 30,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: cs.surface,
+              border: Border.all(color: cs.outline),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.chevron_left, size: 18),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(_monthShort(context, selectedMonth)),
+        const SizedBox(width: 8),
+        InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: onNext,
+          child: Container(
+            width: 30,
+            height: 30,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: cs.surface,
+              border: Border.all(color: cs.outline),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.chevron_right, size: 18),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+TrainingType? _typeFor(List<TrainingType> types, String id) {
+  for (final type in types) {
+    if (type.id == id) return type;
+  }
+  return null;
+}
+
+Color _parseHexColor(String? hex) {
+  if (hex == null || hex.trim().isEmpty) return AppColors.primary;
+  final cleaned = hex.replaceAll('#', '');
+  final value = int.tryParse(
+    cleaned.length == 6 ? 'FF$cleaned' : cleaned,
+    radix: 16,
+  );
+  return value == null ? AppColors.primary : Color(value);
+}
+
+int _maxOrOne(List<int> values) {
+  if (values.isEmpty) return 1;
+  final max = values.reduce((a, b) => a > b ? a : b);
+  return max <= 0 ? 1 : max;
+}
+
+double _maxDoubleOrOne(Iterable<double> values) {
+  if (values.isEmpty) return 1;
+  double max = 0;
+  for (final value in values) {
+    if (value > max) max = value;
+  }
+  return max <= 0 ? 1 : max;
+}
+
+String _durationLabel(BuildContext context, double minutes) {
+  final l10n = AppLocalizations.of(context);
+  return '${minutes.round()} ${l10n.statsMinutes}';
+}
+
+String _favoriteDayLabel(BuildContext context, List<int> weekdayIndexes) {
+  if (weekdayIndexes.isEmpty) return '-';
+  return weekdayIndexes
+      .map((weekday) => _weekdayShort(context, weekday))
+      .join(' / ');
+}
+
+String _monthShort(BuildContext context, int month) {
+  final full = _monthLong(context, month);
+  if (full.length <= 3) return full;
+  return full.substring(0, 3);
+}
+
+String _monthLong(BuildContext context, int month) {
+  final l10n = AppLocalizations.of(context);
+  return switch (month) {
+    1 => l10n.monthsJanuary,
+    2 => l10n.monthsFebruary,
+    3 => l10n.monthsMarch,
+    4 => l10n.monthsApril,
+    5 => l10n.monthsMay,
+    6 => l10n.monthsJune,
+    7 => l10n.monthsJuly,
+    8 => l10n.monthsAugust,
+    9 => l10n.monthsSeptember,
+    10 => l10n.monthsOctober,
+    11 => l10n.monthsNovember,
+    _ => l10n.monthsDecember,
+  };
+}
+
+String _weekdayShort(BuildContext context, int weekday) {
+  final l10n = AppLocalizations.of(context);
+  final value = switch (weekday) {
+    1 => l10n.weekdaysMonday,
+    2 => l10n.weekdaysTuesday,
+    3 => l10n.weekdaysWednesday,
+    4 => l10n.weekdaysThursday,
+    5 => l10n.weekdaysFriday,
+    6 => l10n.weekdaysSaturday,
+    _ => l10n.weekdaysSunday,
+  };
+  if (value.length <= 3) return value;
+  return value.substring(0, 3);
 }

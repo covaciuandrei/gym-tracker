@@ -136,18 +136,43 @@ class ForgotPasswordRoute extends _i14.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i5.HealthPage]
-class HealthRoute extends _i14.PageRouteInfo<void> {
-  const HealthRoute({List<_i14.PageRouteInfo>? children})
-    : super(HealthRoute.name, initialChildren: children);
+class HealthRoute extends _i14.PageRouteInfo<HealthRouteArgs> {
+  HealthRoute({
+    _i15.Key? key,
+    String? testUserId,
+    List<_i14.PageRouteInfo>? children,
+  }) : super(
+         HealthRoute.name,
+         args: HealthRouteArgs(key: key, testUserId: testUserId),
+         initialChildren: children,
+       );
 
   static const String name = 'HealthRoute';
 
   static _i14.PageInfo page = _i14.PageInfo(
     name,
     builder: (data) {
-      return const _i5.HealthPage();
+      final args = data.argsAs<HealthRouteArgs>(
+        orElse: () => const HealthRouteArgs(),
+      );
+      return _i14.WrappedRoute(
+        child: _i5.HealthPage(key: args.key, testUserId: args.testUserId),
+      );
     },
   );
+}
+
+class HealthRouteArgs {
+  const HealthRouteArgs({this.key, this.testUserId});
+
+  final _i15.Key? key;
+
+  final String? testUserId;
+
+  @override
+  String toString() {
+    return 'HealthRouteArgs{key: $key, testUserId: $testUserId}';
+  }
 }
 
 /// generated route for
@@ -257,7 +282,7 @@ class StatsRoute extends _i14.PageRouteInfo<void> {
   static _i14.PageInfo page = _i14.PageInfo(
     name,
     builder: (data) {
-      return const _i12.StatsPage();
+      return _i14.WrappedRoute(child: const _i12.StatsPage());
     },
   );
 }
@@ -273,7 +298,7 @@ class WorkoutTypesRoute extends _i14.PageRouteInfo<void> {
   static _i14.PageInfo page = _i14.PageInfo(
     name,
     builder: (data) {
-      return const _i13.WorkoutTypesPage();
+      return _i14.WrappedRoute(child: const _i13.WorkoutTypesPage());
     },
   );
 }

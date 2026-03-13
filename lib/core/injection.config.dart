@@ -71,17 +71,18 @@ _i174.GetIt $initGetIt(
   gh.factory<_i17.HealthService>(
     () => _i17.HealthService(gh<_i531.HealthSource>()),
   );
-  gh.factory<_i730.StatsCubit>(
-    () => _i730.StatsCubit(
-      gh<_i483.AttendanceService>(),
-      gh<_i425.WorkoutService>(),
-    ),
-  );
   gh.factory<_i800.WorkoutCubit>(
     () => _i800.WorkoutCubit(gh<_i425.WorkoutService>()),
   );
   gh.factory<_i829.HealthCubit>(
     () => _i829.HealthCubit(gh<_i17.HealthService>()),
+  );
+  gh.factory<_i730.StatsCubit>(
+    () => _i730.StatsCubit(
+      gh<_i483.AttendanceService>(),
+      gh<_i425.WorkoutService>(),
+      gh<_i17.HealthService>(),
+    ),
   );
   return getIt;
 }

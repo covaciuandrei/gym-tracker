@@ -47,12 +47,7 @@ class _MainShellPageState extends State<MainShellPage> {
         ctx.router.replace(const LoginRoute());
       },
       child: AutoTabsScaffold(
-        routes: const [
-          CalendarRoute(),
-          StatsRoute(),
-          HealthRoute(),
-          ProfileRoute(),
-        ],
+        routes: [CalendarRoute(), StatsRoute(), HealthRoute(), ProfileRoute()],
         bottomNavigationBuilder: (_, tabsRouter) {
           return NavigationBar(
             selectedIndex: tabsRouter.activeIndex,
