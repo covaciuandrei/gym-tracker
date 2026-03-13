@@ -28,8 +28,6 @@ class _MainShellPageState extends State<MainShellPage> {
   @override
   void initState() {
     super.initState();
-    // Start streaming Firebase auth changes so the shell can react to
-    // token expiry or externally-triggered sign-outs.
     context.read<AuthCubit>().watchAuthState();
   }
 
@@ -41,39 +39,120 @@ class _MainShellPageState extends State<MainShellPage> {
       listenWhen: (_, curr) =>
           curr is AuthSignOutSuccessState || curr is AuthUnauthenticatedState,
       listener: (ctx, _) {
-        // The stack is already clean when inside the shell (previous screens
-        // used replace/replaceAll before landing here), so a simple replace
-        // is sufficient to return to the login page.
         ctx.router.replace(const LoginRoute());
       },
       child: AutoTabsScaffold(
         routes: [CalendarRoute(), StatsRoute(), HealthRoute(), ProfileRoute()],
         bottomNavigationBuilder: (_, tabsRouter) {
-          return NavigationBar(
-            selectedIndex: tabsRouter.activeIndex,
-            onDestinationSelected: tabsRouter.setActiveIndex,
-            destinations: [
-              NavigationDestination(
-                icon: const Icon(Icons.calendar_month_outlined),
-                selectedIcon: const Icon(Icons.calendar_month),
-                label: l10n.navCalendar,
+          final cs = Theme.of(context).colorScheme;
+          final destinations = [
+            (
+              icon: Icons.calendar_month_outlined,
+              selectedIcon: Icons.calendar_month,
+              label: l10n.navCalendar,
+            ),
+            (
+              icon: Icons.bar_chart_outlined,
+              selectedIcon: Icons.bar_chart,
+              label: l10n.navStats,
+            ),
+            (
+              icon: Icons.medication_outlined,
+              selectedIcon: Icons.medication,
+              label: l10n.navHealth,
+            ),
+            (
+              icon: Icons.person_outline,
+              selectedIcon: Icons.person,
+              label: l10n.navProfile,
+            ),
+          ];
+
+          return DecoratedBox(
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              border: Border(
+                top: BorderSide(
+                  color: cs.outlineVariant.withValues(alpha: 0.5),
+                ),
               ),
-              NavigationDestination(
-                icon: const Icon(Icons.bar_chart_outlined),
-                selectedIcon: const Icon(Icons.bar_chart),
-                label: l10n.navStats,
+            ),
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 50),
+                child: SizedBox(
+                  height: 80,
+                  child: Row(
+                    children: List.generate(destinations.length, (index) {
+                      final item = destinations[index];
+                      final isSelected = tabsRouter.activeIndex == index;
+
+                      return Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 3,
+                            vertical: 12,
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(14),
+                              onTap: () => tabsRouter.setActiveIndex(index),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 180),
+                                curve: Curves.easeOut,
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? cs.primaryContainer.withValues(
+                                          alpha: 0.45,
+                                        )
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? cs.primary
+                                        : Colors.transparent,
+                                    width: 1.6,
+                                  ),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      isSelected
+                                          ? item.selectedIcon
+                                          : item.icon,
+                                      size: 22,
+                                      color: isSelected
+                                          ? cs.primary
+                                          : cs.onSurfaceVariant,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      item.label,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: isSelected
+                                            ? FontWeight.w600
+                                            : FontWeight.w500,
+                                        color: isSelected
+                                            ? cs.primary
+                                            : cs.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
               ),
-              NavigationDestination(
-                icon: const Icon(Icons.medication_outlined),
-                selectedIcon: const Icon(Icons.medication),
-                label: l10n.navHealth,
-              ),
-              NavigationDestination(
-                icon: const Icon(Icons.person_outline),
-                selectedIcon: const Icon(Icons.person),
-                label: l10n.navProfile,
-              ),
-            ],
+            ),
           );
         },
       ),
