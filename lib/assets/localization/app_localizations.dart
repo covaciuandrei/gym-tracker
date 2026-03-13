@@ -896,6 +896,12 @@ abstract class AppLocalizations {
   /// **'Name'**
   String get workoutTypesName;
 
+  /// No description provided for @workoutTypesNamePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Strength Training'**
+  String get workoutTypesNamePlaceholder;
+
   /// No description provided for @workoutTypesIcon.
   ///
   /// In en, this message translates to:
@@ -907,6 +913,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Color'**
   String get workoutTypesColor;
+
+  /// No description provided for @workoutTypesCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get workoutTypesCreate;
 
   /// No description provided for @workoutTypesCancel.
   ///
@@ -920,11 +932,65 @@ abstract class AppLocalizations {
   /// **'No workout types yet.\nTap + to add your first type.'**
   String get workoutTypesEmpty;
 
+  /// No description provided for @workoutTypesEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No workout types yet'**
+  String get workoutTypesEmptyTitle;
+
+  /// No description provided for @workoutTypesEmptyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first workout type to organize sessions.'**
+  String get workoutTypesEmptyDescription;
+
+  /// No description provided for @workoutTypesCreateFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Create First Type'**
+  String get workoutTypesCreateFirst;
+
+  /// No description provided for @workoutTypesCreateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Workout Type'**
+  String get workoutTypesCreateTitle;
+
   /// No description provided for @workoutTypesEditTitle.
   ///
   /// In en, this message translates to:
   /// **'Edit Type'**
   String get workoutTypesEditTitle;
+
+  /// No description provided for @workoutTypesDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete workout type'**
+  String get workoutTypesDeleteTitle;
+
+  /// No description provided for @workoutTypesDeleteWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone.'**
+  String get workoutTypesDeleteWarning;
+
+  /// No description provided for @workoutTypesLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading workout types...'**
+  String get workoutTypesLoading;
+
+  /// No description provided for @workoutTypesPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get workoutTypesPreview;
+
+  /// No description provided for @workoutTypesPreviewName.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout Type'**
+  String get workoutTypesPreviewName;
 
   /// No description provided for @healthTitle.
   ///

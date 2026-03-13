@@ -419,10 +419,16 @@ class AppLocalizationsRo extends AppLocalizations {
   String get workoutTypesName => 'Nume';
 
   @override
+  String get workoutTypesNamePlaceholder => 'ex: Antrenament de Forță';
+
+  @override
   String get workoutTypesIcon => 'Pictogramă';
 
   @override
   String get workoutTypesColor => 'Culoare';
+
+  @override
+  String get workoutTypesCreate => 'Creează';
 
   @override
   String get workoutTypesCancel => 'Anulează';
@@ -432,7 +438,36 @@ class AppLocalizationsRo extends AppLocalizations {
       'Nu există tipuri de antrenament.\nAtinge + pentru a adăuga primul tip.';
 
   @override
+  String get workoutTypesEmptyTitle => 'Nu există tipuri de antrenament';
+
+  @override
+  String get workoutTypesEmptyDescription =>
+      'Creează primul tip de antrenament pentru a organiza sesiunile.';
+
+  @override
+  String get workoutTypesCreateFirst => 'Creează primul tip';
+
+  @override
+  String get workoutTypesCreateTitle => 'Creează tip de antrenament';
+
+  @override
   String get workoutTypesEditTitle => 'Editează Tip';
+
+  @override
+  String get workoutTypesDeleteTitle => 'Șterge tipul de antrenament';
+
+  @override
+  String get workoutTypesDeleteWarning =>
+      'Această acțiune nu poate fi anulată.';
+
+  @override
+  String get workoutTypesLoading => 'Se încarcă tipurile de antrenament...';
+
+  @override
+  String get workoutTypesPreview => 'Previzualizare';
+
+  @override
+  String get workoutTypesPreviewName => 'Tip de antrenament';
 
   @override
   String get healthTitle => 'Sănătate';

@@ -415,10 +415,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get workoutTypesName => 'Name';
 
   @override
+  String get workoutTypesNamePlaceholder => 'e.g. Strength Training';
+
+  @override
   String get workoutTypesIcon => 'Icon';
 
   @override
   String get workoutTypesColor => 'Color';
+
+  @override
+  String get workoutTypesCreate => 'Create';
 
   @override
   String get workoutTypesCancel => 'Cancel';
@@ -428,7 +434,35 @@ class AppLocalizationsEn extends AppLocalizations {
       'No workout types yet.\nTap + to add your first type.';
 
   @override
+  String get workoutTypesEmptyTitle => 'No workout types yet';
+
+  @override
+  String get workoutTypesEmptyDescription =>
+      'Create your first workout type to organize sessions.';
+
+  @override
+  String get workoutTypesCreateFirst => 'Create First Type';
+
+  @override
+  String get workoutTypesCreateTitle => 'Create Workout Type';
+
+  @override
   String get workoutTypesEditTitle => 'Edit Type';
+
+  @override
+  String get workoutTypesDeleteTitle => 'Delete workout type';
+
+  @override
+  String get workoutTypesDeleteWarning => 'This action cannot be undone.';
+
+  @override
+  String get workoutTypesLoading => 'Loading workout types...';
+
+  @override
+  String get workoutTypesPreview => 'Preview';
+
+  @override
+  String get workoutTypesPreviewName => 'Workout Type';
 
   @override
   String get healthTitle => 'Health';
