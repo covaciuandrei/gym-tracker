@@ -124,6 +124,12 @@ decoration: BoxDecoration(
 - **No hardcoded colors** — always use `Theme.of(context).colorScheme.*` or
   `AppColors.*` constants
 - **No hardcoded text styles** — always use `Theme.of(context).textTheme.*`
+- **ThemeHelper / LocaleHelper usage scope**:
+  - Do **not** inject `ThemeHelper`/`LocaleHelper` into every page.
+  - Most pages should read visuals/localized text through inherited context
+    (`Theme.of(context)` and `AppLocalizations.of(context)`).
+  - Use `ThemeHelper`/`LocaleHelper` directly only where app-level preferences
+    are changed or observed (for example root app wiring and Settings page).
 
 **State management in widgets (BlocBuilder / BlocConsumer):**
 
@@ -148,6 +154,15 @@ decoration: BoxDecoration(
 - For local live-feedback widgets (password strength, match indicator) use
   `ListenableBuilder` or `ValueListenableBuilder` on `TextEditingController`
   — not `setState`.
+- For page initialization data (for example app version, profile bootstrap,
+  or first-load UI values), **do not use `setState`**. Create an `init()`
+  method in that page's cubit, call it from `initState()`, emit a dedicated
+  state (for example `SettingsReadyState(appVersion: ...)`), and read that
+  value from `BlocBuilder`/`BlocConsumer.builder`.
+- **Never use `late` or `late final` in app code.** Prefer one of:
+  - eagerly initialized `final` fields,
+  - nullable fields with explicit guards,
+  - cubit-emitted state values read in `BlocBuilder`.
 - Expose the **inner view widget as a public class** (e.g. `RegisterView`)
   so tests can inject a mock cubit via `BlocProvider.value` without `getIt`.
 

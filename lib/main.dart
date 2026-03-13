@@ -49,14 +49,12 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   final _appRouter = getIt<AppRouter>();
-  late final LocaleHelper _localeHelper;
-  late final ThemeHelper _themeHelper;
+  final LocaleHelper _localeHelper = getIt<LocaleHelper>();
+  final ThemeHelper _themeHelper = getIt<ThemeHelper>();
 
   @override
   void initState() {
     super.initState();
-    _localeHelper = getIt<LocaleHelper>();
-    _themeHelper = getIt<ThemeHelper>();
     _localeHelper.addListener(_onHelperChanged);
     _themeHelper.addListener(_onHelperChanged);
   }

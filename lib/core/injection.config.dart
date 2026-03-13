@@ -16,6 +16,7 @@ import 'package:injectable/injectable.dart' as _i526;
 import '../cubit/auth/auth_cubit.dart' as _i548;
 import '../cubit/calendar/calendar_cubit.dart' as _i1060;
 import '../cubit/health/health_cubit.dart' as _i829;
+import '../cubit/settings/settings_cubit.dart' as _i411;
 import '../cubit/stats/stats_cubit.dart' as _i730;
 import '../cubit/workout/workout_cubit.dart' as _i800;
 import '../data/mappers/attendance_day_mapper.dart' as _i604;
@@ -39,6 +40,7 @@ _i174.GetIt $initGetIt(
 }) {
   final gh = _i526.GetItHelper(getIt, environment, environmentFilter);
   final firebaseModule = _$FirebaseModule();
+  gh.factory<_i411.SettingsCubit>(() => _i411.SettingsCubit());
   gh.factory<_i604.AttendanceDayMapper>(() => _i604.AttendanceDayMapper());
   gh.factory<_i472.SupplementMapper>(() => _i472.SupplementMapper());
   gh.factory<_i660.TrainingTypeMapper>(() => _i660.TrainingTypeMapper());

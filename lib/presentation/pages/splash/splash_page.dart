@@ -14,53 +14,54 @@ class SplashPage extends StatefulWidget {
   State<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage>
-    with TickerProviderStateMixin {
+class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   // ── Entry animation (plays once, 1 400 ms) ──────────────────────────────
-  late final AnimationController _entryCtrl;
+  AnimationController? _entryCtrl;
 
   // Logo: elastic pop-in
-  late final Animation<double> _logoScale;
-  late final Animation<double> _logoFade;
+  Animation<double>? _logoScale;
+  Animation<double>? _logoFade;
 
   // App name: fade + slide up
-  late final Animation<double> _titleFade;
-  late final Animation<double> _titleY;
+  Animation<double>? _titleFade;
+  Animation<double>? _titleY;
 
   // Subtitle: fade + slide up (delayed)
-  late final Animation<double> _subtitleFade;
-  late final Animation<double> _subtitleY;
+  Animation<double>? _subtitleFade;
+  Animation<double>? _subtitleY;
 
   // Dots loader: fade in last
-  late final Animation<double> _dotsFade;
+  Animation<double>? _dotsFade;
 
   // ── Dots loop animation (repeating, 900 ms) ──────────────────────────────
-  late final AnimationController _dotsCtrl;
+  AnimationController? _dotsCtrl;
 
   @override
   void initState() {
     super.initState();
 
-    _entryCtrl = AnimationController(
+    final entryCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1400),
     )..forward();
+    _entryCtrl = entryCtrl;
 
-    _dotsCtrl = AnimationController(
+    final dotsCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat();
+    _dotsCtrl = dotsCtrl;
 
     // Logo: 0.0 → 0.6 elastic scale, 0.0 → 0.3 fade
     _logoScale = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
-        parent: _entryCtrl,
+        parent: entryCtrl,
         curve: const Interval(0.0, 0.6, curve: Curves.elasticOut),
       ),
     );
     _logoFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
-        parent: _entryCtrl,
+        parent: entryCtrl,
         curve: const Interval(0.0, 0.30, curve: Curves.easeOut),
       ),
     );
@@ -68,13 +69,13 @@ class _SplashPageState extends State<SplashPage>
     // Title: 0.30 → 0.65
     _titleFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
-        parent: _entryCtrl,
+        parent: entryCtrl,
         curve: const Interval(0.30, 0.65, curve: Curves.easeOut),
       ),
     );
     _titleY = Tween<double>(begin: 24.0, end: 0.0).animate(
       CurvedAnimation(
-        parent: _entryCtrl,
+        parent: entryCtrl,
         curve: const Interval(0.30, 0.65, curve: Curves.easeOut),
       ),
     );
@@ -82,13 +83,13 @@ class _SplashPageState extends State<SplashPage>
     // Subtitle: 0.50 → 0.82
     _subtitleFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
-        parent: _entryCtrl,
+        parent: entryCtrl,
         curve: const Interval(0.50, 0.82, curve: Curves.easeOut),
       ),
     );
     _subtitleY = Tween<double>(begin: 16.0, end: 0.0).animate(
       CurvedAnimation(
-        parent: _entryCtrl,
+        parent: entryCtrl,
         curve: const Interval(0.50, 0.82, curve: Curves.easeOut),
       ),
     );
@@ -96,7 +97,7 @@ class _SplashPageState extends State<SplashPage>
     // Dots: 0.75 → 1.0
     _dotsFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
-        parent: _entryCtrl,
+        parent: entryCtrl,
         curve: const Interval(0.75, 1.0, curve: Curves.easeOut),
       ),
     );
@@ -117,8 +118,8 @@ class _SplashPageState extends State<SplashPage>
 
   @override
   void dispose() {
-    _entryCtrl.dispose();
-    _dotsCtrl.dispose();
+    _entryCtrl?.dispose();
+    _dotsCtrl?.dispose();
     super.dispose();
   }
 
@@ -126,22 +127,36 @@ class _SplashPageState extends State<SplashPage>
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
+    final entryCtrl = _entryCtrl;
+    final dotsCtrl = _dotsCtrl;
+
+    if (entryCtrl == null ||
+        dotsCtrl == null ||
+        _logoScale == null ||
+        _logoFade == null ||
+        _titleFade == null ||
+        _titleY == null ||
+        _subtitleFade == null ||
+        _subtitleY == null ||
+        _dotsFade == null) {
+      return const SizedBox.shrink();
+    }
 
     return Scaffold(
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
           child: AnimatedBuilder(
-            animation: _entryCtrl,
+            animation: entryCtrl,
             builder: (context, _) {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // ── Logo card ───────────────────────────────────────────
                   Opacity(
-                    opacity: _logoFade.value,
+                    opacity: _logoFade!.value,
                     child: Transform.scale(
-                      scale: _logoScale.value,
+                      scale: _logoScale!.value,
                       child: const _LogoCard(),
                     ),
                   ),
@@ -149,9 +164,9 @@ class _SplashPageState extends State<SplashPage>
 
                   // ── App name ────────────────────────────────────────────
                   Opacity(
-                    opacity: _titleFade.value,
+                    opacity: _titleFade!.value,
                     child: Transform.translate(
-                      offset: Offset(0, _titleY.value),
+                      offset: Offset(0, _titleY!.value),
                       child: Text(
                         'Gym Tracker',
                         style: tt.displaySmall?.copyWith(
@@ -165,9 +180,9 @@ class _SplashPageState extends State<SplashPage>
 
                   // ── Subtitle ────────────────────────────────────────────
                   Opacity(
-                    opacity: _subtitleFade.value,
+                    opacity: _subtitleFade!.value,
                     child: Transform.translate(
-                      offset: Offset(0, _subtitleY.value),
+                      offset: Offset(0, _subtitleY!.value),
                       child: Text(
                         'Track your gym journey',
                         style: tt.bodyLarge?.copyWith(
@@ -181,11 +196,8 @@ class _SplashPageState extends State<SplashPage>
 
                   // ── Bouncing dots loader ────────────────────────────────
                   Opacity(
-                    opacity: _dotsFade.value,
-                    child: _DotsLoader(
-                      controller: _dotsCtrl,
-                      color: cs.primary,
-                    ),
+                    opacity: _dotsFade!.value,
+                    child: _DotsLoader(controller: dotsCtrl, color: cs.primary),
                   ),
                 ],
               );
@@ -225,9 +237,7 @@ class _LogoCard extends StatelessWidget {
           ),
         ],
       ),
-      child: const Center(
-        child: Text('💪', style: TextStyle(fontSize: 56)),
-      ),
+      child: const Center(child: Text('💪', style: TextStyle(fontSize: 56))),
     );
   }
 }
