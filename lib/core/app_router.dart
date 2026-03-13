@@ -29,5 +29,6 @@ class AppRouter extends RootStackRouter {
     ),
     AutoRoute(path: '/workout-types', page: WorkoutTypesRoute.page),
     AutoRoute(path: '/settings', page: SettingsRoute.page),
+    AutoRoute(path: '/change-password', page: ChangePasswordRoute.page),
   ];
 }
