@@ -62,14 +62,18 @@ _i174.GetIt $initGetIt(
     () => _i96.TrainingTypeSource(gh<_i660.TrainingTypeMapper>()),
   );
   gh.factory<_i548.AuthCubit>(() => _i548.AuthCubit(gh<_i637.AuthService>()));
-  gh.factory<_i1060.CalendarCubit>(
-    () => _i1060.CalendarCubit(gh<_i483.AttendanceService>()),
-  );
   gh.factory<_i425.WorkoutService>(
     () => _i425.WorkoutService(gh<_i96.TrainingTypeSource>()),
   );
   gh.factory<_i17.HealthService>(
     () => _i17.HealthService(gh<_i531.HealthSource>()),
+  );
+  gh.factory<_i1060.CalendarCubit>(
+    () => _i1060.CalendarCubit(
+      gh<_i483.AttendanceService>(),
+      gh<_i17.HealthService>(),
+      gh<_i425.WorkoutService>(),
+    ),
   );
   gh.factory<_i800.WorkoutCubit>(
     () => _i800.WorkoutCubit(gh<_i425.WorkoutService>()),

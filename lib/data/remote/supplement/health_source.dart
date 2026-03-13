@@ -4,6 +4,7 @@ import 'package:injectable/injectable.dart';
 import 'package:gym_tracker/data/mappers/supplement_mapper.dart';
 import 'package:gym_tracker/model/supplement_log.dart';
 import 'package:gym_tracker/model/supplement_product.dart';
+import 'package:gym_tracker/data/remote/supplement/product_ingredient_dto.dart';
 import 'supplement_log_dto.dart';
 import 'supplement_product_dto.dart';
 
@@ -21,7 +22,26 @@ class HealthSource {
       .collection('supplementProducts')
       .withConverter<SupplementProductDto>(
         fromFirestore: (snap, _) {
-          final dto = SupplementProductDto.fromJson(snap.data()!);
+          final raw = snap.data() ?? const <String, dynamic>{};
+          final servingsRaw =
+              raw['servings_per_day_default'] ?? raw['servingsPerDayDefault'];
+          final ingredientsRaw =
+              raw['ingredients'] as List<dynamic>? ?? const <dynamic>[];
+
+          final dto = SupplementProductDto(
+            id: snap.id,
+            name: (raw['name'] ?? '') as String,
+            brand: (raw['brand'] ?? '') as String,
+            ingredients: ingredientsRaw
+                .whereType<Map<String, dynamic>>()
+                .map(ProductIngredientDto.fromJson)
+                .toList(growable: false),
+            servingsPerDayDefault: servingsRaw is num
+                ? servingsRaw.toDouble()
+                : 1.0,
+            createdBy: (raw['created_by'] ?? raw['createdBy']) as String?,
+            verified: raw['verified'] as bool?,
+          );
           return SupplementProductDto(
             id: snap.id,
             name: dto.name,
@@ -39,16 +59,20 @@ class HealthSource {
   Stream<List<SupplementProduct>> watchAllProducts() => _productsRef
       .orderBy('name')
       .snapshots()
-      .map((snap) =>
-          snap.docs.map((d) => _mapper.mapProductDto(d.data())).toList());
+      .map(
+        (snap) =>
+            snap.docs.map((d) => _mapper.mapProductDto(d.data())).toList(),
+      );
 
   /// Streams supplement products created by [userId].
   Stream<List<SupplementProduct>> watchMyProducts(String userId) => _productsRef
       .where('created_by', isEqualTo: userId)
       .orderBy('name')
       .snapshots()
-      .map((snap) =>
-          snap.docs.map((d) => _mapper.mapProductDto(d.data())).toList());
+      .map(
+        (snap) =>
+            snap.docs.map((d) => _mapper.mapProductDto(d.data())).toList(),
+      );
 
   /// Returns a single supplement product by [productId].
   Future<SupplementProduct?> getProduct(String productId) async {
@@ -78,51 +102,61 @@ class HealthSource {
   CollectionReference<SupplementLogDto> _entriesRef(
     String userId,
     String yearMonth,
-  ) =>
-      _db
-          .collection('users')
-          .doc(userId)
-          .collection('healthLogs')
-          .doc(yearMonth)
-          .collection('entries')
-          .withConverter<SupplementLogDto>(
-            fromFirestore: (snap, _) {
-              final dto = SupplementLogDto.fromJson(snap.data()!);
-              return SupplementLogDto(
-                id: snap.id,
-                date: dto.date,
-                productId: dto.productId,
-                productName: dto.productName,
-                productBrand: dto.productBrand,
-                servingsTaken: dto.servingsTaken,
-                timestamp: dto.timestamp,
-              );
-            },
-            toFirestore: (dto, _) => dto.toJson(),
+  ) => _db
+      .collection('users')
+      .doc(userId)
+      .collection('healthLogs')
+      .doc(yearMonth)
+      .collection('entries')
+      .withConverter<SupplementLogDto>(
+        fromFirestore: (snap, _) {
+          final raw = snap.data() ?? const <String, dynamic>{};
+          final servingsRaw = raw['servings_taken'] ?? raw['servingsTaken'];
+          final dto = SupplementLogDto(
+            id: snap.id,
+            date: (raw['date'] ?? '') as String,
+            productId: (raw['product_id'] ?? raw['productId'] ?? '') as String,
+            productName: (raw['product_name'] ?? raw['productName']) as String?,
+            productBrand:
+                (raw['product_brand'] ?? raw['productBrand']) as String?,
+            servingsTaken: servingsRaw is num ? servingsRaw.toDouble() : 1.0,
+            timestamp: raw['timestamp'],
           );
+          return SupplementLogDto(
+            id: snap.id,
+            date: dto.date,
+            productId: dto.productId,
+            productName: dto.productName,
+            productBrand: dto.productBrand,
+            servingsTaken: dto.servingsTaken,
+            timestamp: dto.timestamp,
+          );
+        },
+        toFirestore: (dto, _) => dto.toJson(),
+      );
 
   /// Streams all supplement log entries for a given [userId] and [yearMonth].
   Stream<List<SupplementLog>> watchMonthEntries(
     String userId,
     String yearMonth,
-  ) =>
-      _entriesRef(userId, yearMonth)
-          .orderBy('date')
-          .snapshots()
-          .map((snap) =>
-              snap.docs.map((d) => _mapper.mapLogDto(d.data())).toList());
+  ) => _entriesRef(userId, yearMonth)
+      .orderBy('date')
+      .snapshots()
+      .map(
+        (snap) => snap.docs.map((d) => _mapper.mapLogDto(d.data())).toList(),
+      );
 
   /// Streams all supplement log entries for a specific [date] ("YYYY-MM-DD").
   Stream<List<SupplementLog>> watchDayEntries(
     String userId,
     String yearMonth,
     String date,
-  ) =>
-      _entriesRef(userId, yearMonth)
-          .where('date', isEqualTo: date)
-          .snapshots()
-          .map((snap) =>
-              snap.docs.map((d) => _mapper.mapLogDto(d.data())).toList());
+  ) => _entriesRef(userId, yearMonth)
+      .where('date', isEqualTo: date)
+      .snapshots()
+      .map(
+        (snap) => snap.docs.map((d) => _mapper.mapLogDto(d.data())).toList(),
+      );
 
   /// Creates a new log entry. Returns the generated document id.
   Future<String> createEntry(
@@ -130,16 +164,14 @@ class HealthSource {
     String yearMonth,
     SupplementLog model,
   ) async {
-    final ref = await _entriesRef(userId, yearMonth)
-        .add(_mapper.mapLogModel(model));
+    final ref = await _entriesRef(
+      userId,
+      yearMonth,
+    ).add(_mapper.mapLogModel(model));
     return ref.id;
   }
 
   /// Deletes a specific log entry by [entryId].
-  Future<void> deleteEntry(
-    String userId,
-    String yearMonth,
-    String entryId,
-  ) =>
+  Future<void> deleteEntry(String userId, String yearMonth, String entryId) =>
       _entriesRef(userId, yearMonth).doc(entryId).delete();
 }

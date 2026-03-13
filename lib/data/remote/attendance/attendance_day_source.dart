@@ -18,29 +18,36 @@ class AttendanceDaySource {
   CollectionReference<AttendanceDayDto> _daysRef(
     String userId,
     String yearMonth,
-  ) =>
-      _db
-          .collection('users')
-          .doc(userId)
-          .collection('attendances')
-          .doc(yearMonth)
-          .collection('days')
-          .withConverter<AttendanceDayDto>(
-            fromFirestore: (snap, _) =>
-                AttendanceDayDto.fromJson(snap.data()!),
-            toFirestore: (dto, _) => dto.toJson(),
+  ) => _db
+      .collection('users')
+      .doc(userId)
+      .collection('attendances')
+      .doc(yearMonth)
+      .collection('days')
+      .withConverter<AttendanceDayDto>(
+        fromFirestore: (snap, _) {
+          final raw = snap.data() ?? const <String, dynamic>{};
+          final durationRaw = raw['duration_minutes'] ?? raw['durationMinutes'];
+          return AttendanceDayDto(
+            date: (raw['date'] ?? '') as String,
+            timestamp: raw['timestamp'] ?? Timestamp.now(),
+            trainingTypeId:
+                (raw['training_type_id'] ?? raw['trainingTypeId']) as String?,
+            durationMinutes: durationRaw is num ? durationRaw.toInt() : null,
+            notes: raw['notes'] as String?,
           );
+        },
+        toFirestore: (dto, _) => dto.toJson(),
+      );
 
   /// Streams all attendance days for a given [userId] and [yearMonth].
-  Stream<List<AttendanceDay>> watchMonth(
-    String userId,
-    String yearMonth,
-  ) =>
+  Stream<List<AttendanceDay>> watchMonth(String userId, String yearMonth) =>
       _daysRef(userId, yearMonth)
           .orderBy('date')
           .snapshots()
-          .map((snap) =>
-              snap.docs.map((d) => _mapper.mapDto(d.data())).toList());
+          .map(
+            (snap) => snap.docs.map((d) => _mapper.mapDto(d.data())).toList(),
+          );
 
   /// Returns the attendance record for [date] ("YYYY-MM-DD"), or null.
   Future<AttendanceDay?> getDay(
@@ -59,16 +66,9 @@ class AttendanceDaySource {
     String userId,
     String yearMonth,
     AttendanceDay model,
-  ) =>
-      _daysRef(userId, yearMonth)
-          .doc(model.date)
-          .set(_mapper.mapModel(model));
+  ) => _daysRef(userId, yearMonth).doc(model.date).set(_mapper.mapModel(model));
 
   /// Removes the attendance record for [date] from a given [yearMonth].
-  Future<void> deleteDay(
-    String userId,
-    String yearMonth,
-    String date,
-  ) =>
+  Future<void> deleteDay(String userId, String yearMonth, String date) =>
       _daysRef(userId, yearMonth).doc(date).delete();
 }
