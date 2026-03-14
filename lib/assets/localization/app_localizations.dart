@@ -503,7 +503,7 @@ abstract class AppLocalizations {
   /// No description provided for @calendarHealthTab.
   ///
   /// In en, this message translates to:
-  /// **'Health 💊'**
+  /// **'Health'**
   String get calendarHealthTab;
 
   /// No description provided for @calendarNotes.

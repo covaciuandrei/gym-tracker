@@ -4,7 +4,6 @@ import 'package:auto_route/auto_route.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/core/injection.dart';
@@ -15,7 +14,8 @@ import 'package:gym_tracker/model/supplement_log.dart';
 import 'package:gym_tracker/model/supplement_product.dart';
 import 'package:gym_tracker/model/training_type.dart';
 import 'package:gym_tracker/presentation/controls/option_toggle.dart';
-import 'package:gym_tracker/presentation/controls/primary_button.dart';
+import 'package:gym_tracker/presentation/validators/number_validator.dart';
+import 'package:gym_tracker/service/health/health_service.dart';
 
 @RoutePage()
 class CalendarPage extends StatefulWidget implements AutoRouteWrapper {
@@ -26,10 +26,7 @@ class CalendarPage extends StatefulWidget implements AutoRouteWrapper {
 
   @override
   Widget wrappedRoute(BuildContext context) {
-    return BlocProvider<CalendarCubit>(
-      create: (_) => getIt<CalendarCubit>(),
-      child: this,
-    );
+    return BlocProvider<CalendarCubit>(create: (_) => getIt<CalendarCubit>(), child: this);
   }
 }
 
@@ -60,11 +57,7 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   void _loadMonth(String userId) {
-    context.read<CalendarCubit>().loadMonth(
-      userId: userId,
-      year: _year.value,
-      month: _month.value,
-    );
+    context.read<CalendarCubit>().loadMonth(userId: userId, year: _year.value, month: _month.value);
   }
 
   void _loadYear(String userId) {
@@ -98,73 +91,84 @@ class _CalendarPageState extends State<CalendarPage> {
     _loadMonth(userId);
   }
 
-  Future<void> _openDaySheet(
-    DateTime date, {
-    required AttendanceDay? attendance,
-    required List<SupplementLog> logs,
-    required List<SupplementProduct> products,
-    required List<TrainingType> types,
-  }) async {
+  Future<void> _showDaySheet(BuildContext context, DateTime date, BaseState state) async {
     final userId = _userId;
     if (userId == null) return;
 
-    await showDialog<void>(
+    List<AttendanceDay> days = [];
+    List<SupplementLog> healthLogs = [];
+    List<SupplementProduct> products = [];
+    List<TrainingType> workoutTypes = [];
+
+    if (state is CalendarMonthLoadedState) {
+      days = state.days;
+      healthLogs = state.healthLogs;
+      products = state.products;
+      workoutTypes = state.workoutTypes;
+    } else if (state is CalendarYearLoadedState) {
+      final monthDays = state.attendanceByMonth[date.month] ?? [];
+      final monthSupplements = state.supplementsByMonth[date.month] ?? [];
+      days = monthDays;
+      healthLogs = monthSupplements;
+      workoutTypes = state.workoutTypes;
+
+      try {
+        products = await getIt<HealthService>().watchAllProducts().first;
+      } catch (_) {
+        products = [];
+      }
+    }
+
+    final dateKey = _dateKey(date);
+    final attendance = days.where((d) => d.date == dateKey).firstOrNull;
+    final dayLogs = healthLogs.where((log) => log.date == dateKey).toList();
+
+    if (!context.mounted) return;
+
+    await showDialog(
       context: context,
-      barrierDismissible: true,
-      builder: (_) {
-        return _CalendarDaySheet(
-          date: date,
-          initialAttendance: attendance,
-          initialLogs: logs,
-          products: products,
-          types: types,
-          onMarkAttended: (typeId, duration) {
-            return context.read<CalendarCubit>().markAttended(
-              userId: userId,
-              date: _dateKey(date),
-              workoutTypeId: typeId,
-              durationMinutes: duration,
-            );
-          },
-          onUpdateAttendance: (typeId, duration) {
-            return context.read<CalendarCubit>().updateDay(
-              userId: userId,
-              date: _dateKey(date),
-              workoutTypeId: typeId,
-              durationMinutes: duration,
-            );
-          },
-          onClearAttendance: () {
-            return context.read<CalendarCubit>().clearDay(
-              userId: userId,
-              date: _dateKey(date),
-            );
-          },
-          onAddSupplement: (product) {
-            return context.read<CalendarCubit>().logSupplement(
-              userId: userId,
-              model: SupplementLog(
-                id: '',
-                date: _dateKey(date),
-                productId: product.id,
-                productName: product.name,
-                productBrand: product.brand,
-                servingsTaken: product.servingsPerDayDefault <= 0
-                    ? 1
-                    : product.servingsPerDayDefault,
-                timestamp: DateTime.now(),
-              ),
-            );
-          },
-          onDeleteSupplement: (log) {
-            return context.read<CalendarCubit>().deleteSupplementEntry(
-              userId: userId,
-              date: log.date,
-              entryId: log.id,
-            );
-          },
-        );
-      },
+      builder: (_) => _CalendarDaySheet(
+        date: date,
+        initialAttendance: attendance,
+        initialLogs: dayLogs,
+        products: products,
+        types: workoutTypes,
+        onMarkAttended: (typeId, duration) async {
+          final day = AttendanceDay(
+            date: dateKey,
+            timestamp: DateTime.now(),
+            trainingTypeId: typeId,
+            durationMinutes: duration,
+          );
+          await context.read<CalendarCubit>().markDay(userId: userId, day: day);
+        },
+        onUpdateAttendance: (typeId, duration) async {
+          final day = AttendanceDay(
+            date: dateKey,
+            timestamp: attendance?.timestamp ?? DateTime.now(),
+            trainingTypeId: typeId,
+            durationMinutes: duration,
+          );
+          await context.read<CalendarCubit>().markDay(userId: userId, day: day);
+        },
+        onClearAttendance: () async {
+          await context.read<CalendarCubit>().clearDay(userId: userId, date: dateKey);
+        },
+        onAddSupplement: (product) async {
+          final log = SupplementLog(
+            id: '',
+            date: dateKey,
+            timestamp: DateTime.now(),
+            productId: product.id,
+            productName: product.name,
+            servingsTaken: 1,
+          );
+          await context.read<CalendarCubit>().logSupplement(userId: userId, model: log);
+        },
+        onDeleteSupplement: (log) async {
+          await context.read<CalendarCubit>().deleteSupplementEntry(userId: userId, date: dateKey, entryId: log.id);
+        },
+      ),
     );
   }
 
@@ -181,7 +185,6 @@ class _CalendarPageState extends State<CalendarPage> {
     }
 
     final l10n = AppLocalizations.of(context);
-    final cs = Theme.of(context).colorScheme;
 
     return BlocConsumer<CalendarCubit, BaseState>(
       listenWhen: (_, curr) =>
@@ -206,9 +209,7 @@ class _CalendarPageState extends State<CalendarPage> {
         }
 
         if (state is SomethingWentWrongState) {
-          ScaffoldMessenger.of(
-            ctx,
-          ).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
+          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
         }
       },
       builder: (ctx, state) {
@@ -224,16 +225,10 @@ class _CalendarPageState extends State<CalendarPage> {
                   final selectedYear = _year.value;
                   final selectedMonth = _month.value;
 
-                  final monthState = state is CalendarMonthLoadedState
-                      ? state
-                      : null;
-                  final yearState = state is CalendarYearLoadedState
-                      ? state
-                      : null;
+                  final monthState = state is CalendarMonthLoadedState ? state : null;
+                  final yearState = state is CalendarYearLoadedState ? state : null;
 
-                  final title = yearly
-                      ? '$selectedYear'
-                      : '${_monthName(context, selectedMonth)} $selectedYear';
+                  final title = yearly ? '$selectedYear' : '${_monthName(context, selectedMonth)} $selectedYear';
 
                   Widget content;
                   if (state is PendingState) {
@@ -244,18 +239,16 @@ class _CalendarPageState extends State<CalendarPage> {
                       attendanceByMonth: yearState.attendanceByMonth,
                       supplementsByMonth: yearState.supplementsByMonth,
                       workoutTypes: yearState.workoutTypes,
-                      onDayTap: (_) {},
+                      onDayTap: (date) => _showDaySheet(context, date, yearState),
                     );
                   } else if (!yearly && monthState != null) {
                     content = _CalendarMonthView(
                       year: selectedYear,
                       month: selectedMonth,
                       days: monthState.days,
-                      supplementDates: monthState.healthLogs
-                          .map((log) => log.date)
-                          .toSet(),
+                      supplementDates: monthState.healthLogs.map((log) => log.date).toSet(),
                       workoutTypes: monthState.workoutTypes,
-                      onDayTap: (_) {},
+                      onDayTap: (date) => _showDaySheet(context, date, monthState),
                     );
                   } else {
                     content = const Center(child: CircularProgressIndicator());
@@ -266,22 +259,15 @@ class _CalendarPageState extends State<CalendarPage> {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          _CalendarNavButton(
-                            icon: Icons.chevron_left,
-                            onTap: () => _navigate(-1),
-                          ),
+                          _CalendarNavButton(icon: Icons.chevron_left, onTap: () => _navigate(-1)),
                           Expanded(
                             child: Text(
                               title,
                               textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(fontWeight: FontWeight.w700),
+                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
                             ),
                           ),
-                          _CalendarNavButton(
-                            icon: Icons.chevron_right,
-                            onTap: () => _navigate(1),
-                          ),
+                          _CalendarNavButton(icon: Icons.chevron_right, onTap: () => _navigate(1)),
                         ],
                       ),
                       const SizedBox(height: 12),
@@ -294,14 +280,8 @@ class _CalendarPageState extends State<CalendarPage> {
                         child: OptionToggle(
                           selectedValue: yearly ? 'yearly' : 'monthly',
                           items: [
-                            OptionToggleItem(
-                              value: 'monthly',
-                              label: l10n.calendarMonthly,
-                            ),
-                            OptionToggleItem(
-                              value: 'yearly',
-                              label: l10n.calendarYearly,
-                            ),
+                            OptionToggleItem(value: 'monthly', label: l10n.calendarMonthly),
+                            OptionToggleItem(value: 'yearly', label: l10n.calendarYearly),
                           ],
                           onSelect: (value) => _toggleMode(value == 'yearly'),
                         ),
@@ -339,7 +319,6 @@ class _CalendarMonthView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final attendanceByDate = {for (final day in days) day.date: day};
     final cells = _buildMonthCells(
       year: year,
@@ -358,10 +337,9 @@ class _CalendarMonthView extends StatelessWidget {
                 child: Text(
                   _weekdayShort(context, index + 1),
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: _calendarMutedText(context),
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: _calendarMutedText(context), fontWeight: FontWeight.w600),
                 ),
               ),
             );
@@ -416,8 +394,7 @@ class _CalendarYearView extends StatelessWidget {
       itemBuilder: (_, index) {
         final month = index + 1;
         final monthDays = attendanceByMonth[month] ?? const <AttendanceDay>[];
-        final supplements =
-            supplementsByMonth[month] ?? const <SupplementLog>[];
+        final supplements = supplementsByMonth[month] ?? const <SupplementLog>[];
         final supplementDates = supplements.map((log) => log.date).toSet();
         final attendanceByDate = {for (final day in monthDays) day.date: day};
         final cells = _buildMonthCells(
@@ -428,10 +405,7 @@ class _CalendarYearView extends StatelessWidget {
         );
 
         return Container(
-          decoration: BoxDecoration(
-            color: _calendarPanelBackground(context),
-            borderRadius: BorderRadius.circular(14),
-          ),
+          decoration: BoxDecoration(color: _calendarPanelBackground(context), borderRadius: BorderRadius.circular(14)),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
             child: Column(
@@ -452,11 +426,10 @@ class _CalendarYearView extends StatelessWidget {
                         child: Text(
                           _weekdayShort(context, weekday + 1),
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(
-                                color: _calendarMutedText(context),
-                                fontWeight: FontWeight.w600,
-                              ),
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: _calendarMutedText(context),
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     );
@@ -477,16 +450,9 @@ class _CalendarYearView extends StatelessWidget {
                     final cell = cells[i];
                     final workoutType = cell.attendance?.trainingTypeId == null
                         ? null
-                        : _typeById(
-                            workoutTypes,
-                            cell.attendance!.trainingTypeId!,
-                          );
+                        : _typeById(workoutTypes, cell.attendance!.trainingTypeId!);
 
-                    return _CalendarDayCell(
-                      cell: cell,
-                      workoutType: workoutType,
-                      onTap: () => onDayTap(cell.date),
-                    );
+                    return _CalendarDayCell(cell: cell, workoutType: workoutType, onTap: () => onDayTap(cell.date));
                   },
                 ),
               ],
@@ -499,11 +465,7 @@ class _CalendarYearView extends StatelessWidget {
 }
 
 class _CalendarDayCell extends StatelessWidget {
-  const _CalendarDayCell({
-    required this.cell,
-    required this.workoutType,
-    required this.onTap,
-  });
+  const _CalendarDayCell({required this.cell, required this.workoutType, required this.onTap});
 
   final _CalendarCell cell;
   final TrainingType? workoutType;
@@ -515,9 +477,7 @@ class _CalendarDayCell extends StatelessWidget {
     final hasWorkout = cell.attendance != null;
     final hasSupplement = cell.hasSupplement;
     final isActive = hasWorkout || hasSupplement;
-    final baseTextColor = cell.isCurrentMonth
-        ? cs.onSurface
-        : _calendarMutedText(context);
+    final baseTextColor = cell.isCurrentMonth ? cs.onSurface : _calendarMutedText(context);
     final textColor = isActive ? const Color(0xFFFFFFFF) : baseTextColor;
 
     Widget tile = InkWell(
@@ -537,34 +497,23 @@ class _CalendarDayCell extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              '${cell.date.day}',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: textColor),
-            ),
+            Text('${cell.date.day}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: textColor)),
             const SizedBox(height: 4),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (workoutType != null)
-                  Text(
-                    workoutType!.icon ?? '•',
-                    style: const TextStyle(fontSize: 11),
-                  )
+                  Text(workoutType!.icon ?? '•', style: const TextStyle(fontSize: 12))
                 else if (hasWorkout)
                   Container(
-                    width: 4,
-                    height: 4,
+                    width: 8,
+                    height: 8,
                     decoration: BoxDecoration(
                       color: isActive ? const Color(0xFFFFFFFF) : cs.primary,
                       shape: BoxShape.circle,
                     ),
                   ),
-                if (hasSupplement) ...[
-                  const SizedBox(width: 2),
-                  const Text('💊', style: TextStyle(fontSize: 10)),
-                ],
+                if (hasSupplement) ...[const SizedBox(width: 4), const Text('💊', style: TextStyle(fontSize: 12))],
               ],
             ),
           ],
@@ -627,10 +576,8 @@ class _CalendarDaySheet extends StatefulWidget {
   final List<SupplementProduct> products;
   final List<TrainingType> types;
 
-  final Future<void> Function(String? typeId, int? durationMinutes)
-  onMarkAttended;
-  final Future<void> Function(String? typeId, int? durationMinutes)
-  onUpdateAttendance;
+  final Future<void> Function(String? typeId, int? durationMinutes) onMarkAttended;
+  final Future<void> Function(String? typeId, int? durationMinutes) onUpdateAttendance;
   final Future<void> Function() onClearAttendance;
   final Future<void> Function(SupplementProduct product) onAddSupplement;
   final Future<void> Function(SupplementLog log) onDeleteSupplement;
@@ -647,17 +594,15 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
   int _supplementPageIndex = 0;
   bool _editingWorkout = false;
   bool _busy = false;
+  bool _hasValidationError = false;
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
-    _selectedTypeId = ValueNotifier<String?>(
-      widget.initialAttendance?.trainingTypeId,
-    );
+    _selectedTypeId = ValueNotifier<String?>(widget.initialAttendance?.trainingTypeId);
     _selectedProductId = ValueNotifier<String?>(null);
-    _durationController = TextEditingController(
-      text: widget.initialAttendance?.durationMinutes?.toString() ?? '',
-    );
+    _durationController = TextEditingController(text: widget.initialAttendance?.durationMinutes?.toString() ?? '');
     _supplementPageController = PageController();
   }
 
@@ -670,36 +615,6 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
     super.dispose();
   }
 
-  List<List<SupplementLog>> _supplementPages(List<SupplementLog> logs) {
-    const perPage = 2;
-    if (logs.isEmpty) return const <List<SupplementLog>>[];
-    final pages = <List<SupplementLog>>[];
-    for (int i = 0; i < logs.length; i += perPage) {
-      pages.add(logs.skip(i).take(perPage).toList(growable: false));
-    }
-    return pages;
-  }
-
-  List<int> _visibleSupplementDots(int totalPages, int currentPage) {
-    if (totalPages <= 3) {
-      return List<int>.generate(totalPages, (index) => index);
-    }
-    if (currentPage <= 0) {
-      return const <int>[0, 1, 2];
-    }
-    if (currentPage >= totalPages - 1) {
-      return <int>[totalPages - 3, totalPages - 2, totalPages - 1];
-    }
-    return <int>[currentPage - 1, currentPage, currentPage + 1];
-  }
-
-  String _formatSupplementTime(DateTime? dateTime) {
-    if (dateTime == null) return '';
-    final hh = dateTime.hour.toString().padLeft(2, '0');
-    final mm = dateTime.minute.toString().padLeft(2, '0');
-    return '$hh:$mm';
-  }
-
   int? _parseDuration() {
     final raw = _durationController?.text.trim() ?? '';
     if (raw.isEmpty) return null;
@@ -710,6 +625,17 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
 
   Future<void> _submitWorkout() async {
     if (_busy) return;
+
+    // Validate the form
+    final isValid = _formKey.currentState!.validate();
+    setState(() {
+      _hasValidationError = !isValid;
+    });
+
+    if (!isValid) {
+      return;
+    }
+
     setState(() => _busy = true);
     final duration = _parseDuration();
     final typeId = _selectedTypeId?.value;
@@ -749,6 +675,14 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
     if (mounted) Navigator.of(context).pop();
   }
 
+  String _formatDuration(int? minutes) {
+    if (minutes == null || minutes <= 0) return '';
+    if (minutes < 60) return '${minutes}min';
+    final hours = minutes ~/ 60;
+    final mins = minutes % 60;
+    return mins > 0 ? '${hours}h ${mins}min' : '${hours}h';
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -758,14 +692,11 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
     final selectedTypeId = _selectedTypeId;
     final selectedProductId = _selectedProductId;
     final durationController = _durationController;
-    if (selectedTypeId == null ||
-        selectedProductId == null ||
-        durationController == null) {
+    if (selectedTypeId == null || selectedProductId == null || durationController == null) {
       return const SizedBox.shrink();
     }
 
-    final dateTitle =
-        '${widget.date.day} ${_monthShort(context, widget.date.month)} ${widget.date.year}';
+    final dateTitle = '${widget.date.day} ${_monthShort(context, widget.date.month)} ${widget.date.year}';
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 50),
@@ -773,643 +704,544 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: 420,
-          maxHeight: math.min(500.0, MediaQuery.of(context).size.height * 0.6),
+          maxHeight: _dialogMaxHeightWithValidation(
+            context,
+            widget.initialAttendance,
+            widget.initialLogs,
+            _hasValidationError,
+          ),
         ),
         child: Container(
           margin: EdgeInsets.symmetric(horizontal: 30),
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius: BorderRadius.circular(20),
-          ),
+          decoration: BoxDecoration(color: cs.surface, borderRadius: BorderRadius.circular(20)),
           child: SafeArea(
             top: false,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: DefaultTabController(
                 length: 2,
-                child: Column(
-                  children: [
-                    Row(
+                child: Builder(
+                  builder: (tabContext) {
+                    final tabController = DefaultTabController.of(tabContext);
+                    return Column(
                       children: [
-                        const SizedBox(width: 24),
+                        Row(
+                          children: [
+                            const SizedBox(width: 24),
+                            Expanded(
+                              child: Text(
+                                dateTitle,
+                                style: tt.headlineSmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop()),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 32),
+                          child: TabBar(
+                            dividerHeight: 0,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            controller: tabController,
+                            labelColor: Theme.of(context).colorScheme.onPrimaryContainer,
+
+                            unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                            indicatorColor: Theme.of(context).colorScheme.primary,
+                            indicatorWeight: 0,
+                            labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                            unselectedLabelStyle: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400),
+                            labelPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 7),
+                            indicatorSize: TabBarIndicatorSize.tab,
+                            indicator: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            tabs: [
+                              Tab(text: l10n.calendarWorkoutTab, height: 28),
+                              Tab(text: l10n.calendarHealthTab, height: 28),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        const Divider(height: 1),
+                        const SizedBox(height: 8),
                         Expanded(
-                          child: Text(
-                            dateTitle,
-                            style: tt.headlineSmall?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.of(context).pop(),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    TabBar(
-                      tabs: [
-                        Tab(text: l10n.calendarWorkoutTab),
-                        Tab(text: l10n.calendarHealthTab),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: TabBarView(
-                        children: [
-                          SingleChildScrollView(
-                            padding: const EdgeInsets.only(top: 12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (widget.initialAttendance != null &&
-                                    !_editingWorkout) ...[
-                                  Center(
-                                    child: Text(
-                                      '${l10n.calendarWentToGym} 💪',
-                                      style: tt.titleLarge?.copyWith(
-                                        color: cs.onSurfaceVariant,
+                          child: TabBarView(
+                            children: [
+                              SingleChildScrollView(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (widget.initialAttendance != null && !_editingWorkout) ...[
+                                      Center(
+                                        child: Text(
+                                          '${l10n.calendarWentToGym} 💪',
+                                          style: tt.titleLarge?.copyWith(color: cs.onSurfaceVariant),
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  ValueListenableBuilder<String?>(
-                                    valueListenable: selectedTypeId,
-                                    builder: (_, typeId, __) {
-                                      final type = typeId == null
-                                          ? null
-                                          : _typeById(widget.types, typeId);
-                                      final durationText = durationController
-                                          .text
-                                          .trim();
+                                      const SizedBox(height: 12),
+                                      ValueListenableBuilder<String?>(
+                                        valueListenable: selectedTypeId,
+                                        builder: (_, typeId, __) {
+                                          final type = typeId == null ? null : _typeById(widget.types, typeId);
 
-                                      return Container(
+                                          return Container(
+                                            width: double.infinity,
+                                            padding: const EdgeInsets.all(14),
+                                            decoration: BoxDecoration(
+                                              color: cs.surfaceContainerHighest,
+                                              borderRadius: BorderRadius.circular(10),
+                                              border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.65)),
+                                            ),
+                                            child: Row(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                Text(type?.icon ?? '🏋️', style: const TextStyle(fontSize: 21)),
+                                                const SizedBox(width: 10),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(
+                                                        type?.name ?? l10n.calendarNoType,
+                                                        style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                                                      ),
+                                                      const SizedBox(height: 4),
+                                                      if (widget.initialAttendance?.durationMinutes != null)
+                                                        Text(
+                                                          '⏱ ${_formatDuration(widget.initialAttendance!.durationMinutes)}',
+                                                          style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                                                        ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                IconButton(
+                                                  visualDensity: VisualDensity.compact,
+                                                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                                                  padding: EdgeInsets.zero,
+                                                  onPressed: _busy
+                                                      ? null
+                                                      : () {
+                                                          setState(() {
+                                                            _editingWorkout = true;
+                                                          });
+                                                        },
+                                                  icon: Icon(
+                                                    Icons.edit_outlined,
+                                                    size: 16,
+                                                    color: const Color(0xFFF2A07F),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      const SizedBox(height: 16),
+                                      SizedBox(
                                         width: double.infinity,
-                                        padding: const EdgeInsets.all(14),
-                                        decoration: BoxDecoration(
-                                          color: cs.surfaceContainerHighest,
-                                          borderRadius: BorderRadius.circular(
-                                            10,
+                                        child: FilledButton(
+                                          style: FilledButton.styleFrom(
+                                            backgroundColor: const Color(0xFFEF4444),
+                                            foregroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                           ),
-                                          border: Border.all(
-                                            color: cs.outlineVariant.withValues(
-                                              alpha: 0.65,
-                                            ),
-                                          ),
+                                          onPressed: _busy ? null : _clearWorkout,
+                                          child: const Text('Remove'),
                                         ),
-                                        child: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                      ),
+                                      const SizedBox(height: 10),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: OutlinedButton(
+                                          style: OutlinedButton.styleFrom(
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                            side: BorderSide(color: cs.outlineVariant),
+                                            foregroundColor: cs.onSurface,
+                                          ),
+                                          onPressed: _busy ? null : () => Navigator.of(context).pop(),
+                                          child: const Text('Cancel'),
+                                        ),
+                                      ),
+                                    ] else ...[
+                                      Form(
+                                        key: _formKey,
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Text(
-                                              type?.icon ?? '🏋️',
-                                              style: const TextStyle(
-                                                fontSize: 21,
+                                            Center(
+                                              child: Text(
+                                                'Did you go to the gym?',
+                                                style: tt.titleLarge?.copyWith(
+                                                  color: cs.onSurfaceVariant,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
                                               ),
                                             ),
-                                            const SizedBox(width: 10),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    type?.name ??
-                                                        l10n.calendarNoType,
-                                                    style: tt.titleLarge
-                                                        ?.copyWith(
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                        ),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  if (durationText.isNotEmpty)
-                                                    Text(
-                                                      '⏱ ${durationText}min',
-                                                      style: tt.bodyLarge
-                                                          ?.copyWith(
-                                                            color: cs
-                                                                .onSurfaceVariant,
-                                                          ),
+                                            const SizedBox(height: 20),
+                                            ValueListenableBuilder<String?>(
+                                              valueListenable: selectedTypeId,
+                                              builder: (_, typeId, __) {
+                                                final uniqueTypes = <String, TrainingType>{
+                                                  for (final t in widget.types) t.id: t,
+                                                }.values.toList(growable: false);
+                                                final safeTypeId = uniqueTypes.any((t) => t.id == typeId)
+                                                    ? typeId
+                                                    : null;
+                                                final pickerMaxHeight = math.min(
+                                                  400.0,
+                                                  MediaQuery.of(context).size.height * 0.4,
+                                                );
+
+                                                return DropdownButtonFormField<String>(
+                                                  initialValue: safeTypeId,
+                                                  decoration: InputDecoration(
+                                                    hintText: '-- Select type --',
+                                                    labelText: 'Select Workout Type (optional)',
+                                                    filled: true,
+                                                    fillColor: cs.surfaceContainerHighest,
+                                                    contentPadding: const EdgeInsets.symmetric(
+                                                      horizontal: 14,
+                                                      vertical: 12,
                                                     ),
-                                                ],
-                                              ),
-                                            ),
-                                            IconButton(
-                                              visualDensity:
-                                                  VisualDensity.compact,
-                                              constraints: const BoxConstraints(
-                                                minWidth: 28,
-                                                minHeight: 28,
-                                              ),
-                                              padding: EdgeInsets.zero,
-                                              onPressed: _busy
-                                                  ? null
-                                                  : () {
-                                                      setState(() {
-                                                        _editingWorkout = true;
-                                                      });
-                                                    },
-                                              icon: Icon(
-                                                Icons.edit_outlined,
-                                                size: 16,
-                                                color: const Color(0xFFF2A07F),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                  const SizedBox(height: 16),
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: FilledButton(
-                                      style: FilledButton.styleFrom(
-                                        backgroundColor: const Color(
-                                          0xFFEF4444,
-                                        ),
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
-                                        ),
-                                      ),
-                                      onPressed: _busy ? null : _clearWorkout,
-                                      child: const Text('Remove'),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 10),
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: OutlinedButton(
-                                      style: OutlinedButton.styleFrom(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
-                                        ),
-                                        side: BorderSide(
-                                          color: cs.outlineVariant,
-                                        ),
-                                        foregroundColor: cs.onSurface,
-                                      ),
-                                      onPressed: _busy
-                                          ? null
-                                          : () => Navigator.of(context).pop(),
-                                      child: const Text('Cancel'),
-                                    ),
-                                  ),
-                                ] else ...[
-                                  Text(
-                                    widget.initialAttendance == null
-                                        ? l10n.calendarMarkAttended
-                                        : l10n.calendarWentToGym,
-                                    style: tt.titleMedium,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  ValueListenableBuilder<String?>(
-                                    valueListenable: selectedTypeId,
-                                    builder: (_, typeId, __) {
-                                      final uniqueTypes =
-                                          <String, TrainingType>{
-                                            for (final t in widget.types)
-                                              t.id: t,
-                                          }.values.toList(growable: false);
-                                      final safeTypeId =
-                                          uniqueTypes.any((t) => t.id == typeId)
-                                          ? typeId
-                                          : null;
-                                      final pickerMaxHeight = math.min(
-                                        400.0,
-                                        MediaQuery.of(context).size.height *
-                                            0.4,
-                                      );
-
-                                      return Align(
-                                        alignment: Alignment.center,
-                                        child: FractionallySizedBox(
-                                          widthFactor: 0.7,
-                                          child: DropdownButtonFormField<String>(
-                                            initialValue: safeTypeId,
-                                            decoration: InputDecoration(
-                                              labelText:
-                                                  l10n.calendarTrainingType,
-                                            ),
-                                            menuMaxHeight: pickerMaxHeight,
-                                            borderRadius: BorderRadius.circular(
-                                              16,
-                                            ),
-                                            items: [
-                                              DropdownMenuItem<String>(
-                                                value: null,
-                                                child: Text(
-                                                  l10n.calendarNoType,
-                                                ),
-                                              ),
-                                              ...uniqueTypes.map(
-                                                (
-                                                  type,
-                                                ) => DropdownMenuItem<String>(
-                                                  value: type.id,
-                                                  child: Text(
-                                                    '${type.icon ?? ''} ${type.name}'
-                                                        .trim(),
+                                                    border: OutlineInputBorder(
+                                                      borderRadius: BorderRadius.circular(10),
+                                                      borderSide: BorderSide(color: cs.outlineVariant),
+                                                    ),
+                                                    enabledBorder: OutlineInputBorder(
+                                                      borderRadius: BorderRadius.circular(10),
+                                                      borderSide: BorderSide(
+                                                        color: cs.outlineVariant.withValues(alpha: 0.6),
+                                                      ),
+                                                    ),
                                                   ),
-                                                ),
-                                              ),
-                                            ],
-                                            onChanged: _busy
-                                                ? null
-                                                : (value) {
-                                                    selectedTypeId.value =
-                                                        value;
-                                                  },
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                  const SizedBox(height: 12),
-                                  TextField(
-                                    controller: durationController,
-                                    enabled: !_busy,
-                                    keyboardType: TextInputType.number,
-                                    decoration: InputDecoration(
-                                      labelText: l10n.calendarDurationMinutes,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Row(
-                                    children: [
-                                      if (widget.initialAttendance != null) ...[
-                                        Expanded(
-                                          child: OutlinedButton(
-                                            onPressed: _busy
-                                                ? null
-                                                : () {
-                                                    setState(() {
-                                                      _editingWorkout = false;
-                                                    });
-                                                  },
-                                            child: const Text('Cancel'),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                      ],
-                                      Expanded(
-                                        child: PrimaryButton(
-                                          label: l10n.calendarSave,
-                                          isLoading: _busy,
-                                          onPressed: _busy
-                                              ? null
-                                              : _submitWorkout,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                          SingleChildScrollView(
-                            padding: const EdgeInsets.only(top: 12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (widget.initialLogs.isEmpty)
-                                  Text(
-                                    l10n.calendarNoHealthLogs,
-                                    style: tt.bodyMedium?.copyWith(
-                                      color: cs.onSurfaceVariant,
-                                    ),
-                                  )
-                                else ...[
-                                  Center(
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 10,
-                                      ),
-                                      child: Text(
-                                        'Supplements taken 💊',
-                                        style: tt.titleMedium,
-                                      ),
-                                    ),
-                                  ),
-                                  Builder(
-                                    builder: (_) {
-                                      final pages = _supplementPages(
-                                        widget.initialLogs,
-                                      );
-                                      final controller =
-                                          _supplementPageController;
-                                      if (pages.isEmpty || controller == null) {
-                                        return const SizedBox.shrink();
-                                      }
-
-                                      const double cardHeight = 128;
-                                      final pageHeight = pages.first.length > 1
-                                          ? (cardHeight * 2) + 8
-                                          : cardHeight;
-
-                                      return Column(
-                                        children: [
-                                          SizedBox(
-                                            height: pageHeight,
-                                            child: PageView.builder(
-                                              controller: controller,
-                                              itemCount: pages.length,
-                                              onPageChanged: (index) {
-                                                if (!mounted) return;
-                                                setState(() {
-                                                  _supplementPageIndex = index;
-                                                });
-                                              },
-                                              itemBuilder: (_, pageIndex) {
-                                                final pageLogs =
-                                                    pages[pageIndex];
-                                                return Column(
-                                                  children: pageLogs
-                                                      .map(
-                                                        (log) => Container(
-                                                          margin:
-                                                              EdgeInsets.only(
-                                                                bottom:
-                                                                    log ==
-                                                                        pageLogs
-                                                                            .last
-                                                                    ? 0
-                                                                    : 8,
-                                                              ),
-                                                          padding:
-                                                              const EdgeInsets.all(
-                                                                12,
-                                                              ),
-                                                          decoration: BoxDecoration(
-                                                            color: cs
-                                                                .surfaceContainerHighest,
-                                                            borderRadius:
-                                                                BorderRadius.circular(
-                                                                  10,
-                                                                ),
-                                                            border: Border.all(
-                                                              color: cs
-                                                                  .outlineVariant,
-                                                            ),
-                                                          ),
-                                                          child: Row(
-                                                            crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .start,
-                                                            children: [
-                                                              const Padding(
-                                                                padding:
-                                                                    EdgeInsets.only(
-                                                                      top: 2,
-                                                                    ),
-                                                                child: Text(
-                                                                  '💊',
-                                                                  style:
-                                                                      TextStyle(
-                                                                        fontSize:
-                                                                            20,
-                                                                      ),
-                                                                ),
-                                                              ),
-                                                              const SizedBox(
-                                                                width: 10,
-                                                              ),
-                                                              Expanded(
-                                                                child: Column(
-                                                                  crossAxisAlignment:
-                                                                      CrossAxisAlignment
-                                                                          .start,
-                                                                  children: [
-                                                                    Text(
-                                                                      log.productName ??
-                                                                          '-',
-                                                                      maxLines:
-                                                                          2,
-                                                                      overflow:
-                                                                          TextOverflow
-                                                                              .ellipsis,
-                                                                      style: tt
-                                                                          .titleMedium,
-                                                                    ),
-                                                                    const SizedBox(
-                                                                      height: 2,
-                                                                    ),
-                                                                    Text(
-                                                                      '⏱ ${_formatSupplementTime(log.timestamp)}',
-                                                                      style: tt
-                                                                          .bodyMedium,
-                                                                    ),
-                                                                    const SizedBox(
-                                                                      height: 8,
-                                                                    ),
-                                                                    SizedBox(
-                                                                      width: double
-                                                                          .infinity,
-                                                                      child: FilledButton(
-                                                                        style: FilledButton.styleFrom(
-                                                                          backgroundColor: const Color(
-                                                                            0xFFEF4444,
-                                                                          ),
-                                                                          foregroundColor:
-                                                                              Colors.white,
-                                                                          shape: RoundedRectangleBorder(
-                                                                            borderRadius: BorderRadius.circular(
-                                                                              8,
-                                                                            ),
-                                                                          ),
-                                                                        ),
-                                                                        onPressed:
-                                                                            _busy
-                                                                            ? null
-                                                                            : () => _deleteSupplement(
-                                                                                log,
-                                                                              ),
-                                                                        child: const Text(
-                                                                          'Remove',
-                                                                        ),
-                                                                      ),
-                                                                    ),
-                                                                  ],
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      )
-                                                      .toList(growable: false),
+                                                  menuMaxHeight: pickerMaxHeight,
+                                                  borderRadius: BorderRadius.circular(16),
+                                                  items: [
+                                                    DropdownMenuItem<String>(
+                                                      value: null,
+                                                      child: Text('-- Select type --'),
+                                                    ),
+                                                    ...uniqueTypes.map(
+                                                      (type) => DropdownMenuItem<String>(
+                                                        value: type.id,
+                                                        child: Text('${type.icon ?? ''} ${type.name}'.trim()),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                  onChanged: _busy
+                                                      ? null
+                                                      : (value) {
+                                                          selectedTypeId.value = value;
+                                                        },
                                                 );
                                               },
                                             ),
-                                          ),
-                                          if (pages.length > 1) ...[
-                                            const SizedBox(height: 10),
+                                            const SizedBox(height: 16),
+                                            Text(
+                                              'Duration:',
+                                              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                                            ),
+                                            const SizedBox(height: 6),
                                             Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children:
-                                                  _visibleSupplementDots(
-                                                        pages.length,
-                                                        _supplementPageIndex,
-                                                      )
-                                                      .map((index) {
-                                                        final active =
-                                                            _supplementPageIndex ==
-                                                            index;
-                                                        return GestureDetector(
-                                                          onTap: () {
-                                                            final controller =
-                                                                _supplementPageController;
-                                                            if (controller ==
-                                                                null) {
-                                                              return;
-                                                            }
-                                                            controller.animateToPage(
-                                                              index,
-                                                              duration:
-                                                                  const Duration(
-                                                                    milliseconds:
-                                                                        220,
-                                                                  ),
-                                                              curve: Curves
-                                                                  .easeOut,
-                                                            );
-                                                          },
-                                                          child: AnimatedContainer(
-                                                            duration:
-                                                                const Duration(
-                                                                  milliseconds:
-                                                                      200,
-                                                                ),
-                                                            margin:
-                                                                const EdgeInsets.symmetric(
-                                                                  horizontal: 3,
-                                                                ),
-                                                            width: active
-                                                                ? 18
-                                                                : 8,
-                                                            height: 8,
-                                                            decoration: BoxDecoration(
-                                                              color: active
-                                                                  ? Theme.of(
-                                                                          context,
-                                                                        )
-                                                                        .colorScheme
-                                                                        .primary
-                                                                  : cs.outlineVariant,
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    999,
-                                                                  ),
+                                              children: [
+                                                Expanded(
+                                                  child: TextFormField(
+                                                    controller: durationController,
+                                                    enabled: !_busy,
+                                                    keyboardType: TextInputType.number,
+                                                    validator: NumberValidator.validatePositiveNumber,
+                                                    onChanged: (value) {
+                                                      // Reset validation error state when user starts typing
+                                                      if (_hasValidationError) {
+                                                        setState(() {
+                                                          _hasValidationError = false;
+                                                        });
+                                                      }
+                                                    },
+                                                    decoration: InputDecoration(
+                                                      hintText: 'e.g. 60',
+                                                      labelText: 'Duration (optional)',
+                                                      filled: true,
+                                                      fillColor: cs.surfaceContainerHighest,
+                                                      contentPadding: const EdgeInsets.symmetric(
+                                                        horizontal: 14,
+                                                        vertical: 12,
+                                                      ),
+                                                      border: OutlineInputBorder(
+                                                        borderRadius: BorderRadius.circular(10),
+                                                        borderSide: BorderSide(color: cs.outlineVariant),
+                                                      ),
+                                                      enabledBorder: OutlineInputBorder(
+                                                        borderRadius: BorderRadius.circular(10),
+                                                        borderSide: BorderSide(
+                                                          color: cs.outlineVariant.withValues(alpha: 0.6),
+                                                        ),
+                                                      ),
+                                                      errorBorder: OutlineInputBorder(
+                                                        borderRadius: BorderRadius.circular(10),
+                                                        borderSide: BorderSide(
+                                                          color: Theme.of(context).colorScheme.error,
+                                                        ),
+                                                      ),
+                                                      focusedErrorBorder: OutlineInputBorder(
+                                                        borderRadius: BorderRadius.circular(10),
+                                                        borderSide: BorderSide(
+                                                          color: Theme.of(context).colorScheme.error,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text('min', style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 24),
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: OutlinedButton(
+                                                    style: OutlinedButton.styleFrom(
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(10),
+                                                      ),
+                                                      side: BorderSide(color: cs.outlineVariant),
+                                                      foregroundColor: cs.onSurface,
+                                                    ),
+                                                    onPressed: _busy ? null : () => Navigator.of(context).pop(),
+                                                    child: const Text(
+                                                      'Cancel',
+                                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: OutlinedButton(
+                                                    style: OutlinedButton.styleFrom(
+                                                      backgroundColor: Theme.of(context).colorScheme.primary,
+                                                      foregroundColor: Colors.white,
+                                                      side: BorderSide(color: Theme.of(context).colorScheme.primary),
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(10),
+                                                      ),
+                                                    ),
+                                                    onPressed: _busy ? null : _submitWorkout,
+                                                    child: _busy
+                                                        ? const SizedBox(
+                                                            width: 22,
+                                                            height: 22,
+                                                            child: CircularProgressIndicator(
+                                                              strokeWidth: 2.5,
+                                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                                             ),
+                                                          )
+                                                        : const Text(
+                                                            'Add',
+                                                            style: TextStyle(fontWeight: FontWeight.bold),
                                                           ),
-                                                        );
-                                                      })
-                                                      .toList(growable: false),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ],
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                ],
-                                const SizedBox(height: 12),
-                                ValueListenableBuilder<String?>(
-                                  valueListenable: selectedProductId,
-                                  builder: (_, productId, __) {
-                                    final uniqueProducts =
-                                        <String, SupplementProduct>{
-                                          for (final p in widget.products)
-                                            p.id: p,
-                                        }.values.toList(growable: false);
-                                    final safeProductId =
-                                        uniqueProducts.any(
-                                          (p) => p.id == productId,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              SingleChildScrollView(
+                                padding: const EdgeInsets.only(top: 12),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    if (widget.initialLogs.isNotEmpty) ...[
+                                      Center(
+                                        child: Text(
+                                          'Supplements taken 💊',
+                                          style: tt.titleMedium?.copyWith(color: cs.onSurfaceVariant),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      if (widget.initialLogs.length <= 2)
+                                        ...widget.initialLogs.map(
+                                          (log) => _SupplementCard(
+                                            log: log,
+                                            busy: _busy,
+                                            onRemove: () => _deleteSupplement(log),
+                                          ),
                                         )
-                                        ? productId
-                                        : null;
+                                      else
+                                        _SupplementCarousel(
+                                          logs: widget.initialLogs,
+                                          busy: _busy,
+                                          pageController: _supplementPageController!,
+                                          currentPage: _supplementPageIndex,
+                                          onPageChanged: (i) => setState(() => _supplementPageIndex = i),
+                                          onRemove: _deleteSupplement,
+                                        ),
+                                      const SizedBox(height: 4),
+                                    ],
+                                    ValueListenableBuilder<String?>(
+                                      valueListenable: selectedProductId,
+                                      builder: (_, productId, __) {
+                                        final uniqueProducts = <String, SupplementProduct>{
+                                          for (final p in widget.products) p.id: p,
+                                        }.values.toList(growable: false);
+                                        final safeProductId = uniqueProducts.any((p) => p.id == productId)
+                                            ? productId
+                                            : null;
 
-                                    if (productId != null &&
-                                        safeProductId == null) {
-                                      WidgetsBinding.instance
-                                          .addPostFrameCallback((_) {
-                                            if (selectedProductId.value !=
-                                                null) {
+                                        if (productId != null && safeProductId == null) {
+                                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                                            if (selectedProductId.value != null) {
                                               selectedProductId.value = null;
                                             }
                                           });
-                                    }
+                                        }
 
-                                    if (uniqueProducts.isEmpty) {
-                                      return Text(
-                                        'No supplement products available.',
-                                        style: tt.bodyMedium?.copyWith(
-                                          color: cs.onSurfaceVariant,
-                                        ),
-                                      );
-                                    }
+                                        if (uniqueProducts.isEmpty) {
+                                          return Text(
+                                            'No supplement products available.',
+                                            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                                          );
+                                        }
 
-                                    final pickerMaxHeight = math.min(
-                                      400.0,
-                                      MediaQuery.of(context).size.height * 0.4,
-                                    );
+                                        final pickerMaxHeight = math.min(
+                                          400.0,
+                                          MediaQuery.of(context).size.height * 0.4,
+                                        );
 
-                                    return Align(
-                                      alignment: Alignment.center,
-                                      child: FractionallySizedBox(
-                                        widthFactor: 0.7,
-                                        child: DropdownButtonFormField<String>(
-                                          initialValue: safeProductId,
-                                          decoration: InputDecoration(
-                                            labelText:
-                                                l10n.calendarSelectProduct,
-                                          ),
-                                          menuMaxHeight: pickerMaxHeight,
-                                          borderRadius: BorderRadius.circular(
-                                            16,
-                                          ),
-                                          items: uniqueProducts
-                                              .map(
-                                                (product) =>
-                                                    DropdownMenuItem<String>(
+                                        return Column(
+                                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                                          children: [
+                                            if (widget.initialLogs.isEmpty) ...[
+                                              Center(
+                                                child: Text(
+                                                  'Did you take any supplements?',
+                                                  style: tt.titleLarge?.copyWith(
+                                                    color: cs.onSurfaceVariant,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 20),
+                                            ],
+                                            Text(
+                                              'Add Supplement:',
+                                              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                                            ),
+                                            const SizedBox(height: 6),
+                                            DropdownButtonFormField<String>(
+                                              initialValue: safeProductId,
+                                              decoration: InputDecoration(
+                                                hintText: 'Select a supplement...',
+                                                filled: true,
+                                                fillColor: cs.surfaceContainerHighest,
+                                                contentPadding: const EdgeInsets.symmetric(
+                                                  horizontal: 14,
+                                                  vertical: 12,
+                                                ),
+                                                border: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(10),
+                                                  borderSide: BorderSide(color: cs.outlineVariant),
+                                                ),
+                                                enabledBorder: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(10),
+                                                  borderSide: BorderSide(
+                                                    color: cs.outlineVariant.withValues(alpha: 0.6),
+                                                  ),
+                                                ),
+                                              ),
+                                              menuMaxHeight: pickerMaxHeight,
+                                              borderRadius: BorderRadius.circular(16),
+                                              items: uniqueProducts
+                                                  .map(
+                                                    (product) => DropdownMenuItem<String>(
                                                       value: product.id,
                                                       child: Text(product.name),
                                                     ),
-                                              )
-                                              .toList(growable: false),
-                                          onChanged: _busy
-                                              ? null
-                                              : (value) {
-                                                  selectedProductId.value =
-                                                      value;
-                                                },
-                                        ),
-                                      ),
-                                    );
-                                  },
+                                                  )
+                                                  .toList(growable: false),
+                                              onChanged: _busy
+                                                  ? null
+                                                  : (value) {
+                                                      selectedProductId.value = value;
+                                                    },
+                                            ),
+                                            const SizedBox(height: 16),
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  flex: 1,
+                                                  child: OutlinedButton(
+                                                    style: OutlinedButton.styleFrom(
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(10),
+                                                      ),
+                                                      side: BorderSide(color: cs.outlineVariant),
+                                                      foregroundColor: cs.onSurface,
+                                                    ),
+                                                    onPressed: _busy ? null : () => Navigator.of(context).pop(),
+                                                    child: const Text(
+                                                      'Cancel',
+                                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  flex: 1,
+                                                  child: OutlinedButton(
+                                                    style: OutlinedButton.styleFrom(
+                                                      backgroundColor: Theme.of(context).colorScheme.primary,
+                                                      foregroundColor: Colors.white,
+                                                      side: BorderSide(color: Theme.of(context).colorScheme.primary),
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius: BorderRadius.circular(10),
+                                                      ),
+                                                    ),
+                                                    onPressed: _busy || widget.products.isEmpty ? null : _addSupplement,
+                                                    child: _busy
+                                                        ? const SizedBox(
+                                                            width: 22,
+                                                            height: 22,
+                                                            child: CircularProgressIndicator(
+                                                              strokeWidth: 2.5,
+                                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                                            ),
+                                                          )
+                                                        : Text(
+                                                            'Add',
+                                                            style: const TextStyle(fontWeight: FontWeight.bold),
+                                                          ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(height: 12),
-                                PrimaryButton(
-                                  label: l10n.calendarAddSupplement,
-                                  isLoading: _busy,
-                                  onPressed: _busy || widget.products.isEmpty
-                                      ? null
-                                      : _addSupplement,
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
@@ -1478,11 +1310,7 @@ List<_CalendarCell> _buildMonthCells({
   }
 
   while (cells.length < 42) {
-    final date = DateTime(
-      year,
-      month,
-      daysInMonth + (cells.length - (startOffset + daysInMonth)) + 1,
-    );
+    final date = DateTime(year, month, daysInMonth + (cells.length - (startOffset + daysInMonth)) + 1);
     final key = _dateKey(date);
     cells.add(
       _CalendarCell(
@@ -1498,22 +1326,207 @@ List<_CalendarCell> _buildMonthCells({
   return cells;
 }
 
+double _dialogMaxHeightWithValidation(
+  BuildContext context,
+  AttendanceDay? initialAttendance,
+  List<SupplementLog> initialLogs,
+  bool hasValidationError,
+) {
+  final screenHeight = MediaQuery.of(context).size.height;
+  final hasWorkout = initialAttendance != null;
+  final supplementCount = initialLogs.length;
+
+  // Base height calculation
+  double baseHeight;
+
+  // Case 0: 3+ supplements - largest height to display all content without scroll
+  if (supplementCount >= 3) {
+    baseHeight = math.min(600, screenHeight * 0.6);
+  }
+  // Case 1: 2 supplements - large height to display all content without scroll
+  else if (supplementCount == 2) {
+    baseHeight = math.min(500, screenHeight * 0.6);
+  }
+  // Case 2: 1 workout OR 1 supplement OR workout+supplement - medium height
+  else if (hasWorkout || supplementCount == 1) {
+    baseHeight = math.min(424, screenHeight * 0.58);
+  }
+  // Case 3: No workout AND no supplement - smallest height
+  else {
+    baseHeight = math.min(424, screenHeight * 0.5);
+  }
+
+  // Add extra height for validation errors to prevent scrolling
+  if (hasValidationError) {
+    baseHeight += 20; // Add 60px for error message display
+  }
+
+  return baseHeight;
+}
+
+class _SupplementCard extends StatelessWidget {
+  const _SupplementCard({required this.log, required this.busy, required this.onRemove});
+
+  final SupplementLog log;
+  final bool busy;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final hh = log.timestamp?.hour.toString().padLeft(2, '0') ?? '';
+    final mm = log.timestamp?.minute.toString().padLeft(2, '0') ?? '';
+    final timeText = log.timestamp != null ? '$hh:$mm' : '';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.6)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('💊', style: TextStyle(fontSize: 22)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  log.productName ?? '-',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 4),
+                Text('⏱ $timeText', style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+              ],
+            ),
+          ),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+            padding: EdgeInsets.zero,
+            onPressed: busy ? null : onRemove,
+            icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFFEF4444)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SupplementCarousel extends StatelessWidget {
+  const _SupplementCarousel({
+    required this.logs,
+    required this.busy,
+    required this.pageController,
+    required this.currentPage,
+    required this.onPageChanged,
+    required this.onRemove,
+  });
+
+  final List<SupplementLog> logs;
+  final bool busy;
+  final PageController pageController;
+  final int currentPage;
+  final ValueChanged<int> onPageChanged;
+  final Future<void> Function(SupplementLog) onRemove;
+
+  static const int _perPage = 2;
+  static const double _cardHeight = 80.0;
+
+  List<List<SupplementLog>> get _pages {
+    final result = <List<SupplementLog>>[];
+    for (int i = 0; i < logs.length; i += _perPage) {
+      result.add(logs.skip(i).take(_perPage).toList(growable: false));
+    }
+    return result;
+  }
+
+  List<int> _windowedDots(int total, int current) {
+    if (total <= 3) return List<int>.generate(total, (i) => i);
+    if (current <= 0) return [0, 1, 2];
+    if (current >= total - 1) return [total - 3, total - 2, total - 1];
+    return [current - 1, current, current + 1];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final pages = _pages;
+    final totalPages = pages.length;
+    final pageHeight = _perPage * _cardHeight + (_perPage - 1) * 8;
+
+    return Column(
+      children: [
+        SizedBox(
+          height: pageHeight,
+          child: PageView.builder(
+            controller: pageController,
+            itemCount: totalPages,
+            onPageChanged: onPageChanged,
+            itemBuilder: (_, pageIndex) {
+              final pageLogs = pages[pageIndex];
+              return Column(
+                children: [
+                  for (int i = 0; i < pageLogs.length; i++) ...[
+                    if (i > 0) const SizedBox(height: 8),
+                    SizedBox(
+                      height: _cardHeight,
+                      child: _SupplementCard(log: pageLogs[i], busy: busy, onRemove: () => onRemove(pageLogs[i])),
+                    ),
+                  ],
+                ],
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: _windowedDots(totalPages, currentPage)
+              .map((index) {
+                final active = currentPage == index;
+                return GestureDetector(
+                  onTap: () => pageController.animateToPage(
+                    index,
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOut,
+                  ),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    width: active ? 18 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: active ? cs.primary : cs.outlineVariant,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                );
+              })
+              .toList(growable: false),
+        ),
+      ],
+    );
+  }
+}
+
 Color _calendarPageBackground(BuildContext context) {
-  return Theme.of(context).brightness == Brightness.dark
-      ? const Color(0xFF08193F)
-      : const Color(0xFFF1F3F7);
+  return Theme.of(context).brightness == Brightness.dark ? const Color(0xFF08193F) : const Color(0xFFF1F3F7);
 }
 
 Color _calendarPanelBackground(BuildContext context) {
-  return Theme.of(context).brightness == Brightness.dark
-      ? const Color(0xFF1A2A49)
-      : const Color(0xFFF8F9FB);
+  return Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1A2A49) : const Color(0xFFF8F9FB);
 }
 
 Color _calendarMutedText(BuildContext context) {
-  return Theme.of(context).brightness == Brightness.dark
-      ? const Color(0xFF86A0C6)
-      : const Color(0xFF7D8798);
+  return Theme.of(context).brightness == Brightness.dark ? const Color(0xFF86A0C6) : const Color(0xFF7D8798);
 }
 
 Color _calendarDayBackground(
@@ -1531,9 +1544,7 @@ Color _calendarDayBackground(
   if (hasSupplement) {
     return const Color(0xFF10B981);
   }
-  return Theme.of(context).brightness == Brightness.dark
-      ? const Color(0xFF1E293B)
-      : Colors.white;
+  return Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : Colors.white;
 }
 
 String _dateKey(DateTime date) {
@@ -1597,25 +1608,4 @@ SupplementProduct? _productById(List<SupplementProduct> products, String id) {
     if (product.id == id) return product;
   }
   return null;
-}
-
-AttendanceDay? _findAttendanceForDate(
-  DateTime date,
-  Map<int, List<AttendanceDay>> attendanceByMonth,
-) {
-  final key = _dateKey(date);
-  final monthData = attendanceByMonth[date.month] ?? const <AttendanceDay>[];
-  for (final day in monthData) {
-    if (day.date == key) return day;
-  }
-  return null;
-}
-
-List<SupplementLog> _findLogsForDate(
-  DateTime date,
-  Map<int, List<SupplementLog>> supplementsByMonth,
-) {
-  final key = _dateKey(date);
-  final monthData = supplementsByMonth[date.month] ?? const <SupplementLog>[];
-  return monthData.where((log) => log.date == key).toList(growable: false);
 }

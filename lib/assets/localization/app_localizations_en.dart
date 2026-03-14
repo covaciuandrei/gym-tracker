@@ -216,7 +216,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get calendarWorkoutTab => 'Workout';
 
   @override
-  String get calendarHealthTab => 'Health 💊';
+  String get calendarHealthTab => 'Health';
 
   @override
   String get calendarNotes => 'Notes';

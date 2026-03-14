@@ -219,7 +219,7 @@ class AppLocalizationsRo extends AppLocalizations {
   String get calendarWorkoutTab => 'Antrenament';
 
   @override
-  String get calendarHealthTab => 'Sănătate 💊';
+  String get calendarHealthTab => 'Sănătate';
 
   @override
   String get calendarNotes => 'Note';
