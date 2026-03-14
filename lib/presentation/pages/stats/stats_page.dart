@@ -95,12 +95,8 @@ class _StatsViewState extends State<StatsView> {
               children: [
                 ValueListenableBuilder<int>(
                   valueListenable: _selectedYear,
-                  builder: (_, year, __) {
-                    return _YearHeader(
-                      title: '${l10n.statsTitle} $year',
-                      onPrevious: () => _changeYear(-1),
-                      onNext: () => _changeYear(1),
-                    );
+                  builder: (_, year, _) {
+                    return _YearHeader(title: '$year', onPrevious: () => _changeYear(-1), onNext: () => _changeYear(1));
                   },
                 ),
                 const SizedBox(height: 12),
@@ -166,8 +162,6 @@ class _YearHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     return Row(
       children: [
         _NavIconButton(icon: Icons.chevron_left, onTap: onPrevious),
@@ -456,7 +450,7 @@ class _WorkoutsTab extends StatelessWidget {
           const SizedBox(height: 16),
           ValueListenableBuilder<int>(
             valueListenable: selectedMonth,
-            builder: (_, month, __) {
+            builder: (_, month, _) {
               final monthData = stats.monthlyTypeDistribution[month] ?? const <String, int>{};
               final entries = monthData.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
               final maxCount = entries.isEmpty ? 1 : entries.first.value;
@@ -539,7 +533,7 @@ class _DurationTab extends StatelessWidget {
         children: [
           ValueListenableBuilder<int>(
             valueListenable: selectedMonth,
-            builder: (_, month, __) {
+            builder: (_, month, _) {
               final monthAvg = stats.monthlyDurationAverages[month] ?? 0;
               final untracked = stats.monthlyUntrackedDurationCounts[month - 1];
 
@@ -567,7 +561,7 @@ class _DurationTab extends StatelessWidget {
                     child: _GradientStatCard(
                       icon: '📝',
                       value: '$untracked',
-                      label: l10n.statsUntrackedCount,
+                      label: '${l10n.statsUntrackedCount} This Month',
                       colors: const [AppColors.statsTeal, AppColors.statsTealDark],
                     ),
                   ),
@@ -578,7 +572,7 @@ class _DurationTab extends StatelessWidget {
           const SizedBox(height: 16),
           ValueListenableBuilder<int>(
             valueListenable: selectedMonth,
-            builder: (_, month, __) {
+            builder: (_, month, _) {
               final monthData = stats.monthlyTypeDurationAverages[month] ?? const <String, double>{};
               final entries = monthData.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
               final maxValue = entries.isEmpty ? 1.0 : entries.first.value;
@@ -616,6 +610,24 @@ class _DurationTab extends StatelessWidget {
           const SizedBox(height: 16),
           _ChartSection(
             title: l10n.statsDuration,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Average duration',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.primary),
+                ),
+              ],
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -625,6 +637,7 @@ class _DurationTab extends StatelessWidget {
                       value: stats.monthlyDurationAverages[i] ?? 0,
                       max: _maxDoubleOrOne(stats.monthlyDurationAverages.values),
                       label: _monthShort(context, i),
+                      showValue: true,
                     ),
                   ),
                   if (i < 12) const SizedBox(width: 6),
@@ -654,7 +667,7 @@ class _HealthTab extends StatelessWidget {
         children: [
           ValueListenableBuilder<int>(
             valueListenable: selectedMonth,
-            builder: (_, month, __) {
+            builder: (_, month, _) {
               final monthSupp = stats.monthlySupplementServings[month] ?? const <String, double>{};
               final sortedMonthSupp = monthSupp.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
               final topMonth = sortedMonthSupp.isEmpty ? null : sortedMonthSupp.first;
@@ -667,8 +680,9 @@ class _HealthTab extends StatelessWidget {
                         child: _GradientStatCard(
                           icon: '💊',
                           value: topMonth == null ? '-' : stats.productNames[topMonth.key] ?? '-',
-                          label: l10n.statsThisMonth,
-                          subtitle: topMonth == null ? null : '${topMonth.value.toStringAsFixed(0)}x',
+                          label:
+                              '${topMonth == null ? '' : '${topMonth.value.toStringAsFixed(0)}x '}${l10n.statsThisMonth}',
+
                           colors: const [AppColors.statsEmerald, AppColors.statsEmeraldDark],
                         ),
                       ),
@@ -677,10 +691,9 @@ class _HealthTab extends StatelessWidget {
                         child: _GradientStatCard(
                           icon: '🏆',
                           value: stats.mostTakenSupplementName ?? '-',
-                          label: l10n.statsMostUsed,
-                          subtitle: stats.mostTakenSupplementCount <= 0
-                              ? null
-                              : '${stats.mostTakenSupplementCount.toStringAsFixed(0)}x',
+                          label:
+                              '${stats.mostTakenSupplementCount <= 0 ? null : '${stats.mostTakenSupplementCount.toStringAsFixed(0)}x '}${l10n.statsMostUsed}',
+
                           colors: const [AppColors.statsTeal, AppColors.statsTealDark],
                         ),
                       ),
@@ -691,10 +704,19 @@ class _HealthTab extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _GradientStatCard(
-                          icon: l10n.statsConsistency,
-                          value: '${stats.healthConsistencyPct.round()}%',
-                          label: 'of weeks this year',
+                          icon: '🎯',
+                          value: l10n.statsConsistencyWithoutIcon,
+                          label: '${stats.healthConsistencyPct.round()}% of weeks this year',
                           colors: const [AppColors.statsCyan, AppColors.statsCyanDark],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _GradientStatCard(
+                          icon: '💊',
+                          value: l10n.statsUniqueSupplements,
+                          label: '${stats.productNames.length} different products',
+                          colors: const [AppColors.statsEmerald, AppColors.statsEmeraldDark],
                         ),
                       ),
                     ],
@@ -706,7 +728,7 @@ class _HealthTab extends StatelessWidget {
           const SizedBox(height: 16),
           ValueListenableBuilder<int>(
             valueListenable: selectedMonth,
-            builder: (_, month, __) {
+            builder: (_, month, _) {
               final monthSupp = stats.monthlySupplementServings[month] ?? const <String, double>{};
               final entries = monthSupp.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
 
@@ -732,7 +754,7 @@ class _HealthTab extends StatelessWidget {
                                   value: entry.value,
                                   max: max,
                                   color: AppColors.statsEmerald,
-                                  trailing: '${entry.value.toStringAsFixed(0)}',
+                                  trailing: entry.value.toStringAsFixed(0),
                                 ),
                               );
                             })
@@ -740,42 +762,6 @@ class _HealthTab extends StatelessWidget {
                       ),
               );
             },
-          ),
-          const SizedBox(height: 16),
-          _ChartSection(
-            title: l10n.statsTotalLogs,
-            child: Column(
-              children: [
-                _GradientStatCard(
-                  icon: '🧾',
-                  value: '${stats.healthTotalLogs}',
-                  label: l10n.statsTotalLogs,
-                  colors: const [AppColors.statsEmerald, AppColors.statsEmeraldDark],
-                ),
-                const SizedBox(height: 12),
-                if (stats.topNutrients.isEmpty)
-                  EmptyStateWidget(title: l10n.statsHealth, message: l10n.statsTotalTracked, emoji: '🥦')
-                else
-                  Column(
-                    children: stats.topNutrients
-                        .map(
-                          (nutrient) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Row(
-                              children: [
-                                Expanded(child: Text(nutrient.name, style: Theme.of(context).textTheme.bodyMedium)),
-                                Text(
-                                  '${nutrient.amount.toStringAsFixed(1)} ${nutrient.unit}',
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                        .toList(growable: false),
-                  ),
-              ],
-            ),
           ),
         ],
       ),
@@ -825,7 +811,6 @@ class _GradientStatCard extends StatelessWidget {
     required this.value,
     required this.label,
     required this.colors,
-    this.subtitle,
     this.onTap,
   });
 
@@ -833,7 +818,6 @@ class _GradientStatCard extends StatelessWidget {
   final String value;
   final String label;
   final List<Color> colors;
-  final String? subtitle;
   final VoidCallback? onTap;
 
   @override
@@ -875,15 +859,6 @@ class _GradientStatCard extends StatelessWidget {
                 fontSize: label.length > 20 ? 11 : null, // Smaller font for longer text like dates
               ),
             ),
-            if (subtitle != null) ...[
-              const SizedBox(height: 2 * 0.8),
-              Text(
-                subtitle!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.white.withValues(alpha: 0.8)),
-              ),
-            ],
           ],
         ),
       ),
@@ -1152,10 +1127,11 @@ String _getConsistencyPercentage(AttendanceStats stats) {
 
 String _formatDateRange(String start, String end) {
   if (start.isEmpty || end.isEmpty) return '';
-  final fmt = (d) {
+  String fmt(d) {
     final date = DateTime.parse(d);
     return '${date.day} ${_monthShortEn(date.month)} ${date.year}';
-  };
+  }
+
   return '${fmt(start)} → ${fmt(end)}';
 }
 

@@ -614,6 +614,18 @@ abstract class AppLocalizations {
   /// **'Consistency 🎯'**
   String get statsConsistency;
 
+  /// No description provided for @statsConsistencyWithoutIcon.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency'**
+  String get statsConsistencyWithoutIcon;
+
+  /// No description provided for @statsUniqueSupplements.
+  ///
+  /// In en, this message translates to:
+  /// **'Unique Supplements'**
+  String get statsUniqueSupplements;
+
   /// No description provided for @statsStreak0.
   ///
   /// In en, this message translates to:

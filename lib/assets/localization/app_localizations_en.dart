@@ -273,6 +273,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsConsistency => 'Consistency 🎯';
 
   @override
+  String get statsConsistencyWithoutIcon => 'Consistency';
+
+  @override
+  String get statsUniqueSupplements => 'Unique Supplements';
+
+  @override
   String get statsStreak0 => 'Start your journey! 💪';
 
   @override

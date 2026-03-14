@@ -26,13 +26,12 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/presentation/pages/main_shell/main_shell_page.dart';
+import 'package:mocktail/mocktail.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -58,10 +57,7 @@ Widget _buildApp(AuthCubit cubit, {StackRouter? router}) {
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: BlocProvider<AuthCubit>.value(
-        value: cubit,
-        child: const MainShellPage(),
-      ),
+      home: BlocProvider<AuthCubit>.value(value: cubit, child: const MainShellPage()),
     ),
   );
 }
@@ -95,8 +91,7 @@ void main() {
   // ── initState ─────────────────────────────────────────────────────────────
 
   group('MainShellPage — init', () {
-    testWidgets('calls watchAuthState once when the page is mounted',
-        (tester) async {
+    testWidgets('calls watchAuthState once when the page is mounted', (tester) async {
       final cubit = _idleCubit();
 
       await tester.pumpWidget(_buildApp(cubit));
@@ -117,8 +112,9 @@ void main() {
 
     setUp(() {
       mockRouter = MockStackRouter();
-      when(() => mockRouter.replace(any<PageRouteInfo>()))
-          .thenAnswer((_) async {});
+      when(() => mockRouter.replace(any<PageRouteInfo>())).thenAnswer((_) async {
+        return null;
+      });
       // Use a synchronous broadcast stream so that add() delivers the event
       // inline — before the next pump can trigger another AutoTabsRouter rebuild
       // attempt that would deactivate the BlocListener's element.
@@ -129,9 +125,7 @@ void main() {
       await streamController.close();
     });
 
-    testWidgets(
-        'replaces navigation stack with LoginRoute on AuthSignOutSuccessState',
-        (tester) async {
+    testWidgets('replaces navigation stack with LoginRoute on AuthSignOutSuccessState', (tester) async {
       final cubit = _streamCubit(streamController.stream);
 
       await tester.pumpWidget(_buildApp(cubit, router: mockRouter));
@@ -143,9 +137,7 @@ void main() {
       verify(() => mockRouter.replace(const LoginRoute())).called(1);
     });
 
-    testWidgets(
-        'replaces navigation stack with LoginRoute on AuthUnauthenticatedState',
-        (tester) async {
+    testWidgets('replaces navigation stack with LoginRoute on AuthUnauthenticatedState', (tester) async {
       final cubit = _streamCubit(streamController.stream);
 
       await tester.pumpWidget(_buildApp(cubit, router: mockRouter));
@@ -156,8 +148,7 @@ void main() {
       verify(() => mockRouter.replace(const LoginRoute())).called(1);
     });
 
-    testWidgets('does NOT replace stack on unrelated state changes',
-        (tester) async {
+    testWidgets('does NOT replace stack on unrelated state changes', (tester) async {
       final cubit = _streamCubit(streamController.stream);
 
       await tester.pumpWidget(_buildApp(cubit, router: mockRouter));

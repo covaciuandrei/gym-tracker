@@ -42,7 +42,7 @@ class GradientButton extends StatelessWidget {
               ? []
               : [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.35),
+                    color: AppColors.primary.withValues(alpha: 0.35),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -53,10 +53,7 @@ class GradientButton extends StatelessWidget {
               ? const SizedBox(
                   width: 22,
                   height: 22,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2.5,
-                  ),
+                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
                 )
               : Text(
                   label,

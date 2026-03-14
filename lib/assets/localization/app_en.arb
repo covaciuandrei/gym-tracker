@@ -90,6 +90,8 @@
   "statsBestStreak": "Best Streak 🏆",
   "statsFavoriteDay": "Favorite Day ⭐",
   "statsConsistency": "Consistency 🎯",
+  "statsConsistencyWithoutIcon": "Consistency",
+  "statsUniqueSupplements": "Unique Supplements",
   "statsStreak0": "Start your journey! 💪",
   "statsStreak1": "First week down! 🎉",
   "statsStreak2": "Building momentum!",

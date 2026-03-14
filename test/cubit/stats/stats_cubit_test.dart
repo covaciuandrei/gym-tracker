@@ -13,21 +13,22 @@
 // Run:  flutter test test/cubit/stats/stats_cubit_test.dart
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/cubit/stats/stats_cubit.dart';
 import 'package:gym_tracker/model/attendance_day.dart';
-import 'package:gym_tracker/model/attendance_stats.dart';
 import 'package:gym_tracker/model/training_type.dart';
 import 'package:gym_tracker/service/attendance/attendance_service.dart';
+import 'package:gym_tracker/service/health/health_service.dart';
 import 'package:gym_tracker/service/workout/workout_service.dart';
+import 'package:mocktail/mocktail.dart';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────
 
 class MockAttendanceService extends Mock implements AttendanceService {}
 
 class MockWorkoutService extends Mock implements WorkoutService {}
+
+class MockHealthService extends Mock implements HealthService {}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
@@ -43,8 +44,7 @@ void _stubMonths(
   final pairs = [(year - 1, 12), for (int m = 1; m <= 12; m++) (year, m)];
   for (final (y, m) in pairs) {
     final data = overrides[(y, m)] ?? <AttendanceDay>[];
-    when(() => mock.watchMonth(userId: userId, year: y, month: m))
-        .thenAnswer((_) => Stream.value(data));
+    when(() => mock.watchMonth(userId: userId, year: y, month: m)).thenAnswer((_) => Stream.value(data));
   }
 }
 
@@ -83,12 +83,14 @@ final _juneDays = [
 void main() {
   late MockAttendanceService mockAttendance;
   late MockWorkoutService mockWorkout;
+  late MockHealthService mockHealth;
   late StatsCubit sut;
 
   setUp(() {
     mockAttendance = MockAttendanceService();
     mockWorkout = MockWorkoutService();
-    sut = StatsCubit(mockAttendance, mockWorkout);
+    mockHealth = MockHealthService();
+    sut = StatsCubit(mockAttendance, mockWorkout, mockHealth);
   });
 
   tearDown(() => sut.close());
@@ -98,8 +100,7 @@ void main() {
   group('load – empty year', () {
     test('emits pending then StatsLoadedState with zero counts', () async {
       _stubMonths(mockAttendance, _userId, _year);
-      when(() => mockWorkout.watchAll(_userId))
-          .thenAnswer((_) => Stream.value([]));
+      when(() => mockWorkout.watchAll(_userId)).thenAnswer((_) => Stream.value([]));
 
       final future = expectLater(
         sut.stream,
@@ -108,26 +109,10 @@ void main() {
           isA<StatsLoadedState>()
               .having((s) => s.year, 'year', _year)
               .having((s) => s.types, 'types', isEmpty)
-              .having(
-                (s) => s.stats.yearlyCount,
-                'yearlyCount',
-                0,
-              )
-              .having(
-                (s) => s.stats.currentWeekStreak,
-                'currentWeekStreak',
-                0,
-              )
-              .having(
-                (s) => s.stats.bestWeekStreak,
-                'bestWeekStreak',
-                0,
-              )
-              .having(
-                (s) => s.stats.favoriteDaysOfWeek,
-                'favoriteDaysOfWeek',
-                isEmpty,
-              ),
+              .having((s) => s.stats.yearlyCount, 'yearlyCount', 0)
+              .having((s) => s.stats.currentWeekStreak, 'currentWeekStreak', 0)
+              .having((s) => s.stats.bestWeekStreak, 'bestWeekStreak', 0)
+              .having((s) => s.stats.favoriteDaysOfWeek, 'favoriteDaysOfWeek', isEmpty),
         ]),
       );
       await sut.load(userId: _userId, year: _year);
@@ -139,14 +124,8 @@ void main() {
 
   group('load – known June data', () {
     setUp(() {
-      _stubMonths(
-        mockAttendance,
-        _userId,
-        _year,
-        overrides: {(_year, 6): _juneDays},
-      );
-      when(() => mockWorkout.watchAll(_userId))
-          .thenAnswer((_) => Stream.value([_typeA, _typeB]));
+      _stubMonths(mockAttendance, _userId, _year, overrides: {(_year, 6): _juneDays});
+      when(() => mockWorkout.watchAll(_userId)).thenAnswer((_) => Stream.value([_typeA, _typeB]));
     });
 
     test('yearlyCount equals total days', () async {
@@ -171,8 +150,7 @@ void main() {
       expect(state.stats.typeDistribution, {'type_a': 2});
     });
 
-    test('favoriteDaysOfWeek is Monday (weekday 1) for all-Monday data',
-        () async {
+    test('favoriteDaysOfWeek is Monday (weekday 1) for all-Monday data', () async {
       final emitted = <BaseState>[];
       sut.stream.listen(emitted.add);
       await sut.load(userId: _userId, year: _year);
@@ -241,18 +219,16 @@ void main() {
 
   group('load – failure', () {
     test('emits pending then somethingWentWrong when service throws', () async {
-      when(() => mockAttendance.watchMonth(
-            userId: any(named: 'userId'),
-            year: any(named: 'year'),
-            month: any(named: 'month'),
-          )).thenAnswer((_) => Stream.error(Exception('network')));
-      when(() => mockWorkout.watchAll(_userId))
-          .thenAnswer((_) => Stream.value([]));
+      when(
+        () => mockAttendance.watchMonth(
+          userId: any(named: 'userId'),
+          year: any(named: 'year'),
+          month: any(named: 'month'),
+        ),
+      ).thenAnswer((_) => Stream.error(Exception('network')));
+      when(() => mockWorkout.watchAll(_userId)).thenAnswer((_) => Stream.value([]));
 
-      final future = expectLater(
-        sut.stream,
-        emitsInOrder([const PendingState(), const SomethingWentWrongState()]),
-      );
+      final future = expectLater(sut.stream, emitsInOrder([const PendingState(), const SomethingWentWrongState()]));
       await sut.load(userId: _userId, year: _year);
       await future;
     });

@@ -277,6 +277,12 @@ class AppLocalizationsRo extends AppLocalizations {
   String get statsConsistency => 'Consistență 🎯';
 
   @override
+  String get statsConsistencyWithoutIcon => 'Consistență';
+
+  @override
+  String get statsUniqueSupplements => 'Suplimente Unice';
+
+  @override
   String get statsStreak0 => 'Începe-ți călătoria!';
 
   @override

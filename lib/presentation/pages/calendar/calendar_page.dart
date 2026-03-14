@@ -220,7 +220,7 @@ class _CalendarPageState extends State<CalendarPage> {
               padding: const EdgeInsets.all(16),
               child: ListenableBuilder(
                 listenable: Listenable.merge([_yearlyView, _year, _month]),
-                builder: (_, __) {
+                builder: (_, _) {
                   final yearly = _yearlyView.value;
                   final selectedYear = _year.value;
                   final selectedMonth = _month.value;
@@ -390,7 +390,7 @@ class _CalendarYearView extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.separated(
       itemCount: 12,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (_, index) {
         final month = index + 1;
         final monthDays = attendanceByMonth[month] ?? const <AttendanceDay>[];
@@ -860,7 +860,7 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                       const SizedBox(height: 12),
                                       ValueListenableBuilder<String?>(
                                         valueListenable: selectedTypeId,
-                                        builder: (_, typeId, __) {
+                                        builder: (_, typeId, _) {
                                           final type = typeId == null ? null : _typeById(widget.types, typeId);
 
                                           return Container(
@@ -959,7 +959,7 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                             const SizedBox(height: 20),
                                             ValueListenableBuilder<String?>(
                                               valueListenable: selectedTypeId,
-                                              builder: (_, typeId, __) {
+                                              builder: (_, typeId, _) {
                                                 final uniqueTypes = <String, TrainingType>{
                                                   for (final t in widget.types) t.id: t,
                                                 }.values.toList(growable: false);
@@ -1163,7 +1163,7 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                     ],
                                     ValueListenableBuilder<String?>(
                                       valueListenable: selectedProductId,
-                                      builder: (_, productId, __) {
+                                      builder: (_, productId, _) {
                                         final uniqueProducts = <String, SupplementProduct>{
                                           for (final p in widget.products) p.id: p,
                                         }.values.toList(growable: false);

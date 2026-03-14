@@ -2,7 +2,6 @@ import 'package:auto_route/auto_route.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/core/injection.dart';
@@ -13,8 +12,8 @@ import 'package:gym_tracker/presentation/controls/action_bottom_sheet.dart';
 import 'package:gym_tracker/presentation/controls/confirmation_dialog.dart';
 import 'package:gym_tracker/presentation/controls/empty_state.dart';
 import 'package:gym_tracker/presentation/controls/main_list_item.dart';
-import 'package:gym_tracker/presentation/controls/primary_fab.dart';
 import 'package:gym_tracker/presentation/controls/primary_button.dart';
+import 'package:gym_tracker/presentation/controls/primary_fab.dart';
 
 @RoutePage()
 class WorkoutTypesPage extends StatelessWidget implements AutoRouteWrapper {
@@ -22,10 +21,7 @@ class WorkoutTypesPage extends StatelessWidget implements AutoRouteWrapper {
 
   @override
   Widget wrappedRoute(BuildContext context) {
-    return BlocProvider<WorkoutCubit>(
-      create: (_) => getIt<WorkoutCubit>(),
-      child: this,
-    );
+    return BlocProvider<WorkoutCubit>(create: (_) => getIt<WorkoutCubit>(), child: this);
   }
 
   @override
@@ -53,8 +49,7 @@ class WorkoutTypesView extends StatefulWidget {
 }
 
 class _WorkoutTypesViewState extends State<WorkoutTypesView> {
-  final ValueNotifier<List<TrainingType>> _types =
-      ValueNotifier<List<TrainingType>>(<TrainingType>[]);
+  final ValueNotifier<List<TrainingType>> _types = ValueNotifier<List<TrainingType>>(<TrainingType>[]);
   final ValueNotifier<bool> _hasLoadedAtLeastOnce = ValueNotifier<bool>(false);
 
   @override
@@ -76,21 +71,13 @@ class _WorkoutTypesViewState extends State<WorkoutTypesView> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _TypeEditorSheet(
-        title: l10n.workoutTypesCreateTitle,
-        actionLabel: l10n.workoutTypesCreate,
-      ),
+      builder: (_) => _TypeEditorSheet(title: l10n.workoutTypesCreateTitle, actionLabel: l10n.workoutTypesCreate),
     );
     if (draft == null) return;
 
     await context.read<WorkoutCubit>().createType(
       widget.userId,
-      TrainingType(
-        id: '',
-        name: draft.name,
-        color: draft.color,
-        icon: draft.icon,
-      ),
+      TrainingType(id: '', name: draft.name, color: draft.color, icon: draft.icon),
     );
   }
 
@@ -112,25 +99,16 @@ class _WorkoutTypesViewState extends State<WorkoutTypesView> {
 
     await context.read<WorkoutCubit>().updateType(
       widget.userId,
-      TrainingType(
-        id: type.id,
-        name: draft.name,
-        color: draft.color,
-        icon: draft.icon,
-      ),
+      TrainingType(id: type.id, name: draft.name, color: draft.color, icon: draft.icon),
     );
   }
 
-  Future<void> _showDeleteConfirm(
-    BuildContext context,
-    TrainingType type,
-  ) async {
+  Future<void> _showDeleteConfirm(BuildContext context, TrainingType type) async {
     final l10n = AppLocalizations.of(context);
     final shouldDelete = await ConfirmationDialog.show(
       context,
       title: l10n.workoutTypesDeleteTitle,
-      message:
-          '${l10n.workoutTypesDelete} ${type.name}? ${l10n.workoutTypesDeleteWarning}',
+      message: '${l10n.workoutTypesDelete} ${type.name}? ${l10n.workoutTypesDeleteWarning}',
       cancelLabel: l10n.workoutTypesCancel,
       confirmLabel: l10n.workoutTypesDelete,
     );
@@ -159,40 +137,28 @@ class _WorkoutTypesViewState extends State<WorkoutTypesView> {
           return;
         }
 
-        if (state is WorkoutTypeCreatedState ||
-            state is WorkoutTypeUpdatedState ||
-            state is WorkoutTypeDeletedState) {
+        if (state is WorkoutTypeCreatedState || state is WorkoutTypeUpdatedState || state is WorkoutTypeDeletedState) {
           ctx.read<WorkoutCubit>().loadTypes(widget.userId);
           return;
         }
 
         if (state is SomethingWentWrongState) {
-          ScaffoldMessenger.of(
-            ctx,
-          ).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
+          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
         }
       },
       builder: (ctx, state) {
-        final showInitialLoading =
-            state is PendingState && !_hasLoadedAtLeastOnce.value;
+        final showInitialLoading = state is PendingState && !_hasLoadedAtLeastOnce.value;
 
         return ValueListenableBuilder<List<TrainingType>>(
           valueListenable: _types,
-          builder: (_, types, __) {
+          builder: (_, types, _) {
             return Scaffold(
               backgroundColor: cs.surfaceContainerLow,
               appBar: AppBar(
                 title: Text(l10n.workoutTypesTitle),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: () => _openCreateModal(context),
-                  ),
-                ],
+                actions: [IconButton(icon: const Icon(Icons.add), onPressed: () => _openCreateModal(context))],
               ),
-              floatingActionButton: PrimaryFab(
-                onPressed: () => _openCreateModal(context),
-              ),
+              floatingActionButton: PrimaryFab(onPressed: () => _openCreateModal(context)),
               body: showInitialLoading
                   ? Center(
                       child: Column(
@@ -200,12 +166,7 @@ class _WorkoutTypesViewState extends State<WorkoutTypesView> {
                         children: [
                           CircularProgressIndicator(color: cs.primary),
                           const SizedBox(height: 16),
-                          Text(
-                            l10n.workoutTypesLoading,
-                            style: tt.bodyLarge?.copyWith(
-                              color: cs.onSurfaceVariant,
-                            ),
-                          ),
+                          Text(l10n.workoutTypesLoading, style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant)),
                         ],
                       ),
                     )
@@ -218,10 +179,7 @@ class _WorkoutTypesViewState extends State<WorkoutTypesView> {
                       onAction: () => _openCreateModal(context),
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       itemCount: types.length,
                       itemBuilder: (_, index) {
                         final type = types[index];
@@ -236,10 +194,7 @@ class _WorkoutTypesViewState extends State<WorkoutTypesView> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Center(
-                              child: Text(
-                                type.icon ?? _workoutTypeIcons.first,
-                                style: const TextStyle(fontSize: 24),
-                              ),
+                              child: Text(type.icon ?? _workoutTypeIcons.first, style: const TextStyle(fontSize: 24)),
                             ),
                           ),
                           trailing: IconButton(
@@ -311,10 +266,7 @@ class _TypeEditorSheetState extends State<_TypeEditorSheet> {
     final selectedIcon = _selectedIcon;
     final selectedColor = _selectedColor;
 
-    if (nameCtrl == null ||
-        nameValue == null ||
-        selectedIcon == null ||
-        selectedColor == null) {
+    if (nameCtrl == null || nameValue == null || selectedIcon == null || selectedColor == null) {
       return const SizedBox.shrink();
     }
 
@@ -329,16 +281,14 @@ class _TypeEditorSheetState extends State<_TypeEditorSheet> {
             controller: nameCtrl,
             maxLength: 30,
             onChanged: (value) => nameValue.value = value,
-            decoration: InputDecoration(
-              hintText: l10n.workoutTypesNamePlaceholder,
-            ),
+            decoration: InputDecoration(hintText: l10n.workoutTypesNamePlaceholder),
           ),
           const SizedBox(height: 16),
           Text(l10n.workoutTypesIcon, style: tt.titleMedium),
           const SizedBox(height: 8),
           ValueListenableBuilder<String>(
             valueListenable: selectedIcon,
-            builder: (_, activeIcon, __) {
+            builder: (_, activeIcon, _) {
               return Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -351,17 +301,11 @@ class _TypeEditorSheetState extends State<_TypeEditorSheet> {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: isSelected
-                            ? cs.primaryContainer
-                            : cs.surfaceContainerHighest,
+                        color: isSelected ? cs.primaryContainer : cs.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(12),
-                        border: isSelected
-                            ? Border.all(color: cs.primary, width: 2)
-                            : null,
+                        border: isSelected ? Border.all(color: cs.primary, width: 2) : null,
                       ),
-                      child: Center(
-                        child: Text(icon, style: const TextStyle(fontSize: 24)),
-                      ),
+                      child: Center(child: Text(icon, style: const TextStyle(fontSize: 24))),
                     ),
                   );
                 }).toList(),
@@ -373,7 +317,7 @@ class _TypeEditorSheetState extends State<_TypeEditorSheet> {
           const SizedBox(height: 8),
           ValueListenableBuilder<String>(
             valueListenable: selectedColor,
-            builder: (_, activeColor, __) {
+            builder: (_, activeColor, _) {
               return Wrap(
                 spacing: 12,
                 runSpacing: 12,
@@ -388,17 +332,9 @@ class _TypeEditorSheetState extends State<_TypeEditorSheet> {
                       decoration: BoxDecoration(
                         color: _safeColorFromHex(hex),
                         shape: BoxShape.circle,
-                        border: isSelected
-                            ? Border.all(color: cs.onSurface, width: 2)
-                            : null,
+                        border: isSelected ? Border.all(color: cs.onSurface, width: 2) : null,
                       ),
-                      child: isSelected
-                          ? const Icon(
-                              Icons.check,
-                              size: 18,
-                              color: Colors.white,
-                            )
-                          : null,
+                      child: isSelected ? const Icon(Icons.check, size: 18, color: Colors.white) : null,
                     ),
                   );
                 }).toList(),
@@ -410,33 +346,24 @@ class _TypeEditorSheetState extends State<_TypeEditorSheet> {
           const SizedBox(height: 8),
           ValueListenableBuilder<String>(
             valueListenable: selectedColor,
-            builder: (_, activeColor, __) {
+            builder: (_, activeColor, _) {
               return ValueListenableBuilder<String>(
                 valueListenable: selectedIcon,
-                builder: (_, activeIcon, __) {
+                builder: (_, activeIcon, _) {
                   return ValueListenableBuilder<String>(
                     valueListenable: nameValue,
-                    builder: (_, activeName, __) {
+                    builder: (_, activeName, _) {
                       return MainListItem(
                         margin: EdgeInsets.zero,
-                        title: activeName.trim().isEmpty
-                            ? l10n.workoutTypesPreviewName
-                            : activeName.trim(),
+                        title: activeName.trim().isEmpty ? l10n.workoutTypesPreviewName : activeName.trim(),
                         leading: Container(
                           width: 44,
                           height: 44,
                           decoration: BoxDecoration(
-                            color: _safeColorFromHex(
-                              activeColor,
-                            ).withValues(alpha: 0.2),
+                            color: _safeColorFromHex(activeColor).withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Center(
-                            child: Text(
-                              activeIcon,
-                              style: const TextStyle(fontSize: 24),
-                            ),
-                          ),
+                          child: Center(child: Text(activeIcon, style: const TextStyle(fontSize: 24))),
                         ),
                       );
                     },
@@ -450,35 +377,28 @@ class _TypeEditorSheetState extends State<_TypeEditorSheet> {
       footer: Row(
         children: [
           Expanded(
-            child: OutlinedButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(l10n.workoutTypesCancel),
-            ),
+            child: OutlinedButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.workoutTypesCancel)),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: ValueListenableBuilder<String>(
               valueListenable: selectedIcon,
-              builder: (_, icon, __) {
+              builder: (_, icon, _) {
                 return ValueListenableBuilder<String>(
                   valueListenable: selectedColor,
-                  builder: (_, color, __) {
+                  builder: (_, color, _) {
                     return ValueListenableBuilder<String>(
                       valueListenable: nameValue,
-                      builder: (_, activeName, __) {
+                      builder: (_, activeName, _) {
                         return PrimaryButton(
                           label: widget.actionLabel,
                           isLoading: false,
                           onPressed: activeName.trim().isEmpty
                               ? null
                               : () {
-                                  Navigator.of(context).pop(
-                                    _TypeDraft(
-                                      name: activeName.trim(),
-                                      icon: icon,
-                                      color: color,
-                                    ),
-                                  );
+                                  Navigator.of(
+                                    context,
+                                  ).pop(_TypeDraft(name: activeName.trim(), icon: icon, color: color));
                                 },
                         );
                       },
@@ -495,11 +415,7 @@ class _TypeEditorSheetState extends State<_TypeEditorSheet> {
 }
 
 class _TypeDraft {
-  const _TypeDraft({
-    required this.name,
-    required this.icon,
-    required this.color,
-  });
+  const _TypeDraft({required this.name, required this.icon, required this.color});
 
   final String name;
   final String icon;
@@ -508,10 +424,7 @@ class _TypeDraft {
 
 Color _safeColorFromHex(String hex) {
   final normalized = hex.replaceAll('#', '');
-  final value = int.tryParse(
-    normalized.length == 6 ? 'FF$normalized' : normalized,
-    radix: 16,
-  );
+  final value = int.tryParse(normalized.length == 6 ? 'FF$normalized' : normalized, radix: 16);
   if (value == null) return const Color(0xFF6366F1);
   return Color(value);
 }
