@@ -605,20 +605,116 @@ abstract class AppLocalizations {
   /// No description provided for @statsFavoriteDay.
   ///
   /// In en, this message translates to:
-  /// **'Favorite Day 📅'**
+  /// **'Favorite Day ⭐'**
   String get statsFavoriteDay;
+
+  /// No description provided for @statsConsistency.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency 🎯'**
+  String get statsConsistency;
 
   /// No description provided for @statsStreak0.
   ///
   /// In en, this message translates to:
-  /// **'Start your journey!'**
+  /// **'Start your journey! 💪'**
   String get statsStreak0;
 
   /// No description provided for @statsStreak1.
   ///
   /// In en, this message translates to:
-  /// **'First week down!'**
+  /// **'First week down! 🎉'**
   String get statsStreak1;
+
+  /// No description provided for @statsStreak2.
+  ///
+  /// In en, this message translates to:
+  /// **'Building momentum!'**
+  String get statsStreak2;
+
+  /// No description provided for @statsStreak4.
+  ///
+  /// In en, this message translates to:
+  /// **'One month strong! 📅'**
+  String get statsStreak4;
+
+  /// No description provided for @statsStreak8.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re on fire! 🔥'**
+  String get statsStreak8;
+
+  /// No description provided for @statsStreak12.
+  ///
+  /// In en, this message translates to:
+  /// **'Consistency king! 👑'**
+  String get statsStreak12;
+
+  /// No description provided for @statsStreak20.
+  ///
+  /// In en, this message translates to:
+  /// **'Unstoppable! 💎'**
+  String get statsStreak20;
+
+  /// No description provided for @statsStreak30.
+  ///
+  /// In en, this message translates to:
+  /// **'Half-year beast! 🦁'**
+  String get statsStreak30;
+
+  /// No description provided for @statsStreak40.
+  ///
+  /// In en, this message translates to:
+  /// **'Legend mode! 🏆'**
+  String get statsStreak40;
+
+  /// No description provided for @statsStreak52.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost a full year! 🌟'**
+  String get statsStreak52;
+
+  /// No description provided for @statsStreakMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Absolute GOAT! 🐐'**
+  String get statsStreakMax;
+
+  /// No description provided for @statsTapToSeeDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to see dates'**
+  String get statsTapToSeeDates;
+
+  /// No description provided for @statsNoStreakYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No streak yet'**
+  String get statsNoStreakYet;
+
+  /// No description provided for @statsDaysYouHitGym.
+  ///
+  /// In en, this message translates to:
+  /// **'Days You Hit the Gym'**
+  String get statsDaysYouHitGym;
+
+  /// No description provided for @statsFavoriteDayLegend.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite day'**
+  String get statsFavoriteDayLegend;
+
+  /// No description provided for @statsFavoriteDaysLegend.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorite days'**
+  String get statsFavoriteDaysLegend;
+
+  /// No description provided for @statsXThisYear.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}x this year'**
+  String statsXThisYear(Object count);
 
   /// No description provided for @statsAvgThisMonth.
   ///

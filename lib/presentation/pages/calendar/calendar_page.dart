@@ -596,10 +596,17 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
   bool _busy = false;
   bool _hasValidationError = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _supplementFormKey = GlobalKey<FormState>();
+
+  // Current state that can be updated when data changes
+  late AttendanceDay? _currentAttendance;
+  List<SupplementLog> _currentLogs = [];
 
   @override
   void initState() {
     super.initState();
+    _currentAttendance = widget.initialAttendance;
+    _currentLogs = List.from(widget.initialLogs);
     _selectedTypeId = ValueNotifier<String?>(widget.initialAttendance?.trainingTypeId);
     _selectedProductId = ValueNotifier<String?>(null);
     _durationController = TextEditingController(text: widget.initialAttendance?.durationMinutes?.toString() ?? '');
@@ -653,26 +660,94 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
     if (_busy) return;
     setState(() => _busy = true);
     await widget.onClearAttendance();
-    if (mounted) Navigator.of(context).pop();
+    // Update local state instead of closing
+    if (mounted) {
+      setState(() {
+        _currentAttendance = null;
+        _editingWorkout = false;
+        _busy = false;
+        _selectedTypeId?.value = null;
+        _durationController?.text = '';
+      });
+    }
   }
 
   Future<void> _addSupplement() async {
     if (_busy) return;
+
+    // Validate the supplement form
+    final isSupplementValid = _supplementFormKey.currentState?.validate() ?? false;
+    if (!isSupplementValid) {
+      setState(() {
+        _hasValidationError = true;
+      });
+      return;
+    }
+
     final productId = _selectedProductId?.value;
     if (productId == null) return;
     final product = _productById(widget.products, productId);
     if (product == null) return;
 
     setState(() => _busy = true);
+
+    // Create the new supplement log
+    final dateKey = _dateKey(widget.date);
+    final newLog = SupplementLog(
+      id: '', // Will be set by the service
+      date: dateKey,
+      timestamp: DateTime.now(),
+      productId: product.id,
+      productName: product.name,
+      servingsTaken: 1,
+    );
+
     await widget.onAddSupplement(product);
-    if (mounted) Navigator.of(context).pop();
+
+    // Update local state with the new supplement
+    if (mounted) {
+      setState(() {
+        _currentLogs.add(newLog);
+        _busy = false;
+        _selectedProductId?.value = null;
+        _hasValidationError = false;
+
+        // If we now have 3+ supplements, reset page index to show the new supplement
+        // Only animate if the PageController is attached (i.e., carousel is visible)
+        if (_currentLogs.length >= 3 && _supplementPageController?.hasClients == true) {
+          _supplementPageIndex = (_currentLogs.length - 1) ~/ 2;
+          _supplementPageController?.animateToPage(
+            _supplementPageIndex,
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOut,
+          );
+        }
+      });
+    }
   }
 
   Future<void> _deleteSupplement(SupplementLog log) async {
     if (_busy) return;
     setState(() => _busy = true);
     await widget.onDeleteSupplement(log);
-    if (mounted) Navigator.of(context).pop();
+    // Update local state instead of closing
+    if (mounted) {
+      setState(() {
+        _currentLogs.remove(log);
+        _busy = false;
+        // Adjust page index if necessary - only if carousel is still visible
+        if (_currentLogs.length >= 3 && _supplementPageController?.hasClients == true) {
+          if (_supplementPageIndex > 0 && _supplementPageIndex >= (_currentLogs.length / 2).ceil() - 1) {
+            _supplementPageIndex = math.max(0, (_currentLogs.length / 2).ceil() - 1);
+            _supplementPageController?.animateToPage(
+              _supplementPageIndex,
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOut,
+            );
+          }
+        }
+      });
+    }
   }
 
   String _formatDuration(int? minutes) {
@@ -704,12 +779,7 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: 420,
-          maxHeight: _dialogMaxHeightWithValidation(
-            context,
-            widget.initialAttendance,
-            widget.initialLogs,
-            _hasValidationError,
-          ),
+          maxHeight: _dialogMaxHeightWithValidation(context, _currentAttendance, _currentLogs, _hasValidationError),
         ),
         child: Container(
           margin: EdgeInsets.symmetric(horizontal: 30),
@@ -780,7 +850,7 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (widget.initialAttendance != null && !_editingWorkout) ...[
+                                    if (_currentAttendance != null && !_editingWorkout) ...[
                                       Center(
                                         child: Text(
                                           '${l10n.calendarWentToGym} 💪',
@@ -815,9 +885,9 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                                         style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                                                       ),
                                                       const SizedBox(height: 4),
-                                                      if (widget.initialAttendance?.durationMinutes != null)
+                                                      if (_currentAttendance?.durationMinutes != null)
                                                         Text(
-                                                          '⏱ ${_formatDuration(widget.initialAttendance!.durationMinutes)}',
+                                                          '⏱ ${_formatDuration(_currentAttendance!.durationMinutes)}',
                                                           style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                                                         ),
                                                     ],
@@ -960,12 +1030,11 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                                     keyboardType: TextInputType.number,
                                                     validator: NumberValidator.validatePositiveNumber,
                                                     onChanged: (value) {
-                                                      // Reset validation error state when user starts typing
-                                                      if (_hasValidationError) {
-                                                        setState(() {
-                                                          _hasValidationError = false;
-                                                        });
-                                                      }
+                                                      // Trigger form validation on change to clear error when input becomes valid/empty
+                                                      final isValid = _formKey.currentState?.validate() ?? false;
+                                                      setState(() {
+                                                        _hasValidationError = !isValid;
+                                                      });
                                                     },
                                                     decoration: InputDecoration(
                                                       hintText: 'e.g. 60',
@@ -1065,7 +1134,7 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.stretch,
                                   children: [
-                                    if (widget.initialLogs.isNotEmpty) ...[
+                                    if (_currentLogs.isNotEmpty) ...[
                                       Center(
                                         child: Text(
                                           'Supplements taken 💊',
@@ -1073,8 +1142,8 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                         ),
                                       ),
                                       const SizedBox(height: 10),
-                                      if (widget.initialLogs.length <= 2)
-                                        ...widget.initialLogs.map(
+                                      if (_currentLogs.length <= 2)
+                                        ..._currentLogs.map(
                                           (log) => _SupplementCard(
                                             log: log,
                                             busy: _busy,
@@ -1083,7 +1152,7 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                         )
                                       else
                                         _SupplementCarousel(
-                                          logs: widget.initialLogs,
+                                          logs: _currentLogs,
                                           busy: _busy,
                                           pageController: _supplementPageController!,
                                           currentPage: _supplementPageIndex,
@@ -1122,114 +1191,139 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                           MediaQuery.of(context).size.height * 0.4,
                                         );
 
-                                        return Column(
-                                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                                          children: [
-                                            if (widget.initialLogs.isEmpty) ...[
-                                              Center(
-                                                child: Text(
-                                                  'Did you take any supplements?',
-                                                  style: tt.titleLarge?.copyWith(
-                                                    color: cs.onSurfaceVariant,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 20),
-                                            ],
-                                            Text(
-                                              'Add Supplement:',
-                                              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                                            ),
-                                            const SizedBox(height: 6),
-                                            DropdownButtonFormField<String>(
-                                              initialValue: safeProductId,
-                                              decoration: InputDecoration(
-                                                hintText: 'Select a supplement...',
-                                                filled: true,
-                                                fillColor: cs.surfaceContainerHighest,
-                                                contentPadding: const EdgeInsets.symmetric(
-                                                  horizontal: 14,
-                                                  vertical: 12,
-                                                ),
-                                                border: OutlineInputBorder(
-                                                  borderRadius: BorderRadius.circular(10),
-                                                  borderSide: BorderSide(color: cs.outlineVariant),
-                                                ),
-                                                enabledBorder: OutlineInputBorder(
-                                                  borderRadius: BorderRadius.circular(10),
-                                                  borderSide: BorderSide(
-                                                    color: cs.outlineVariant.withValues(alpha: 0.6),
-                                                  ),
-                                                ),
-                                              ),
-                                              menuMaxHeight: pickerMaxHeight,
-                                              borderRadius: BorderRadius.circular(16),
-                                              items: uniqueProducts
-                                                  .map(
-                                                    (product) => DropdownMenuItem<String>(
-                                                      value: product.id,
-                                                      child: Text(product.name),
-                                                    ),
-                                                  )
-                                                  .toList(growable: false),
-                                              onChanged: _busy
-                                                  ? null
-                                                  : (value) {
-                                                      selectedProductId.value = value;
-                                                    },
-                                            ),
-                                            const SizedBox(height: 16),
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  flex: 1,
-                                                  child: OutlinedButton(
-                                                    style: OutlinedButton.styleFrom(
-                                                      shape: RoundedRectangleBorder(
-                                                        borderRadius: BorderRadius.circular(10),
-                                                      ),
-                                                      side: BorderSide(color: cs.outlineVariant),
-                                                      foregroundColor: cs.onSurface,
-                                                    ),
-                                                    onPressed: _busy ? null : () => Navigator.of(context).pop(),
-                                                    child: const Text(
-                                                      'Cancel',
-                                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                        return Form(
+                                          key: _supplementFormKey,
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                                            children: [
+                                              if (_currentLogs.isEmpty) ...[
+                                                Center(
+                                                  child: Text(
+                                                    'Did you take any supplements?',
+                                                    style: tt.titleLarge?.copyWith(
+                                                      color: cs.onSurfaceVariant,
+                                                      fontWeight: FontWeight.w600,
                                                     ),
                                                   ),
                                                 ),
-                                                const SizedBox(width: 12),
-                                                Expanded(
-                                                  flex: 1,
-                                                  child: OutlinedButton(
-                                                    style: OutlinedButton.styleFrom(
-                                                      backgroundColor: Theme.of(context).colorScheme.primary,
-                                                      foregroundColor: Colors.white,
-                                                      side: BorderSide(color: Theme.of(context).colorScheme.primary),
-                                                      shape: RoundedRectangleBorder(
-                                                        borderRadius: BorderRadius.circular(10),
-                                                      ),
-                                                    ),
-                                                    onPressed: _busy || widget.products.isEmpty ? null : _addSupplement,
-                                                    child: _busy
-                                                        ? const SizedBox(
-                                                            width: 22,
-                                                            height: 22,
-                                                            child: CircularProgressIndicator(
-                                                              strokeWidth: 2.5,
-                                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                                            ),
-                                                          )
-                                                        : Text(
-                                                            'Add',
-                                                            style: const TextStyle(fontWeight: FontWeight.bold),
-                                                          ),
-                                                  ),
-                                                ),
+                                                const SizedBox(height: 20),
                                               ],
-                                            ),
-                                          ],
+                                              Text(
+                                                'Add Supplement:',
+                                                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                                              ),
+                                              const SizedBox(height: 6),
+                                              DropdownButtonFormField<String>(
+                                                initialValue: safeProductId,
+                                                validator: (value) {
+                                                  if (value == null || value.isEmpty) {
+                                                    return 'Please select a supplement';
+                                                  }
+                                                  return null;
+                                                },
+                                                onChanged: _busy
+                                                    ? null
+                                                    : (value) {
+                                                        selectedProductId.value = value;
+                                                        // Reset validation error state when user makes a selection
+                                                        if (_hasValidationError) {
+                                                          setState(() {
+                                                            _hasValidationError = false;
+                                                          });
+                                                        }
+                                                      },
+                                                decoration: InputDecoration(
+                                                  hintText: 'Select a supplement...',
+                                                  filled: true,
+                                                  fillColor: cs.surfaceContainerHighest,
+                                                  contentPadding: const EdgeInsets.symmetric(
+                                                    horizontal: 14,
+                                                    vertical: 12,
+                                                  ),
+                                                  border: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(10),
+                                                    borderSide: BorderSide(color: cs.outlineVariant),
+                                                  ),
+                                                  enabledBorder: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(10),
+                                                    borderSide: BorderSide(
+                                                      color: cs.outlineVariant.withValues(alpha: 0.6),
+                                                    ),
+                                                  ),
+                                                  errorBorder: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(10),
+                                                    borderSide: BorderSide(color: Theme.of(context).colorScheme.error),
+                                                  ),
+                                                  focusedErrorBorder: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(10),
+                                                    borderSide: BorderSide(color: Theme.of(context).colorScheme.error),
+                                                  ),
+                                                ),
+                                                menuMaxHeight: pickerMaxHeight,
+                                                borderRadius: BorderRadius.circular(16),
+                                                items: uniqueProducts
+                                                    .map(
+                                                      (product) => DropdownMenuItem<String>(
+                                                        value: product.id,
+                                                        child: Text(product.name),
+                                                      ),
+                                                    )
+                                                    .toList(growable: false),
+                                              ),
+                                              const SizedBox(height: 16),
+                                              Row(
+                                                children: [
+                                                  Expanded(
+                                                    flex: 1,
+                                                    child: OutlinedButton(
+                                                      style: OutlinedButton.styleFrom(
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.circular(10),
+                                                        ),
+                                                        side: BorderSide(color: cs.outlineVariant),
+                                                        foregroundColor: cs.onSurface,
+                                                      ),
+                                                      onPressed: _busy ? null : () => Navigator.of(context).pop(),
+                                                      child: const Text(
+                                                        'Cancel',
+                                                        style: TextStyle(fontWeight: FontWeight.bold),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Expanded(
+                                                    flex: 1,
+                                                    child: OutlinedButton(
+                                                      style: OutlinedButton.styleFrom(
+                                                        backgroundColor: Theme.of(context).colorScheme.primary,
+                                                        foregroundColor: Colors.white,
+                                                        side: BorderSide(color: Theme.of(context).colorScheme.primary),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius: BorderRadius.circular(10),
+                                                        ),
+                                                      ),
+                                                      onPressed: _busy || widget.products.isEmpty
+                                                          ? null
+                                                          : _addSupplement,
+                                                      child: _busy
+                                                          ? const SizedBox(
+                                                              width: 22,
+                                                              height: 22,
+                                                              child: CircularProgressIndicator(
+                                                                strokeWidth: 2.5,
+                                                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                                              ),
+                                                            )
+                                                          : Text(
+                                                              'Add',
+                                                              style: const TextStyle(fontWeight: FontWeight.bold),
+                                                            ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
                                         );
                                       },
                                     ),

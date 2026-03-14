@@ -2,7 +2,6 @@ import 'package:auto_route/auto_route.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/core/injection.dart';
@@ -20,10 +19,7 @@ class StatsPage extends StatelessWidget implements AutoRouteWrapper {
 
   @override
   Widget wrappedRoute(BuildContext context) {
-    return BlocProvider<StatsCubit>(
-      create: (_) => getIt<StatsCubit>(),
-      child: this,
-    );
+    return BlocProvider<StatsCubit>(create: (_) => getIt<StatsCubit>(), child: this);
   }
 
   @override
@@ -52,18 +48,10 @@ class StatsView extends StatefulWidget {
 }
 
 class _StatsViewState extends State<StatsView> {
-  final ValueNotifier<int> _selectedYear = ValueNotifier<int>(
-    DateTime.now().year,
-  );
-  final ValueNotifier<int> _selectedWorkoutMonth = ValueNotifier<int>(
-    DateTime.now().month,
-  );
-  final ValueNotifier<int> _selectedDurationMonth = ValueNotifier<int>(
-    DateTime.now().month,
-  );
-  final ValueNotifier<int> _selectedHealthMonth = ValueNotifier<int>(
-    DateTime.now().month,
-  );
+  final ValueNotifier<int> _selectedYear = ValueNotifier<int>(DateTime.now().year);
+  final ValueNotifier<int> _selectedWorkoutMonth = ValueNotifier<int>(DateTime.now().month);
+  final ValueNotifier<int> _selectedDurationMonth = ValueNotifier<int>(DateTime.now().month);
+  final ValueNotifier<int> _selectedHealthMonth = ValueNotifier<int>(DateTime.now().month);
 
   @override
   void initState() {
@@ -131,9 +119,7 @@ class _StatsViewState extends State<StatsView> {
                     listenWhen: (_, curr) => curr is SomethingWentWrongState,
                     listener: (ctx, state) {
                       if (state is SomethingWentWrongState) {
-                        ScaffoldMessenger.of(ctx).showSnackBar(
-                          SnackBar(content: Text(l10n.errorsUnknown)),
-                        );
+                        ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
                       }
                     },
                     builder: (ctx, state) {
@@ -144,34 +130,19 @@ class _StatsViewState extends State<StatsView> {
                       }
 
                       if (state is SomethingWentWrongState) {
-                        return ErrorStateWidget(
-                          message: l10n.errorsUnknown,
-                          onRetry: () => _loadYear(currentYear),
-                        );
+                        return ErrorStateWidget(message: l10n.errorsUnknown, onRetry: () => _loadYear(currentYear));
                       }
 
-                      if (state is! StatsLoadedState ||
-                          state.year != currentYear) {
+                      if (state is! StatsLoadedState || state.year != currentYear) {
                         return const Center(child: CircularProgressIndicator());
                       }
 
                       return TabBarView(
                         children: [
                           _AttendancesTab(stats: state.stats),
-                          _WorkoutsTab(
-                            stats: state.stats,
-                            types: state.types,
-                            selectedMonth: _selectedWorkoutMonth,
-                          ),
-                          _DurationTab(
-                            stats: state.stats,
-                            types: state.types,
-                            selectedMonth: _selectedDurationMonth,
-                          ),
-                          _HealthTab(
-                            stats: state.stats,
-                            selectedMonth: _selectedHealthMonth,
-                          ),
+                          _WorkoutsTab(stats: state.stats, types: state.types, selectedMonth: _selectedWorkoutMonth),
+                          _DurationTab(stats: state.stats, types: state.types, selectedMonth: _selectedDurationMonth),
+                          _HealthTab(stats: state.stats, selectedMonth: _selectedHealthMonth),
                         ],
                       );
                     },
@@ -187,11 +158,7 @@ class _StatsViewState extends State<StatsView> {
 }
 
 class _YearHeader extends StatelessWidget {
-  const _YearHeader({
-    required this.title,
-    required this.onPrevious,
-    required this.onNext,
-  });
+  const _YearHeader({required this.title, required this.onPrevious, required this.onNext});
 
   final String title;
   final VoidCallback onPrevious;
@@ -205,11 +172,7 @@ class _YearHeader extends StatelessWidget {
       children: [
         _NavIconButton(icon: Icons.chevron_left, onTap: onPrevious),
         Expanded(
-          child: Text(
-            title,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          child: Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge),
         ),
         _NavIconButton(icon: Icons.chevron_right, onTap: onNext),
       ],
@@ -244,16 +207,67 @@ class _NavIconButton extends StatelessWidget {
   }
 }
 
-class _AttendancesTab extends StatelessWidget {
+class _AttendancesTab extends StatefulWidget {
   const _AttendancesTab({required this.stats});
 
   final AttendanceStats stats;
 
   @override
+  State<_AttendancesTab> createState() => _AttendancesTabState();
+}
+
+class _AttendancesTabState extends State<_AttendancesTab> {
+  String _currentStreakLabel = '';
+  String _bestStreakLabel = '';
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _resetLabels();
+  }
+
+  void _resetLabels() {
+    _currentStreakLabel = 'Tap to see';
+    _bestStreakLabel = 'Tap to see';
+  }
+
+  void _showStreakTemporarily(bool isCurrentStreak) {
+    final streakInfo = isCurrentStreak ? widget.stats.currentStreakInfo : widget.stats.bestStreakInfo;
+    if (streakInfo.count == 0 || streakInfo.startDate.isEmpty || streakInfo.endDate.isEmpty) return;
+
+    final dateRange = _formatDateRange(streakInfo.startDate, streakInfo.endDate);
+
+    setState(() {
+      if (isCurrentStreak) {
+        _currentStreakLabel = dateRange;
+      } else {
+        _bestStreakLabel = dateRange;
+      }
+    });
+
+    Future.delayed(const Duration(seconds: 4), () {
+      if (mounted) {
+        setState(() {
+          if (isCurrentStreak) {
+            _currentStreakLabel = 'Tap to see';
+          } else {
+            _bestStreakLabel = 'Tap to see';
+          }
+        });
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final weekdayMax = _maxOrOne(stats.weekdayAttendanceCounts);
-    final monthMax = _maxOrOne(stats.monthlyAttendanceCounts);
+    final weekdayMax = _maxOrOne(widget.stats.weekdayAttendanceCounts);
+    final monthMax = _maxOrOne(widget.stats.monthlyAttendanceCounts);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 20),
@@ -264,27 +278,28 @@ class _AttendancesTab extends StatelessWidget {
               Expanded(
                 child: _GradientStatCard(
                   icon: '📅',
-                  value: '${stats.monthlyCount}',
+                  value: '${widget.stats.monthlyCount}',
                   label: l10n.statsThisMonth,
-                  colors: const [AppColors.primary, AppColors.primaryDark],
+                  colors: const [AppColors.statsBluePurple, AppColors.statsBluePurpleDark],
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _GradientStatCard(
                   icon: '🎯',
-                  value: '${stats.yearlyCount}',
+                  value: '${widget.stats.yearlyCount}',
                   label: l10n.statsThisYear,
-                  colors: const [AppColors.statsPink, AppColors.statsPinkDark],
+                  colors: const [AppColors.statsPinkRed, AppColors.statsPinkRedDark],
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _GradientStatCard(
                   icon: '🏆',
-                  value: '${stats.totalCount}',
+                  value: '${widget.stats.totalCount}',
                   label: l10n.statsAllTime,
-                  colors: const [AppColors.primary, AppColors.primaryDark],
+                  colors: const [AppColors.statsOrangeAlt, AppColors.statsOrangeAltDark],
+                  // colors: const [AppColors.statsBluePurple, AppColors.statsBluePurpleDark],
                 ),
               ),
             ],
@@ -293,43 +308,77 @@ class _AttendancesTab extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _SurfaceStatCard(
-                  icon: '🔥',
-                  value: '${stats.currentWeekStreak}',
-                  label: l10n.statsCurrentStreak,
+                child: _GradientStatCard(
+                  icon: l10n.statsCurrentStreak,
+                  value: '${widget.stats.currentWeekStreak} weeks',
+                  label: _currentStreakLabel,
+                  colors: const [AppColors.statsViolet, AppColors.statsVioletDark],
+                  onTap: widget.stats.currentWeekStreak > 0 ? () => _showStreakTemporarily(true) : null,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _SurfaceStatCard(
-                  icon: '🏅',
-                  value: '${stats.bestWeekStreak}',
-                  label: l10n.statsBestStreak,
+                child: _GradientStatCard(
+                  icon: l10n.statsBestStreak,
+                  value: '${widget.stats.bestWeekStreak} weeks',
+                  label: _bestStreakLabel,
+                  colors: const [AppColors.statsPurple, AppColors.statsPurpleDark],
+                  onTap: widget.stats.bestWeekStreak > 0 ? () => _showStreakTemporarily(false) : null,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _GradientStatCard(
+                  icon: l10n.statsFavoriteDay,
+                  value: _favoriteDayLabel(context, widget.stats.favoriteDaysOfWeek),
+                  label: widget.stats.favoriteDayCount > 0 ? l10n.statsXThisYear(widget.stats.favoriteDayCount) : '0',
+                  colors: const [AppColors.statsOrange, AppColors.statsOrangeDark],
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _SurfaceStatCard(
-                  icon: '⭐',
-                  value: _favoriteDayLabel(context, stats.favoriteDaysOfWeek),
-                  label: l10n.statsFavoriteDay,
+                child: _GradientStatCard(
+                  icon: l10n.statsConsistency,
+                  value: _getConsistencyPercentage(widget.stats),
+                  label: 'of weeks this year',
+                  colors: const [AppColors.statsTeal, AppColors.statsTealDark],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
           _ChartSection(
-            title: l10n.statsFavoriteDay,
+            title: '📊 Days You Hit the Gym',
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(color: AppColors.statsBlue, borderRadius: BorderRadius.circular(2)),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Favorite day',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.statsBlue),
+                ),
+              ],
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 for (int i = 0; i < 7; i++) ...[
                   Expanded(
                     child: _VerticalBar(
-                      value: stats.weekdayAttendanceCounts[i].toDouble(),
+                      value: widget.stats.weekdayAttendanceCounts[i].toDouble(),
                       max: weekdayMax.toDouble(),
                       label: _weekdayShort(context, i + 1),
-                      highlighted: stats.favoriteDaysOfWeek.contains(i + 1),
+                      highlighted: widget.stats.favoriteDaysOfWeek.contains(i + 1),
+                      showValue: true,
                     ),
                   ),
                   if (i < 6) const SizedBox(width: 8),
@@ -339,16 +388,17 @@ class _AttendancesTab extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           _ChartSection(
-            title: l10n.statsAttendances,
+            title: '📈 Monthly Breakdown',
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 for (int i = 0; i < 12; i++) ...[
                   Expanded(
                     child: _VerticalBar(
-                      value: stats.monthlyAttendanceCounts[i].toDouble(),
+                      value: widget.stats.monthlyAttendanceCounts[i].toDouble(),
                       max: monthMax.toDouble(),
                       label: _monthShort(context, i + 1),
+                      showValue: true,
                     ),
                   ),
                   if (i < 11) const SizedBox(width: 6),
@@ -363,11 +413,7 @@ class _AttendancesTab extends StatelessWidget {
 }
 
 class _WorkoutsTab extends StatelessWidget {
-  const _WorkoutsTab({
-    required this.stats,
-    required this.types,
-    required this.selectedMonth,
-  });
+  const _WorkoutsTab({required this.stats, required this.types, required this.selectedMonth});
 
   final AttendanceStats stats;
   final List<TrainingType> types;
@@ -377,8 +423,7 @@ class _WorkoutsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    final sortedTypes = stats.typeDistribution.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
+    final sortedTypes = stats.typeDistribution.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
 
     final mostUsed = sortedTypes.isEmpty ? null : sortedTypes.first;
     final totalTracked = sortedTypes.fold(0, (sum, e) => sum + e.value);
@@ -392,9 +437,7 @@ class _WorkoutsTab extends StatelessWidget {
               Expanded(
                 child: _GradientStatCard(
                   icon: '🏋️',
-                  value: mostUsed == null
-                      ? '-'
-                      : _typeFor(types, mostUsed.key)?.name ?? '-',
+                  value: mostUsed == null ? '-' : _typeFor(types, mostUsed.key)?.name ?? '-',
                   label: l10n.statsMostUsed,
                   colors: const [AppColors.primary, AppColors.primaryDark],
                 ),
@@ -414,27 +457,19 @@ class _WorkoutsTab extends StatelessWidget {
           ValueListenableBuilder<int>(
             valueListenable: selectedMonth,
             builder: (_, month, __) {
-              final monthData =
-                  stats.monthlyTypeDistribution[month] ?? const <String, int>{};
-              final entries = monthData.entries.toList()
-                ..sort((a, b) => b.value.compareTo(a.value));
+              final monthData = stats.monthlyTypeDistribution[month] ?? const <String, int>{};
+              final entries = monthData.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
               final maxCount = entries.isEmpty ? 1 : entries.first.value;
 
               return _ChartSection(
                 title: '${_monthLong(context, month)} ${DateTime.now().year}',
                 trailing: _MonthSwitcher(
                   selectedMonth: month,
-                  onPrevious: () =>
-                      selectedMonth.value = month == 1 ? 12 : month - 1,
-                  onNext: () =>
-                      selectedMonth.value = month == 12 ? 1 : month + 1,
+                  onPrevious: () => selectedMonth.value = month == 1 ? 12 : month - 1,
+                  onNext: () => selectedMonth.value = month == 12 ? 1 : month + 1,
                 ),
                 child: entries.isEmpty
-                    ? EmptyStateWidget(
-                        title: l10n.statsWorkouts,
-                        message: l10n.statsThisMonth,
-                        emoji: '🏋️',
-                      )
+                    ? EmptyStateWidget(title: l10n.statsWorkouts, message: l10n.statsThisMonth, emoji: '🏋️')
                     : Column(
                         children: entries
                             .map((entry) {
@@ -460,11 +495,7 @@ class _WorkoutsTab extends StatelessWidget {
           _ChartSection(
             title: l10n.statsThisYear,
             child: sortedTypes.isEmpty
-                ? EmptyStateWidget(
-                    title: l10n.statsWorkouts,
-                    message: l10n.statsThisYear,
-                    emoji: '🏋️',
-                  )
+                ? EmptyStateWidget(title: l10n.statsWorkouts, message: l10n.statsThisYear, emoji: '🏋️')
                 : Column(
                     children: sortedTypes
                         .map((entry) {
@@ -492,11 +523,7 @@ class _WorkoutsTab extends StatelessWidget {
 }
 
 class _DurationTab extends StatelessWidget {
-  const _DurationTab({
-    required this.stats,
-    required this.types,
-    required this.selectedMonth,
-  });
+  const _DurationTab({required this.stats, required this.types, required this.selectedMonth});
 
   final AttendanceStats stats;
   final List<TrainingType> types;
@@ -530,23 +557,18 @@ class _DurationTab extends StatelessWidget {
                   Expanded(
                     child: _GradientStatCard(
                       icon: '📊',
-                      value: _durationLabel(
-                        context,
-                        stats.yearlyAverageDurationMinutes,
-                      ),
+                      value: _durationLabel(context, stats.yearlyAverageDurationMinutes),
                       label: l10n.statsAvgThisYear,
-                      colors: const [
-                        AppColors.statsViolet,
-                        AppColors.statsVioletDark,
-                      ],
+                      colors: const [AppColors.statsViolet, AppColors.statsVioletDark],
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: _SurfaceStatCard(
+                    child: _GradientStatCard(
                       icon: '📝',
                       value: '$untracked',
                       label: l10n.statsUntrackedCount,
+                      colors: const [AppColors.statsTeal, AppColors.statsTealDark],
                     ),
                   ),
                 ],
@@ -557,28 +579,19 @@ class _DurationTab extends StatelessWidget {
           ValueListenableBuilder<int>(
             valueListenable: selectedMonth,
             builder: (_, month, __) {
-              final monthData =
-                  stats.monthlyTypeDurationAverages[month] ??
-                  const <String, double>{};
-              final entries = monthData.entries.toList()
-                ..sort((a, b) => b.value.compareTo(a.value));
+              final monthData = stats.monthlyTypeDurationAverages[month] ?? const <String, double>{};
+              final entries = monthData.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
               final maxValue = entries.isEmpty ? 1.0 : entries.first.value;
 
               return _ChartSection(
                 title: _monthLong(context, month),
                 trailing: _MonthSwitcher(
                   selectedMonth: month,
-                  onPrevious: () =>
-                      selectedMonth.value = month == 1 ? 12 : month - 1,
-                  onNext: () =>
-                      selectedMonth.value = month == 12 ? 1 : month + 1,
+                  onPrevious: () => selectedMonth.value = month == 1 ? 12 : month - 1,
+                  onNext: () => selectedMonth.value = month == 12 ? 1 : month + 1,
                 ),
                 child: entries.isEmpty
-                    ? EmptyStateWidget(
-                        title: l10n.statsDuration,
-                        message: l10n.statsThisMonth,
-                        emoji: '⏱️',
-                      )
+                    ? EmptyStateWidget(title: l10n.statsDuration, message: l10n.statsThisMonth, emoji: '⏱️')
                     : Column(
                         children: entries
                             .map((entry) {
@@ -591,10 +604,7 @@ class _DurationTab extends StatelessWidget {
                                   value: entry.value,
                                   max: maxValue,
                                   color: _parseHexColor(type?.color),
-                                  trailing: _durationLabel(
-                                    context,
-                                    entry.value,
-                                  ),
+                                  trailing: _durationLabel(context, entry.value),
                                 ),
                               );
                             })
@@ -613,9 +623,7 @@ class _DurationTab extends StatelessWidget {
                   Expanded(
                     child: _VerticalBar(
                       value: stats.monthlyDurationAverages[i] ?? 0,
-                      max: _maxDoubleOrOne(
-                        stats.monthlyDurationAverages.values,
-                      ),
+                      max: _maxDoubleOrOne(stats.monthlyDurationAverages.values),
                       label: _monthShort(context, i),
                     ),
                   ),
@@ -647,59 +655,49 @@ class _HealthTab extends StatelessWidget {
           ValueListenableBuilder<int>(
             valueListenable: selectedMonth,
             builder: (_, month, __) {
-              final monthSupp =
-                  stats.monthlySupplementServings[month] ??
-                  const <String, double>{};
-              final sortedMonthSupp = monthSupp.entries.toList()
-                ..sort((a, b) => b.value.compareTo(a.value));
-              final topMonth = sortedMonthSupp.isEmpty
-                  ? null
-                  : sortedMonthSupp.first;
+              final monthSupp = stats.monthlySupplementServings[month] ?? const <String, double>{};
+              final sortedMonthSupp = monthSupp.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+              final topMonth = sortedMonthSupp.isEmpty ? null : sortedMonthSupp.first;
 
-              return Row(
+              return Column(
                 children: [
-                  Expanded(
-                    child: _GradientStatCard(
-                      icon: '💊',
-                      value: topMonth == null
-                          ? '-'
-                          : stats.productNames[topMonth.key] ?? '-',
-                      label: l10n.statsThisMonth,
-                      subtitle: topMonth == null
-                          ? null
-                          : '${topMonth.value.toStringAsFixed(0)}x',
-                      colors: const [
-                        AppColors.statsEmerald,
-                        AppColors.statsEmeraldDark,
-                      ],
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _GradientStatCard(
+                          icon: '💊',
+                          value: topMonth == null ? '-' : stats.productNames[topMonth.key] ?? '-',
+                          label: l10n.statsThisMonth,
+                          subtitle: topMonth == null ? null : '${topMonth.value.toStringAsFixed(0)}x',
+                          colors: const [AppColors.statsEmerald, AppColors.statsEmeraldDark],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _GradientStatCard(
+                          icon: '🏆',
+                          value: stats.mostTakenSupplementName ?? '-',
+                          label: l10n.statsMostUsed,
+                          subtitle: stats.mostTakenSupplementCount <= 0
+                              ? null
+                              : '${stats.mostTakenSupplementCount.toStringAsFixed(0)}x',
+                          colors: const [AppColors.statsTeal, AppColors.statsTealDark],
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _GradientStatCard(
-                      icon: '🏆',
-                      value: stats.mostTakenSupplementName ?? '-',
-                      label: l10n.statsMostUsed,
-                      subtitle: stats.mostTakenSupplementCount <= 0
-                          ? null
-                          : '${stats.mostTakenSupplementCount.toStringAsFixed(0)}x',
-                      colors: const [
-                        AppColors.statsTeal,
-                        AppColors.statsTealDark,
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _GradientStatCard(
-                      icon: '🎯',
-                      value: '${stats.healthConsistencyPct.round()}%',
-                      label: l10n.statsHealth,
-                      colors: const [
-                        AppColors.statsCyan,
-                        AppColors.statsCyanDark,
-                      ],
-                    ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _GradientStatCard(
+                          icon: l10n.statsConsistency,
+                          value: '${stats.healthConsistencyPct.round()}%',
+                          label: 'of weeks this year',
+                          colors: const [AppColors.statsCyan, AppColors.statsCyanDark],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               );
@@ -709,27 +707,18 @@ class _HealthTab extends StatelessWidget {
           ValueListenableBuilder<int>(
             valueListenable: selectedMonth,
             builder: (_, month, __) {
-              final monthSupp =
-                  stats.monthlySupplementServings[month] ??
-                  const <String, double>{};
-              final entries = monthSupp.entries.toList()
-                ..sort((a, b) => b.value.compareTo(a.value));
+              final monthSupp = stats.monthlySupplementServings[month] ?? const <String, double>{};
+              final entries = monthSupp.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
 
               return _ChartSection(
                 title: _monthLong(context, month),
                 trailing: _MonthSwitcher(
                   selectedMonth: month,
-                  onPrevious: () =>
-                      selectedMonth.value = month == 1 ? 12 : month - 1,
-                  onNext: () =>
-                      selectedMonth.value = month == 12 ? 1 : month + 1,
+                  onPrevious: () => selectedMonth.value = month == 1 ? 12 : month - 1,
+                  onNext: () => selectedMonth.value = month == 12 ? 1 : month + 1,
                 ),
                 child: entries.isEmpty
-                    ? EmptyStateWidget(
-                        title: l10n.statsHealth,
-                        message: l10n.statsThisMonth,
-                        emoji: '💊',
-                      )
+                    ? EmptyStateWidget(title: l10n.statsHealth, message: l10n.statsThisMonth, emoji: '💊')
                     : Column(
                         children: entries
                             .take(8)
@@ -757,18 +746,15 @@ class _HealthTab extends StatelessWidget {
             title: l10n.statsTotalLogs,
             child: Column(
               children: [
-                _SurfaceStatCard(
+                _GradientStatCard(
                   icon: '🧾',
                   value: '${stats.healthTotalLogs}',
                   label: l10n.statsTotalLogs,
+                  colors: const [AppColors.statsEmerald, AppColors.statsEmeraldDark],
                 ),
                 const SizedBox(height: 12),
                 if (stats.topNutrients.isEmpty)
-                  EmptyStateWidget(
-                    title: l10n.statsHealth,
-                    message: l10n.statsTotalTracked,
-                    emoji: '🥦',
-                  )
+                  EmptyStateWidget(title: l10n.statsHealth, message: l10n.statsTotalTracked, emoji: '🥦')
                 else
                   Column(
                     children: stats.topNutrients
@@ -777,14 +763,7 @@ class _HealthTab extends StatelessWidget {
                             padding: const EdgeInsets.only(bottom: 8),
                             child: Row(
                               children: [
-                                Expanded(
-                                  child: Text(
-                                    nutrient.name,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodyMedium,
-                                  ),
-                                ),
+                                Expanded(child: Text(nutrient.name, style: Theme.of(context).textTheme.bodyMedium)),
                                 Text(
                                   '${nutrient.amount.toStringAsFixed(1)} ${nutrient.unit}',
                                   style: Theme.of(context).textTheme.bodyMedium,
@@ -805,11 +784,7 @@ class _HealthTab extends StatelessWidget {
 }
 
 class _ChartSection extends StatelessWidget {
-  const _ChartSection({
-    required this.title,
-    required this.child,
-    this.trailing,
-  });
+  const _ChartSection({required this.title, required this.child, this.trailing});
 
   final String title;
   final Widget child;
@@ -831,12 +806,7 @@ class _ChartSection extends StatelessWidget {
           children: [
             Row(
               children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                ),
+                Expanded(child: Text(title, style: Theme.of(context).textTheme.titleMedium)),
                 if (trailing != null) trailing!,
               ],
             ),
@@ -856,6 +826,7 @@ class _GradientStatCard extends StatelessWidget {
     required this.label,
     required this.colors,
     this.subtitle,
+    this.onTap,
   });
 
   final String icon;
@@ -863,102 +834,58 @@ class _GradientStatCard extends StatelessWidget {
   final String label;
   final List<Color> colors;
   final String? subtitle;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: colors,
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12 * 0.8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: colors),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(icon, style: const TextStyle(fontSize: 20)),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: Colors.white.withValues(alpha: 0.9),
-            ),
-          ),
-          if (subtitle != null) ...[
-            const SizedBox(height: 2),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Text(
-              subtitle!,
+              icon,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 20),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: Colors.white.withValues(alpha: 0.8),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 2 * 0.8),
+            Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: Colors.white.withValues(alpha: 0.9),
+                fontSize: label.length > 20 ? 11 : null, // Smaller font for longer text like dates
               ),
             ),
+            if (subtitle != null) ...[
+              const SizedBox(height: 2 * 0.8),
+              Text(
+                subtitle!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Colors.white.withValues(alpha: 0.8)),
+              ),
+            ],
           ],
-        ],
-      ),
-    );
-  }
-}
-
-class _SurfaceStatCard extends StatelessWidget {
-  const _SurfaceStatCard({
-    required this.icon,
-    required this.value,
-    required this.label,
-  });
-
-  final String icon;
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: cs.surface,
-        border: Border.all(color: cs.outline.withValues(alpha: 0.6)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(icon, style: const TextStyle(fontSize: 18)),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(
-              context,
-            ).textTheme.labelMedium?.copyWith(color: cs.onSurfaceVariant),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -970,12 +897,14 @@ class _VerticalBar extends StatelessWidget {
     required this.max,
     required this.label,
     this.highlighted = false,
+    this.showValue = false,
   });
 
   final double value;
   final double max;
   final String label;
   final bool highlighted;
+  final bool showValue;
 
   @override
   Widget build(BuildContext context) {
@@ -985,24 +914,38 @@ class _VerticalBar extends StatelessWidget {
     return Column(
       children: [
         SizedBox(
-          height: 120,
-          child: Align(
+          height: 140,
+          child: Stack(
             alignment: Alignment.bottomCenter,
-            child: Container(
-              width: 20,
-              height: 8 + (ratio * 112),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-                color: highlighted ? AppColors.statsPink : cs.primary,
+            children: [
+              Container(
+                width: 20,
+                height: 8 + (ratio * 112),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  color: highlighted ? AppColors.statsBlue : cs.primary,
+                ),
               ),
-            ),
+              if (showValue)
+                Positioned(
+                  bottom: 8 + (ratio * 112) + 4,
+                  child: Text(
+                    value.round().toString(),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: highlighted ? AppColors.statsBlue : cs.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
         const SizedBox(height: 6),
         Text(
           label,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: highlighted ? AppColors.statsPink : cs.onSurfaceVariant,
+            fontSize: (Theme.of(context).textTheme.labelSmall?.fontSize ?? 10) - 1,
+            color: highlighted ? AppColors.statsBlue : cs.onSurfaceVariant,
           ),
         ),
       ],
@@ -1036,9 +979,7 @@ class _HorizontalProgress extends StatelessWidget {
       children: [
         Text(icon),
         const SizedBox(width: 8),
-        Expanded(
-          child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
-        ),
+        Expanded(child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis)),
         const SizedBox(width: 8),
         Expanded(
           flex: 2,
@@ -1065,11 +1006,7 @@ class _HorizontalProgress extends StatelessWidget {
 }
 
 class _MonthSwitcher extends StatelessWidget {
-  const _MonthSwitcher({
-    required this.selectedMonth,
-    required this.onPrevious,
-    required this.onNext,
-  });
+  const _MonthSwitcher({required this.selectedMonth, required this.onPrevious, required this.onNext});
 
   final int selectedMonth;
   final VoidCallback onPrevious;
@@ -1130,10 +1067,7 @@ TrainingType? _typeFor(List<TrainingType> types, String id) {
 Color _parseHexColor(String? hex) {
   if (hex == null || hex.trim().isEmpty) return AppColors.primary;
   final cleaned = hex.replaceAll('#', '');
-  final value = int.tryParse(
-    cleaned.length == 6 ? 'FF$cleaned' : cleaned,
-    radix: 16,
-  );
+  final value = int.tryParse(cleaned.length == 6 ? 'FF$cleaned' : cleaned, radix: 16);
   return value == null ? AppColors.primary : Color(value);
 }
 
@@ -1159,9 +1093,7 @@ String _durationLabel(BuildContext context, double minutes) {
 
 String _favoriteDayLabel(BuildContext context, List<int> weekdayIndexes) {
   if (weekdayIndexes.isEmpty) return '-';
-  return weekdayIndexes
-      .map((weekday) => _weekdayShort(context, weekday))
-      .join(' / ');
+  return weekdayIndexes.map((weekday) => _weekdayShort(context, weekday)).join(' / ');
 }
 
 String _monthShort(BuildContext context, int month) {
@@ -1201,4 +1133,33 @@ String _weekdayShort(BuildContext context, int weekday) {
   };
   if (value.length <= 3) return value;
   return value.substring(0, 3);
+}
+
+String _getConsistencyPercentage(AttendanceStats stats) {
+  final now = DateTime.now();
+  final startOfYear = DateTime(now.year, 1, 1);
+  final passedWeeks = (now.difference(startOfYear).inDays / 7).ceil();
+
+  if (passedWeeks <= 0) return '0%';
+
+  // Estimate weeks with attendance based on total attendance count
+  // This is an approximation since we don't have week-by-week data
+  // Assume average 2-3 visits per week for regular gym-goers
+  final estimatedWeeksWithAttendance = (stats.yearlyCount / 2.5).ceil().clamp(0, passedWeeks);
+  final consistencyPercentage = (estimatedWeeksWithAttendance / passedWeeks * 100).round();
+  return '$consistencyPercentage%';
+}
+
+String _formatDateRange(String start, String end) {
+  if (start.isEmpty || end.isEmpty) return '';
+  final fmt = (d) {
+    final date = DateTime.parse(d);
+    return '${date.day} ${_monthShortEn(date.month)} ${date.year}';
+  };
+  return '${fmt(start)} → ${fmt(end)}';
+}
+
+String _monthShortEn(int month) {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return months[month - 1];
 }

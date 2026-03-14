@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:injectable/injectable.dart';
-
 import 'package:gym_tracker/cubit/base_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/model/attendance_day.dart';
@@ -12,16 +10,13 @@ import 'package:gym_tracker/model/training_type.dart';
 import 'package:gym_tracker/service/attendance/attendance_service.dart';
 import 'package:gym_tracker/service/health/health_service.dart';
 import 'package:gym_tracker/service/workout/workout_service.dart';
+import 'package:injectable/injectable.dart';
 
 part 'stats_states.dart';
 
 @injectable
 class StatsCubit extends BaseCubit {
-  StatsCubit(
-    this._attendanceService,
-    this._workoutService,
-    this._healthService,
-  );
+  StatsCubit(this._attendanceService, this._workoutService, this._healthService);
 
   final AttendanceService _attendanceService;
   final WorkoutService _workoutService;
@@ -57,14 +52,9 @@ class StatsCubit extends BaseCubit {
 
       final futureResults = await Future.wait<dynamic>([
         Future.wait(monthFutures),
-        _workoutService
-            .watchAll(userId)
-            .first
-            .catchError((_) => <TrainingType>[]),
+        _workoutService.watchAll(userId).first.catchError((_) => <TrainingType>[]),
         Future.wait(healthMonthFutures),
-        _healthService.watchAllProducts().first.catchError(
-          (_) => <SupplementProduct>[],
-        ),
+        _healthService.watchAllProducts().first.catchError((_) => <SupplementProduct>[]),
       ]);
 
       final monthResults = futureResults[0] as List<List<AttendanceDay>>;
@@ -74,9 +64,7 @@ class StatsCubit extends BaseCubit {
 
       final prevDecember = monthResults[0];
       final yearData = monthResults.sublist(1).expand((list) => list).toList();
-      final healthYearData = monthlyHealthLogs
-          .expand((list) => list)
-          .toList(growable: false);
+      final healthYearData = monthlyHealthLogs.expand((list) => list).toList(growable: false);
 
       final stats = _computeStats(
         yearData: yearData,
@@ -103,30 +91,34 @@ class StatsCubit extends BaseCubit {
     required List<SupplementProduct> products,
     required int year,
   }) {
-    final sortedYear = [...yearData]
-      ..sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    final sortedYear = [...yearData]..sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
     // Monthly count: current calendar month if showing the current year,
     // otherwise December (month 12 is the natural "latest" for past years).
     final now = DateTime.now();
     final currentMonth = year == now.year ? now.month : 12;
-    final monthlyCount = sortedYear
-        .where(
-          (d) => d.timestamp.year == year && d.timestamp.month == currentMonth,
-        )
-        .length;
+    final monthlyCount = sortedYear.where((d) {
+      final workoutDate = _tryParseDate(d.date);
+      return workoutDate != null && workoutDate.year == year && workoutDate.month == currentMonth;
+    }).length;
 
     // Monthly attendance counts.
     final monthlyAttendanceCounts = List<int>.filled(12, 0);
     for (final day in sortedYear) {
-      final month = day.timestamp.month;
-      monthlyAttendanceCounts[month - 1]++;
+      final workoutDate = _tryParseDate(day.date);
+      if (workoutDate != null && workoutDate.year == year) {
+        final month = workoutDate.month;
+        monthlyAttendanceCounts[month - 1]++;
+      }
     }
 
     // Weekday distribution (DateTime.weekday: 1 = Mon … 7 = Sun).
     final weekdayCounts = List<int>.filled(8, 0);
     for (final day in sortedYear) {
-      weekdayCounts[day.timestamp.weekday]++;
+      final workoutDate = _tryParseDate(day.date);
+      if (workoutDate != null) {
+        weekdayCounts[workoutDate.weekday]++;
+      }
     }
     final maxCount = weekdayCounts.fold(0, (m, c) => c > m ? c : m);
     final favoriteDays = maxCount == 0
@@ -136,17 +128,18 @@ class StatsCubit extends BaseCubit {
               if (weekdayCounts[i] == maxCount) i,
           ];
 
-    final weekdayAttendanceCounts = [
-      for (int i = 1; i <= 7; i++) weekdayCounts[i],
-    ];
+    final weekdayAttendanceCounts = [for (int i = 1; i <= 7; i++) weekdayCounts[i]];
 
     // Type distribution.
     final typeDistribution = <String, int>{};
     final monthlyTypeDistribution = <int, Map<String, int>>{};
     for (final day in sortedYear) {
       if (day.trainingTypeId != null) {
+        final workoutDate = _tryParseDate(day.date);
+        if (workoutDate == null || workoutDate.year != year) continue;
+
         final typeId = day.trainingTypeId!;
-        final month = day.timestamp.month;
+        final month = workoutDate.month;
 
         typeDistribution[typeId] = (typeDistribution[typeId] ?? 0) + 1;
 
@@ -168,7 +161,10 @@ class StatsCubit extends BaseCubit {
     int yearlyDurationCount = 0;
 
     for (final day in sortedYear) {
-      final month = day.timestamp.month;
+      final workoutDate = _tryParseDate(day.date);
+      if (workoutDate == null || workoutDate.year != year) continue;
+
+      final month = workoutDate.month;
       final duration = day.durationMinutes;
 
       if (duration != null && duration > 0) {
@@ -192,10 +188,7 @@ class StatsCubit extends BaseCubit {
         monthlyUntrackedDurationCounts[month - 1]++;
       }
     }
-    final monthlyDurationAverages = {
-      for (final m in monthDurTotals.keys)
-        m: monthDurTotals[m]! / monthDurCounts[m]!,
-    };
+    final monthlyDurationAverages = {for (final m in monthDurTotals.keys) m: monthDurTotals[m]! / monthDurCounts[m]!};
 
     final monthlyTypeDurationAverages = <int, Map<String, double>>{};
     for (final month in monthTypeDurTotals.keys) {
@@ -203,35 +196,26 @@ class StatsCubit extends BaseCubit {
       final counts = monthTypeDurCounts[month] ?? const <String, int>{};
       monthlyTypeDurationAverages[month] = {
         for (final typeId in totals.keys)
-          if ((counts[typeId] ?? 0) > 0)
-            typeId: totals[typeId]! / counts[typeId]!,
+          if ((counts[typeId] ?? 0) > 0) typeId: totals[typeId]! / counts[typeId]!,
       };
     }
 
-    final yearlyAverageDurationMinutes = yearlyDurationCount == 0
-        ? 0.0
-        : yearlyDurationTotal / yearlyDurationCount;
+    final yearlyAverageDurationMinutes = yearlyDurationCount == 0 ? 0.0 : yearlyDurationTotal / yearlyDurationCount;
 
-    final yearlyUntrackedDurationCount = monthlyUntrackedDurationCounts.fold(
-      0,
-      (sum, value) => sum + value,
-    );
+    final yearlyUntrackedDurationCount = monthlyUntrackedDurationCounts.fold(0, (sum, value) => sum + value);
 
     // Per-type duration averages.
     final typeDurTotals = <String, int>{};
     final typeDurCounts = <String, int>{};
     for (final day in sortedYear) {
-      if (day.trainingTypeId != null &&
-          day.durationMinutes != null &&
-          day.durationMinutes! > 0) {
+      if (day.trainingTypeId != null && day.durationMinutes != null && day.durationMinutes! > 0) {
         final tid = day.trainingTypeId!;
         typeDurTotals[tid] = (typeDurTotals[tid] ?? 0) + day.durationMinutes!;
         typeDurCounts[tid] = (typeDurCounts[tid] ?? 0) + 1;
       }
     }
     final perTypeDurationAverages = {
-      for (final tid in typeDurTotals.keys)
-        tid: typeDurTotals[tid]! / typeDurCounts[tid]!,
+      for (final tid in typeDurTotals.keys) tid: typeDurTotals[tid]! / typeDurCounts[tid]!,
     };
 
     // Health aggregates.
@@ -240,12 +224,8 @@ class StatsCubit extends BaseCubit {
     final productServings = <String, double>{};
 
     final productsById = {for (final product in products) product.id: product};
-    final productNames = {
-      for (final product in products) product.id: product.name,
-    };
-    final productBrands = {
-      for (final product in products) product.id: product.brand,
-    };
+    final productNames = {for (final product in products) product.id: product.name};
+    final productBrands = {for (final product in products) product.id: product.brand};
 
     final daysWithSupplements = <String>{};
     final nutrientTotals = <String, NutrientTotal>{};
@@ -254,11 +234,9 @@ class StatsCubit extends BaseCubit {
       final monthMap = <String, double>{};
       for (final log in monthlyHealthLogs[month - 1]) {
         monthlyHealthServings[month - 1] += log.servingsTaken;
-        monthMap[log.productId] =
-            (monthMap[log.productId] ?? 0) + log.servingsTaken;
+        monthMap[log.productId] = (monthMap[log.productId] ?? 0) + log.servingsTaken;
 
-        productServings[log.productId] =
-            (productServings[log.productId] ?? 0) + log.servingsTaken;
+        productServings[log.productId] = (productServings[log.productId] ?? 0) + log.servingsTaken;
 
         final parsedDate = _tryParseDate(log.date);
         if (parsedDate != null) {
@@ -286,32 +264,28 @@ class StatsCubit extends BaseCubit {
     final currentYear = DateTime.now().year;
     final nowDate = DateTime.now();
     final endDate = year == currentYear ? nowDate : DateTime(year, 12, 31);
-    final totalDaysElapsed =
-        endDate.difference(DateTime(year, 1, 1)).inDays + 1;
-    final healthConsistencyPct = totalDaysElapsed <= 0
-        ? 0.0
-        : (daysWithSupplements.length / totalDaysElapsed) * 100;
+    final totalDaysElapsed = endDate.difference(DateTime(year, 1, 1)).inDays + 1;
+    final healthConsistencyPct = totalDaysElapsed <= 0 ? 0.0 : (daysWithSupplements.length / totalDaysElapsed) * 100;
 
     String? mostTakenSupplementName;
     String? mostTakenSupplementBrand;
     double mostTakenSupplementCount = 0;
     if (productServings.isNotEmpty) {
-      final top = productServings.entries.reduce(
-        (a, b) => a.value >= b.value ? a : b,
-      );
+      final top = productServings.entries.reduce((a, b) => a.value >= b.value ? a : b);
       mostTakenSupplementCount = top.value;
       mostTakenSupplementName = productNames[top.key] ?? top.key;
       mostTakenSupplementBrand = productBrands[top.key] ?? '';
     }
 
-    final topNutrients = nutrientTotals.values.toList(growable: false)
-      ..sort((a, b) => b.amount.compareTo(a.amount));
+    final topNutrients = nutrientTotals.values.toList(growable: false)..sort((a, b) => b.amount.compareTo(a.amount));
 
     // Weekly streaks (include previous December for cross-year continuity).
-    final (currentStreak, bestStreak) = _computeStreaks([
-      ...prevDecember,
-      ...sortedYear,
-    ]);
+    final (currentStreak, bestStreak) = _computeStreaks([...prevDecember, ...sortedYear]);
+    final (currentStreakInfo, bestStreakInfo) = _computeStreaksWithDates([...prevDecember, ...sortedYear]);
+
+    // Calculate favorite day count
+    final maxFavoriteCount = weekdayCounts.fold(0, (m, c) => c > m ? c : m);
+    final favoriteDayCount = maxFavoriteCount;
 
     return AttendanceStats(
       totalCount: sortedYear.length,
@@ -319,7 +293,10 @@ class StatsCubit extends BaseCubit {
       monthlyCount: monthlyCount,
       currentWeekStreak: currentStreak,
       bestWeekStreak: bestStreak,
+      currentStreakInfo: currentStreakInfo,
+      bestStreakInfo: bestStreakInfo,
       favoriteDaysOfWeek: favoriteDays,
+      favoriteDayCount: favoriteDayCount,
       weekdayAttendanceCounts: weekdayAttendanceCounts,
       monthlyAttendanceCounts: monthlyAttendanceCounts,
       typeDistribution: typeDistribution,
@@ -365,32 +342,76 @@ class StatsCubit extends BaseCubit {
   /// the immediately preceding one (i.e. the streak is still active or was
   /// active last week).
   (int current, int best) _computeStreaks(List<AttendanceDay> data) {
-    if (data.isEmpty) return (0, 0);
+    final (currentStreak, bestStreak) = _computeStreaksWithDates(data);
+    return (currentStreak.count, bestStreak.count);
+  }
+
+  /// Calculates detailed streak information with start and end dates.
+  (StreakInfo current, StreakInfo best) _computeStreaksWithDates(List<AttendanceDay> data) {
+    if (data.isEmpty) {
+      return (
+        const StreakInfo(count: 0, startDate: '', endDate: ''),
+        const StreakInfo(count: 0, startDate: '', endDate: ''),
+      );
+    }
 
     // Collect the unique ISO-week Monday strings present in the data.
     final weekSet = <String>{};
-    for (final day in data) {
-      weekSet.add(_isoWeekMonday(day.timestamp));
-    }
-    final weeks = weekSet.toList()..sort();
-    if (weeks.isEmpty) return (0, 0);
+    final weekFirstDates = <String, String>{};
+    final weekLastDates = <String, String>{};
 
-    // Walk through sorted weeks and build a list of (runLength, endWeekMonday).
+    for (final day in data) {
+      final weekMonday = _isoWeekMonday(day.timestamp);
+      weekSet.add(weekMonday);
+
+      // Track first and last attendance dates for each week
+      if (!weekFirstDates.containsKey(weekMonday) ||
+          day.timestamp.isBefore(DateTime.parse(weekFirstDates[weekMonday]!))) {
+        weekFirstDates[weekMonday] = day.timestamp.toIso8601String().substring(0, 10);
+      }
+      if (!weekLastDates.containsKey(weekMonday) || day.timestamp.isAfter(DateTime.parse(weekLastDates[weekMonday]!))) {
+        weekLastDates[weekMonday] = day.timestamp.toIso8601String().substring(0, 10);
+      }
+    }
+
+    final weeks = weekSet.toList()..sort();
+    if (weeks.isEmpty) {
+      return (
+        const StreakInfo(count: 0, startDate: '', endDate: ''),
+        const StreakInfo(count: 0, startDate: '', endDate: ''),
+      );
+    }
+
+    // Walk through sorted weeks and build a list of streak info
     int runLen = 1;
-    final allStreaks = <(int length, String endWeek)>[];
+    final allStreaks = <(int length, String startWeek, String endWeek)>[];
+    String currentRunStart = weeks.first;
+
     for (int i = 1; i < weeks.length; i++) {
       final prev = DateTime.parse('${weeks[i - 1]}T12:00:00');
       final curr = DateTime.parse('${weeks[i]}T12:00:00');
       if (curr.difference(prev).inDays == 7) {
         runLen++;
       } else {
-        allStreaks.add((runLen, weeks[i - 1]));
+        allStreaks.add((runLen, currentRunStart, weeks[i - 1]));
         runLen = 1;
+        currentRunStart = weeks[i];
       }
     }
-    allStreaks.add((runLen, weeks.last));
+    allStreaks.add((runLen, currentRunStart, weeks.last));
 
-    final best = allStreaks.fold(0, (m, s) => s.$1 > m ? s.$1 : m);
+    // Find best streak
+    final bestStreakData = allStreaks.fold<(int length, String startWeek, String endWeek)>((
+      0,
+      '',
+      '',
+    ), (best, streak) => streak.$1 > best.$1 ? streak : best);
+
+    final bestStreak = StreakInfo(
+      count: bestStreakData.$1,
+      startDate: weekFirstDates[bestStreakData.$2] ?? '',
+      endDate: weekLastDates[bestStreakData.$3] ?? '',
+    );
 
     // Current streak: the last run is still active only when its ending week
     // equals the current ISO week or the immediately preceding one.
@@ -399,12 +420,18 @@ class StatsCubit extends BaseCubit {
       '${todayMonday}T12:00:00',
     ).subtract(const Duration(days: 7)).toIso8601String().substring(0, 10);
 
-    final (lastLen, lastEndWeek) = allStreaks.last;
-    final current = (lastEndWeek == todayMonday || lastEndWeek == prevMonday)
-        ? lastLen
-        : 0;
+    final (lastLen, lastStartWeek, lastEndWeek) = allStreaks.last;
+    final isCurrentStreakActive = lastEndWeek == todayMonday || lastEndWeek == prevMonday;
 
-    return (current, best);
+    final currentStreak = isCurrentStreakActive
+        ? StreakInfo(
+            count: lastLen,
+            startDate: weekFirstDates[lastStartWeek] ?? '',
+            endDate: weekLastDates[lastEndWeek] ?? '',
+          )
+        : const StreakInfo(count: 0, startDate: '', endDate: '');
+
+    return (currentStreak, bestStreak);
   }
 
   DateTime? _tryParseDate(String raw) {

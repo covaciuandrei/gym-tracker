@@ -1,13 +1,27 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 
+/// Streak information with start and end dates
+@immutable
+class StreakInfo extends Equatable {
+  const StreakInfo({required this.count, required this.startDate, required this.endDate});
+
+  /// Number of consecutive weeks
+  final int count;
+
+  /// ISO start date of first week
+  final String startDate;
+
+  /// ISO end date of last week
+  final String endDate;
+
+  @override
+  List<Object?> get props => [count, startDate, endDate];
+}
+
 @immutable
 class NutrientTotal extends Equatable {
-  const NutrientTotal({
-    required this.name,
-    required this.amount,
-    required this.unit,
-  });
+  const NutrientTotal({required this.name, required this.amount, required this.unit});
 
   final String name;
   final double amount;
@@ -26,7 +40,10 @@ class AttendanceStats extends Equatable {
     required this.monthlyCount,
     required this.currentWeekStreak,
     required this.bestWeekStreak,
+    required this.currentStreakInfo,
+    required this.bestStreakInfo,
     required this.favoriteDaysOfWeek,
+    required this.favoriteDayCount,
     required this.weekdayAttendanceCounts,
     required this.monthlyAttendanceCounts,
     required this.typeDistribution,
@@ -65,9 +82,18 @@ class AttendanceStats extends Equatable {
   /// Longest run of consecutive ISO weeks with ≥ 1 attendance.
   final int bestWeekStreak;
 
+  /// Current streak information with start and end dates
+  final StreakInfo currentStreakInfo;
+
+  /// Best streak information with start and end dates
+  final StreakInfo bestStreakInfo;
+
   /// [DateTime.weekday] values (1 = Mon … 7 = Sun) that share the highest
   /// attendance count. Empty when there is no data.
   final List<int> favoriteDaysOfWeek;
+
+  /// Number of times the favorite day was visited in the selected year
+  final int favoriteDayCount;
 
   /// Monday-first weekday counts for the selected year. Index 0 = Monday,
   /// index 6 = Sunday.
@@ -136,7 +162,10 @@ class AttendanceStats extends Equatable {
     monthlyCount,
     currentWeekStreak,
     bestWeekStreak,
+    currentStreakInfo,
+    bestStreakInfo,
     favoriteDaysOfWeek,
+    favoriteDayCount,
     weekdayAttendanceCounts,
     monthlyAttendanceCounts,
     typeDistribution,

@@ -268,16 +268,66 @@ class AppLocalizationsRo extends AppLocalizations {
   String get statsCurrentStreak => 'Serie Curentă 🔥';
 
   @override
-  String get statsBestStreak => 'Cea Mai Bună Serie 🏆';
+  String get statsBestStreak => 'Top Serie 🏆';
 
   @override
-  String get statsFavoriteDay => 'Ziua Preferată 📅';
+  String get statsFavoriteDay => 'Ziua Preferată ⭐';
+
+  @override
+  String get statsConsistency => 'Consistență 🎯';
 
   @override
   String get statsStreak0 => 'Începe-ți călătoria!';
 
   @override
   String get statsStreak1 => 'Prima săptămână finalizată!';
+
+  @override
+  String get statsStreak2 => 'Building momentum!';
+
+  @override
+  String get statsStreak4 => 'One month strong! 📅';
+
+  @override
+  String get statsStreak8 => 'You\'re on fire! 🔥';
+
+  @override
+  String get statsStreak12 => 'Consistency king! 👑';
+
+  @override
+  String get statsStreak20 => 'Unstoppable! 💎';
+
+  @override
+  String get statsStreak30 => 'Half-year beast! 🦁';
+
+  @override
+  String get statsStreak40 => 'Legend mode! 🏆';
+
+  @override
+  String get statsStreak52 => 'Almost a full year! 🌟';
+
+  @override
+  String get statsStreakMax => 'Absolute GOAT! 🐐';
+
+  @override
+  String get statsTapToSeeDates => 'Tap to see dates';
+
+  @override
+  String get statsNoStreakYet => 'No streak yet';
+
+  @override
+  String get statsDaysYouHitGym => 'Days You Hit the Gym';
+
+  @override
+  String get statsFavoriteDayLegend => 'Favorite day';
+
+  @override
+  String get statsFavoriteDaysLegend => 'Favorite days';
+
+  @override
+  String statsXThisYear(Object count) {
+    return '${count}x this year';
+  }
 
   @override
   String get statsAvgThisMonth => 'Medie Luna Aceasta';

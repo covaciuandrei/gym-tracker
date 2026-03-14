@@ -267,13 +267,63 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsBestStreak => 'Best Streak 🏆';
 
   @override
-  String get statsFavoriteDay => 'Favorite Day 📅';
+  String get statsFavoriteDay => 'Favorite Day ⭐';
 
   @override
-  String get statsStreak0 => 'Start your journey!';
+  String get statsConsistency => 'Consistency 🎯';
 
   @override
-  String get statsStreak1 => 'First week down!';
+  String get statsStreak0 => 'Start your journey! 💪';
+
+  @override
+  String get statsStreak1 => 'First week down! 🎉';
+
+  @override
+  String get statsStreak2 => 'Building momentum!';
+
+  @override
+  String get statsStreak4 => 'One month strong! 📅';
+
+  @override
+  String get statsStreak8 => 'You\'re on fire! 🔥';
+
+  @override
+  String get statsStreak12 => 'Consistency king! 👑';
+
+  @override
+  String get statsStreak20 => 'Unstoppable! 💎';
+
+  @override
+  String get statsStreak30 => 'Half-year beast! 🦁';
+
+  @override
+  String get statsStreak40 => 'Legend mode! 🏆';
+
+  @override
+  String get statsStreak52 => 'Almost a full year! 🌟';
+
+  @override
+  String get statsStreakMax => 'Absolute GOAT! 🐐';
+
+  @override
+  String get statsTapToSeeDates => 'Tap to see dates';
+
+  @override
+  String get statsNoStreakYet => 'No streak yet';
+
+  @override
+  String get statsDaysYouHitGym => 'Days You Hit the Gym';
+
+  @override
+  String get statsFavoriteDayLegend => 'Favorite day';
+
+  @override
+  String get statsFavoriteDaysLegend => 'Favorite days';
+
+  @override
+  String statsXThisYear(Object count) {
+    return '${count}x this year';
+  }
 
   @override
   String get statsAvgThisMonth => 'Avg This Month';
