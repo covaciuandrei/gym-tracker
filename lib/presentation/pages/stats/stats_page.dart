@@ -12,6 +12,7 @@ import 'package:gym_tracker/model/training_type.dart';
 import 'package:gym_tracker/presentation/controls/empty_state.dart';
 import 'package:gym_tracker/presentation/controls/error_state.dart';
 import 'package:gym_tracker/presentation/controls/gym_app_bar.dart';
+import 'package:gym_tracker/presentation/controls/gym_tab_bar.dart';
 import 'package:gym_tracker/presentation/resources/app_colors.dart';
 
 @RoutePage()
@@ -101,41 +102,9 @@ class _StatsViewState extends State<StatsView> {
                   },
                 ),
                 const SizedBox(height: 12),
-                Container(
-                  color: Colors.white,
-                  // color: Colors.red,
-                  child: TabBar(
-                    overlayColor: WidgetStatePropertyAll(Colors.transparent),
-                    // tabAlignment: TabAlignment.start,
-                    // isScrollable: true,
-                    dividerHeight: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 0),
-                    labelColor: Theme.of(context).colorScheme.onPrimaryContainer,
-                    unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
-                    indicatorColor: Theme.of(context).colorScheme.primary,
-                    indicatorWeight: 0,
-                    labelStyle: Theme.of(
-                      context,
-                    ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 11),
-                    unselectedLabelStyle: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400, fontSize: 12),
-                    labelPadding: const EdgeInsets.all(0),
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    indicatorPadding: EdgeInsetsGeometry.all(0),
-
-                    indicator: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-
-                    tabs: [
-                      Tab(text: l10n.statsAttendances),
-                      Tab(text: l10n.statsWorkouts),
-                      Tab(text: l10n.statsDuration),
-                      Tab(text: l10n.statsHealth),
-                    ],
-                  ),
+                GymTabBar(
+                  tabs: [l10n.statsAttendances, l10n.statsWorkout, l10n.statsDuration, l10n.statsHealth],
+                  labelPadding: EdgeInsets.symmetric(horizontal: 0, vertical: 8),
                 ),
                 const SizedBox(height: 12),
                 Expanded(
@@ -509,7 +478,7 @@ class _WorkoutsTab extends StatelessWidget {
                   onNext: () => selectedMonth.value = month == 12 ? 1 : month + 1,
                 ),
                 child: entries.isEmpty
-                    ? EmptyStateWidget(title: l10n.statsWorkouts, message: l10n.statsThisMonth, emoji: '🏋️')
+                    ? EmptyStateWidget(title: l10n.statsWorkout, message: l10n.statsThisMonth, emoji: '🏋️')
                     : Column(
                         children: entries
                             .map((entry) {
@@ -535,7 +504,7 @@ class _WorkoutsTab extends StatelessWidget {
           _ChartSection(
             title: l10n.statsThisYear,
             child: sortedTypes.isEmpty
-                ? EmptyStateWidget(title: l10n.statsWorkouts, message: l10n.statsThisYear, emoji: '🏋️')
+                ? EmptyStateWidget(title: l10n.statsWorkout, message: l10n.statsThisYear, emoji: '🏋️')
                 : Column(
                     children: sortedTypes
                         .map((entry) {

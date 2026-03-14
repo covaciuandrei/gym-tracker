@@ -247,7 +247,7 @@ class AppLocalizationsRo extends AppLocalizations {
   String get statsAttendances => 'Prezențe';
 
   @override
-  String get statsWorkouts => 'Antrenamente';
+  String get statsWorkout => 'Antrenament';
 
   @override
   String get statsDuration => 'Durată';

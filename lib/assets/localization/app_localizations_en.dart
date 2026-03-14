@@ -243,7 +243,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsAttendances => 'Attendances';
 
   @override
-  String get statsWorkouts => 'Workouts';
+  String get statsWorkout => 'Workout';
 
   @override
   String get statsDuration => 'Duration';

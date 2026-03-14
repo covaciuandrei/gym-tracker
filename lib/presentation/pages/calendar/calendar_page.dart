@@ -14,7 +14,7 @@ import 'package:gym_tracker/model/supplement_log.dart';
 import 'package:gym_tracker/model/supplement_product.dart';
 import 'package:gym_tracker/model/training_type.dart';
 import 'package:gym_tracker/presentation/controls/gym_app_bar.dart';
-import 'package:gym_tracker/presentation/controls/option_toggle.dart';
+import 'package:gym_tracker/presentation/controls/gym_tab_bar.dart';
 import 'package:gym_tracker/presentation/validators/number_validator.dart';
 import 'package:gym_tracker/service/health/health_service.dart';
 
@@ -31,7 +31,8 @@ class CalendarPage extends StatefulWidget implements AutoRouteWrapper {
   }
 }
 
-class _CalendarPageState extends State<CalendarPage> {
+class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
   final ValueNotifier<bool> _yearlyView = ValueNotifier<bool>(false);
   final ValueNotifier<int> _year = ValueNotifier<int>(DateTime.now().year);
   final ValueNotifier<int> _month = ValueNotifier<int>(DateTime.now().month);
@@ -41,6 +42,8 @@ class _CalendarPageState extends State<CalendarPage> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(_handleTabSelection);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final userId = _userId;
@@ -49,8 +52,16 @@ class _CalendarPageState extends State<CalendarPage> {
     });
   }
 
+  void _handleTabSelection() {
+    final isYearly = _tabController.index == 1;
+    if (_yearlyView.value != isYearly) {
+      _toggleMode(isYearly);
+    }
+  }
+
   @override
   void dispose() {
+    _tabController.dispose();
     _yearlyView.dispose();
     _year.dispose();
     _month.dispose();
@@ -85,6 +96,9 @@ class _CalendarPageState extends State<CalendarPage> {
     final userId = _userId;
     if (userId == null) return;
     _yearlyView.value = yearly;
+    if (_tabController.index != (yearly ? 1 : 0)) {
+      _tabController.index = yearly ? 1 : 0;
+    }
     if (yearly) {
       _loadYear(userId);
       return;
@@ -232,51 +246,44 @@ class _CalendarPageState extends State<CalendarPage> {
 
                   final title = yearly ? '$selectedYear' : '${_monthName(context, selectedMonth)} $selectedYear';
 
-                  Widget content;
-                  if (state is PendingState) {
-                    content = const Center(child: CircularProgressIndicator());
-                  } else if (yearly && yearState != null) {
-                    content = _CalendarYearView(
-                      year: selectedYear,
-                      attendanceByMonth: yearState.attendanceByMonth,
-                      supplementsByMonth: yearState.supplementsByMonth,
-                      workoutTypes: yearState.workoutTypes,
-                      onDayTap: (date) => _showDaySheet(context, date, yearState),
-                    );
-                  } else if (!yearly && monthState != null) {
-                    content = _CalendarMonthView(
-                      year: selectedYear,
-                      month: selectedMonth,
-                      days: monthState.days,
-                      supplementDates: monthState.healthLogs.map((log) => log.date).toSet(),
-                      workoutTypes: monthState.workoutTypes,
-                      onDayTap: (date) => _showDaySheet(context, date, monthState),
-                    );
-                  } else {
-                    content = const Center(child: CircularProgressIndicator());
-                  }
+                  final monthContent = (state is PendingState && !yearly)
+                      ? const Center(child: CircularProgressIndicator())
+                      : monthState != null
+                      ? _CalendarMonthView(
+                          year: selectedYear,
+                          month: selectedMonth,
+                          days: monthState.days,
+                          supplementDates: monthState.healthLogs.map((log) => log.date).toSet(),
+                          workoutTypes: monthState.workoutTypes,
+                          onDayTap: (date) => _showDaySheet(context, date, monthState),
+                        )
+                      : const Center(child: CircularProgressIndicator());
+
+                  final yearContent = (state is PendingState && yearly)
+                      ? const Center(child: CircularProgressIndicator())
+                      : yearState != null
+                      ? _CalendarYearView(
+                          year: selectedYear,
+                          attendanceByMonth: yearState.attendanceByMonth,
+                          supplementsByMonth: yearState.supplementsByMonth,
+                          workoutTypes: yearState.workoutTypes,
+                          onDayTap: (date) => _showDaySheet(context, date, yearState),
+                        )
+                      : const Center(child: CircularProgressIndicator());
 
                   return Column(
                     children: [
                       _CalendarHeader(title: title, onPrevious: () => _navigate(-1), onNext: () => _navigate(1)),
                       const SizedBox(height: 12),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: _calendarPanelBackground(context),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.all(4),
-                        child: OptionToggle(
-                          selectedValue: yearly ? 'yearly' : 'monthly',
-                          items: [
-                            OptionToggleItem(value: 'monthly', label: l10n.calendarMonthly),
-                            OptionToggleItem(value: 'yearly', label: l10n.calendarYearly),
-                          ],
-                          onSelect: (value) => _toggleMode(value == 'yearly'),
-                        ),
+                      GymTabBar(
+                        controller: _tabController,
+                        tabs: [l10n.calendarMonthly, l10n.calendarYearly],
+                        centered: true,
                       ),
                       const SizedBox(height: 12),
-                      Expanded(child: content),
+                      Expanded(
+                        child: TabBarView(controller: _tabController, children: [monthContent, yearContent]),
+                      ),
                     ],
                   );
                 },
@@ -1622,11 +1629,11 @@ class _SupplementCarousel extends StatelessWidget {
 }
 
 Color _calendarPageBackground(BuildContext context) {
-  return Theme.of(context).brightness == Brightness.dark ? const Color(0xFF08193F) : const Color(0xFFF1F3F7);
+  return Theme.of(context).brightness == Brightness.dark ? const Color(0xFF08193F) : const Color(0xFFF8FAFC);
 }
 
 Color _calendarPanelBackground(BuildContext context) {
-  return Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1A2A49) : const Color(0xFFF8F9FB);
+  return Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1A2A49) : Colors.white;
 }
 
 Color _calendarMutedText(BuildContext context) {

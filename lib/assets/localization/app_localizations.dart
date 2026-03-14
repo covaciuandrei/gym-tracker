@@ -554,11 +554,11 @@ abstract class AppLocalizations {
   /// **'Attendances'**
   String get statsAttendances;
 
-  /// No description provided for @statsWorkouts.
+  /// No description provided for @statsWorkout.
   ///
   /// In en, this message translates to:
-  /// **'Workouts'**
-  String get statsWorkouts;
+  /// **'Workout'**
+  String get statsWorkout;
 
   /// No description provided for @statsDuration.
   ///
