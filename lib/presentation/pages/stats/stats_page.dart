@@ -11,6 +11,7 @@ import 'package:gym_tracker/model/attendance_stats.dart';
 import 'package:gym_tracker/model/training_type.dart';
 import 'package:gym_tracker/presentation/controls/empty_state.dart';
 import 'package:gym_tracker/presentation/controls/error_state.dart';
+import 'package:gym_tracker/presentation/controls/gym_app_bar.dart';
 import 'package:gym_tracker/presentation/resources/app_colors.dart';
 
 @RoutePage()
@@ -87,7 +88,7 @@ class _StatsViewState extends State<StatsView> {
       length: 4,
       child: Scaffold(
         backgroundColor: cs.surfaceContainerLow,
-        appBar: AppBar(title: Text(l10n.statsTitle)),
+        appBar: GymAppBar(title: l10n.statsTitle, showBackButton: false),
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -100,14 +101,41 @@ class _StatsViewState extends State<StatsView> {
                   },
                 ),
                 const SizedBox(height: 12),
-                TabBar(
-                  isScrollable: true,
-                  tabs: [
-                    Tab(text: l10n.statsAttendances),
-                    Tab(text: l10n.statsWorkouts),
-                    Tab(text: l10n.statsDuration),
-                    Tab(text: l10n.statsHealth),
-                  ],
+                Container(
+                  color: Colors.white,
+                  // color: Colors.red,
+                  child: TabBar(
+                    overlayColor: WidgetStatePropertyAll(Colors.transparent),
+                    // tabAlignment: TabAlignment.start,
+                    // isScrollable: true,
+                    dividerHeight: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 0),
+                    labelColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                    unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                    indicatorColor: Theme.of(context).colorScheme.primary,
+                    indicatorWeight: 0,
+                    labelStyle: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 11),
+                    unselectedLabelStyle: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400, fontSize: 12),
+                    labelPadding: const EdgeInsets.all(0),
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    indicatorPadding: EdgeInsetsGeometry.all(0),
+
+                    indicator: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+
+                    tabs: [
+                      Tab(text: l10n.statsAttendances),
+                      Tab(text: l10n.statsWorkouts),
+                      Tab(text: l10n.statsDuration),
+                      Tab(text: l10n.statsHealth),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Expanded(
@@ -383,6 +411,24 @@ class _AttendancesTabState extends State<_AttendancesTab> {
           const SizedBox(height: 16),
           _ChartSection(
             title: '📈 Monthly Breakdown',
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Attendances',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.primary),
+                ),
+              ],
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
@@ -793,7 +839,7 @@ class _ChartSection extends StatelessWidget {
             Row(
               children: [
                 Expanded(child: Text(title, style: Theme.of(context).textTheme.titleMedium)),
-                if (trailing != null) trailing!,
+                ...trailing != null ? [trailing!] : [],
               ],
             ),
             const SizedBox(height: 12),

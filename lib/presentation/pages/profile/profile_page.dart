@@ -1,13 +1,13 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/model/auth_user.dart';
+import 'package:gym_tracker/presentation/controls/gym_app_bar.dart';
 
 @RoutePage()
 class ProfilePage extends StatefulWidget implements AutoRouteWrapper {
@@ -18,10 +18,7 @@ class ProfilePage extends StatefulWidget implements AutoRouteWrapper {
 
   @override
   Widget wrappedRoute(BuildContext context) {
-    return BlocProvider<AuthCubit>(
-      create: (_) => getIt<AuthCubit>(),
-      child: this,
-    );
+    return BlocProvider<AuthCubit>(create: (_) => getIt<AuthCubit>(), child: this);
   }
 }
 
@@ -40,19 +37,14 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return BlocConsumer<AuthCubit, BaseState>(
       listenWhen: (_, curr) =>
-          curr is AuthSignOutSuccessState ||
-          curr is AuthUnauthenticatedState ||
-          curr is SomethingWentWrongState,
+          curr is AuthSignOutSuccessState || curr is AuthUnauthenticatedState || curr is SomethingWentWrongState,
       listener: (ctx, state) {
-        if (state is AuthSignOutSuccessState ||
-            state is AuthUnauthenticatedState) {
+        if (state is AuthSignOutSuccessState || state is AuthUnauthenticatedState) {
           ctx.router.replace(const LoginRoute());
           return;
         }
         if (state is SomethingWentWrongState) {
-          ScaffoldMessenger.of(
-            ctx,
-          ).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
+          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
         }
       },
       builder: (ctx, state) {
@@ -61,24 +53,16 @@ class _ProfilePageState extends State<ProfilePage> {
 
         return Scaffold(
           backgroundColor: cs.surfaceContainerLow,
+          appBar: GymAppBar(title: l10n.profileTitle, showBackButton: false),
           body: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 600),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(height: 16),
-                      Text(
-                        l10n.profileTitle,
-                        style: tt.headlineLarge?.copyWith(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
                       _UserCard(user: user),
                       const SizedBox(height: 24),
                       _SectionHeader(title: l10n.profileManage.toUpperCase()),
@@ -86,39 +70,21 @@ class _ProfilePageState extends State<ProfilePage> {
                         margin: EdgeInsets.zero,
                         elevation: 0,
                         color: cs.surfaceContainerHigh,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         child: Column(
                           children: [
                             ListTile(
-                              leading: Icon(
-                                Icons.fitness_center,
-                                color: cs.primary,
-                              ),
+                              leading: Icon(Icons.fitness_center, color: cs.primary),
                               title: Text(l10n.profileWorkoutTypes),
-                              trailing: Icon(
-                                Icons.chevron_right,
-                                color: cs.onSurfaceVariant,
-                              ),
-                              onTap: () =>
-                                  ctx.router.push(const WorkoutTypesRoute()),
+                              trailing: Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
+                              onTap: () => ctx.router.push(const WorkoutTypesRoute()),
                             ),
-                            Divider(
-                              indent: 16,
-                              endIndent: 16,
-                              color: cs.outline,
-                              height: 1,
-                            ),
+                            Divider(indent: 16, endIndent: 16, color: cs.outline, height: 1),
                             ListTile(
                               leading: Icon(Icons.settings, color: cs.primary),
                               title: Text(l10n.profileSettings),
-                              trailing: Icon(
-                                Icons.chevron_right,
-                                color: cs.onSurfaceVariant,
-                              ),
-                              onTap: () =>
-                                  ctx.router.push(const SettingsRoute()),
+                              trailing: Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
+                              onTap: () => ctx.router.push(const SettingsRoute()),
                             ),
                           ],
                         ),
@@ -129,54 +95,27 @@ class _ProfilePageState extends State<ProfilePage> {
                         margin: EdgeInsets.zero,
                         elevation: 0,
                         color: cs.surfaceContainerHigh,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         child: Column(
                           children: [
                             ListTile(
-                              leading: Icon(
-                                Icons.lock_outline,
-                                color: cs.primary,
-                              ),
+                              leading: Icon(Icons.lock_outline, color: cs.primary),
                               title: Text(l10n.settingsChangePassword),
-                              trailing: Icon(
-                                Icons.chevron_right,
-                                color: cs.onSurfaceVariant,
-                              ),
-                              onTap: () =>
-                                  ctx.router.push(const ChangePasswordRoute()),
+                              trailing: Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
+                              onTap: () => ctx.router.push(const ChangePasswordRoute()),
                             ),
-                            Divider(
-                              indent: 16,
-                              endIndent: 16,
-                              color: cs.outline,
-                              height: 1,
-                            ),
+                            Divider(indent: 16, endIndent: 16, color: cs.outline, height: 1),
                             ListTile(
                               leading: Icon(Icons.logout, color: cs.error),
-                              title: Text(
-                                l10n.profileSignOut,
-                                style: tt.titleMedium?.copyWith(
-                                  color: cs.error,
-                                ),
-                              ),
+                              title: Text(l10n.profileSignOut, style: tt.titleMedium?.copyWith(color: cs.error)),
                               trailing: isSigningOut
                                   ? SizedBox(
                                       width: 16,
                                       height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: cs.primary,
-                                      ),
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: cs.primary),
                                     )
-                                  : Icon(
-                                      Icons.chevron_right,
-                                      color: cs.onSurfaceVariant,
-                                    ),
-                              onTap: isSigningOut
-                                  ? null
-                                  : () => ctx.read<AuthCubit>().signOut(),
+                                  : Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
+                              onTap: isSigningOut ? null : () => ctx.read<AuthCubit>().signOut(),
                             ),
                           ],
                         ),
@@ -205,13 +144,7 @@ class _SectionHeader extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        title,
-        style: tt.labelSmall?.copyWith(
-          color: cs.onSurfaceVariant,
-          letterSpacing: 1.2,
-        ),
-      ),
+      child: Text(title, style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant, letterSpacing: 1.2)),
     );
   }
 }
@@ -227,15 +160,11 @@ class _UserCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final displayName =
-        (user?.displayName != null && user!.displayName!.trim().isNotEmpty)
+    final displayName = (user?.displayName != null && user!.displayName!.trim().isNotEmpty)
         ? user!.displayName!.trim()
         : 'Gym Tracker User';
-    final email = (user?.email != null && user!.email!.trim().isNotEmpty)
-        ? user!.email!.trim()
-        : '-';
-    final initialSource =
-        (user?.displayName != null && user!.displayName!.isNotEmpty)
+    final email = (user?.email != null && user!.email!.trim().isNotEmpty) ? user!.email!.trim() : '-';
+    final initialSource = (user?.displayName != null && user!.displayName!.isNotEmpty)
         ? user!.displayName!
         : (user?.email ?? '?');
     final initial = initialSource.characters.first.toUpperCase();
@@ -254,10 +183,7 @@ class _UserCard extends StatelessWidget {
               backgroundColor: cs.primaryContainer,
               child: Text(
                 initial,
-                style: tt.headlineSmall?.copyWith(
-                  color: cs.onPrimaryContainer,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: tt.headlineSmall?.copyWith(color: cs.onPrimaryContainer, fontWeight: FontWeight.w700),
               ),
             ),
             const SizedBox(width: 16),
@@ -287,10 +213,7 @@ class _UserCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           l10n.profileEmailVerified,
-                          style: tt.labelSmall?.copyWith(
-                            color: cs.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: tt.labelSmall?.copyWith(color: cs.primary, fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),

@@ -90,6 +90,18 @@ void main() {
     mockAttendance = MockAttendanceService();
     mockWorkout = MockWorkoutService();
     mockHealth = MockHealthService();
+
+    // Stub health service methods that StatsCubit calls
+    when(
+      () => mockHealth.watchMonthEntries(
+        userId: any(named: 'userId'),
+        year: any(named: 'year'),
+        month: any(named: 'month'),
+      ),
+    ).thenAnswer((_) => Stream.value([]));
+
+    when(() => mockHealth.watchAllProducts()).thenAnswer((_) => Stream.value([]));
+
     sut = StatsCubit(mockAttendance, mockWorkout, mockHealth);
   });
 

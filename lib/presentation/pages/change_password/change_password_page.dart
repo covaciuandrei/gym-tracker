@@ -1,11 +1,11 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
+import 'package:gym_tracker/presentation/controls/gym_app_bar.dart';
 import 'package:gym_tracker/presentation/controls/set_password_card.dart';
 
 @RoutePage()
@@ -17,10 +17,7 @@ class ChangePasswordPage extends StatefulWidget implements AutoRouteWrapper {
 
   @override
   Widget wrappedRoute(BuildContext context) {
-    return BlocProvider<AuthCubit>(
-      create: (_) => getIt<AuthCubit>(),
-      child: this,
-    );
+    return BlocProvider<AuthCubit>(create: (_) => getIt<AuthCubit>(), child: this);
   }
 }
 
@@ -53,24 +50,19 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     final cs = Theme.of(context).colorScheme;
 
     return BlocConsumer<AuthCubit, BaseState>(
-      listenWhen: (_, curr) =>
-          curr is AuthPasswordChangedState || curr is SomethingWentWrongState,
+      listenWhen: (_, curr) => curr is AuthPasswordChangedState || curr is SomethingWentWrongState,
       listener: (ctx, state) {
         if (state is AuthPasswordChangedState) {
           _formKey.currentState?.reset();
           _currentPasswordCtrl.clear();
           _newPasswordCtrl.clear();
           _confirmPasswordCtrl.clear();
-          ScaffoldMessenger.of(ctx).showSnackBar(
-            SnackBar(content: Text(l10n.settingsPasswordChangedSuccess)),
-          );
+          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.settingsPasswordChangedSuccess)));
           return;
         }
 
         if (state is SomethingWentWrongState) {
-          ScaffoldMessenger.of(
-            ctx,
-          ).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
+          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
         }
       },
       builder: (ctx, state) {
@@ -83,10 +75,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
         return Scaffold(
           backgroundColor: cs.surfaceContainerLow,
-          appBar: AppBar(title: Text(l10n.settingsChangePassword)),
+          appBar: GymAppBar(title: l10n.settingsChangePassword),
           body: SafeArea(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 520),

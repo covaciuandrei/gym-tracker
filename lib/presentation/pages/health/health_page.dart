@@ -12,6 +12,7 @@ import 'package:gym_tracker/model/supplement_product.dart';
 import 'package:gym_tracker/presentation/controls/action_bottom_sheet.dart';
 import 'package:gym_tracker/presentation/controls/confirmation_dialog.dart';
 import 'package:gym_tracker/presentation/controls/empty_state.dart';
+import 'package:gym_tracker/presentation/controls/gym_app_bar.dart';
 import 'package:gym_tracker/presentation/controls/option_toggle.dart';
 import 'package:gym_tracker/presentation/controls/primary_button.dart';
 import 'package:gym_tracker/presentation/controls/primary_fab.dart';
@@ -289,7 +290,7 @@ class _HealthPageState extends State<HealthPage> {
 
             return Scaffold(
               backgroundColor: cs.surfaceContainerLow,
-              appBar: AppBar(title: Text(l10n.healthTitle)),
+              appBar: GymAppBar(title: l10n.healthTitle, showBackButton: false),
               floatingActionButton: showFab ? PrimaryFab(onPressed: () => _openProductForm(userId)) : null,
               body: SafeArea(
                 child: Padding(

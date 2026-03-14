@@ -8,6 +8,7 @@ import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/cubit/settings/settings_cubit.dart';
+import 'package:gym_tracker/presentation/controls/gym_app_bar.dart';
 import 'package:gym_tracker/presentation/controls/labeled_value_tile.dart';
 import 'package:gym_tracker/presentation/controls/option_toggle.dart';
 import 'package:gym_tracker/presentation/controls/surface_section_card.dart';
@@ -73,10 +74,10 @@ class _SettingsPageState extends State<SettingsPage> {
               builder: (_, _) {
                 return Scaffold(
                   backgroundColor: cs.surfaceContainerLow,
-                  appBar: AppBar(title: Text(l10n.settingsTitle)),
+                  appBar: GymAppBar(title: l10n.settingsTitle),
                   body: SafeArea(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                       child: Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 600),

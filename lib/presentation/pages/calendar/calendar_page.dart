@@ -13,6 +13,7 @@ import 'package:gym_tracker/model/attendance_day.dart';
 import 'package:gym_tracker/model/supplement_log.dart';
 import 'package:gym_tracker/model/supplement_product.dart';
 import 'package:gym_tracker/model/training_type.dart';
+import 'package:gym_tracker/presentation/controls/gym_app_bar.dart';
 import 'package:gym_tracker/presentation/controls/option_toggle.dart';
 import 'package:gym_tracker/presentation/validators/number_validator.dart';
 import 'package:gym_tracker/service/health/health_service.dart';
@@ -215,6 +216,7 @@ class _CalendarPageState extends State<CalendarPage> {
       builder: (ctx, state) {
         return Scaffold(
           backgroundColor: _calendarPageBackground(context),
+          appBar: GymAppBar(title: l10n.calendarTitle, showBackButton: false),
           body: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -256,20 +258,7 @@ class _CalendarPageState extends State<CalendarPage> {
 
                   return Column(
                     children: [
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          _CalendarNavButton(icon: Icons.chevron_left, onTap: () => _navigate(-1)),
-                          Expanded(
-                            child: Text(
-                              title,
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
-                            ),
-                          ),
-                          _CalendarNavButton(icon: Icons.chevron_right, onTap: () => _navigate(1)),
-                        ],
-                      ),
+                      _CalendarHeader(title: title, onPrevious: () => _navigate(-1), onNext: () => _navigate(1)),
                       const SizedBox(height: 12),
                       Container(
                         decoration: BoxDecoration(
@@ -529,6 +518,27 @@ class _CalendarDayCell extends StatelessWidget {
   }
 }
 
+class _CalendarHeader extends StatelessWidget {
+  const _CalendarHeader({required this.title, required this.onPrevious, required this.onNext});
+
+  final String title;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _CalendarNavButton(icon: Icons.chevron_left, onTap: onPrevious),
+        Expanded(
+          child: Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge),
+        ),
+        _CalendarNavButton(icon: Icons.chevron_right, onTap: onNext),
+      ],
+    );
+  }
+}
+
 class _CalendarNavButton extends StatelessWidget {
   const _CalendarNavButton({required this.icon, required this.onTap});
 
@@ -546,9 +556,9 @@ class _CalendarNavButton extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: _calendarPanelBackground(context),
+          color: cs.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: cs.outline.withValues(alpha: 0.28)),
+          border: Border.all(color: cs.outline),
         ),
         child: Icon(icon),
       ),

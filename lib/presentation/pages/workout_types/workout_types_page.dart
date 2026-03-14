@@ -11,6 +11,7 @@ import 'package:gym_tracker/model/training_type.dart';
 import 'package:gym_tracker/presentation/controls/action_bottom_sheet.dart';
 import 'package:gym_tracker/presentation/controls/confirmation_dialog.dart';
 import 'package:gym_tracker/presentation/controls/empty_state.dart';
+import 'package:gym_tracker/presentation/controls/gym_app_bar.dart';
 import 'package:gym_tracker/presentation/controls/main_list_item.dart';
 import 'package:gym_tracker/presentation/controls/primary_button.dart';
 import 'package:gym_tracker/presentation/controls/primary_fab.dart';
@@ -154,8 +155,8 @@ class _WorkoutTypesViewState extends State<WorkoutTypesView> {
           builder: (_, types, _) {
             return Scaffold(
               backgroundColor: cs.surfaceContainerLow,
-              appBar: AppBar(
-                title: Text(l10n.workoutTypesTitle),
+              appBar: GymAppBar(
+                title: l10n.workoutTypesTitle,
                 actions: [IconButton(icon: const Icon(Icons.add), onPressed: () => _openCreateModal(context))],
               ),
               floatingActionButton: PrimaryFab(onPressed: () => _openCreateModal(context)),
