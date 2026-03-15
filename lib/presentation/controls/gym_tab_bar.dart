@@ -34,7 +34,10 @@ class GymTabBar extends StatelessWidget {
       indicatorSize: TabBarIndicatorSize.tab,
       indicatorPadding: EdgeInsets.zero,
       indicator: BoxDecoration(color: Theme.of(context).colorScheme.primary, borderRadius: BorderRadius.circular(10)),
-      tabs: tabs.map((t) => Text(t)).toList(),
+      tabs: tabs
+          // .map((t) => Text(t))
+          .map((t) => Text(t, style: TextStyle(fontSize: 12)))
+          .toList(),
     );
 
     final container = Container(

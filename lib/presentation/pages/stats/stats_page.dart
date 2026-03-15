@@ -302,7 +302,7 @@ class _AttendancesTabState extends State<_AttendancesTab> {
               Expanded(
                 child: _GradientStatCard(
                   icon: Emojis.star,
-                  value: _favoriteDayLabel(context, widget.stats.favoriteDaysOfWeek),
+                  value: '${l10n.statsFavoriteDay} ${_favoriteDayLabel(context, widget.stats.favoriteDaysOfWeek)}',
                   label: widget.stats.favoriteDayCount > 0 ? l10n.statsXThisYear(widget.stats.favoriteDayCount) : '0',
                   colors: const [AppColors.statsViolet, AppColors.statsVioletDark],
                 ),
@@ -311,7 +311,7 @@ class _AttendancesTabState extends State<_AttendancesTab> {
               Expanded(
                 child: _GradientStatCard(
                   icon: Emojis.target,
-                  value: _getConsistencyPercentage(widget.stats),
+                  value: '${l10n.statsConsistencyWithoutIcon} ${_getConsistencyPercentage(widget.stats)} ',
                   label: 'of weeks this year',
                   colors: const [AppColors.statsPurple, AppColors.statsPurpleDark],
                 ),
@@ -324,7 +324,7 @@ class _AttendancesTabState extends State<_AttendancesTab> {
               Expanded(
                 child: _GradientStatCard(
                   icon: Emojis.fire,
-                  value: '${widget.stats.currentWeekStreak} weeks',
+                  value: '${l10n.statsCurrentStreak} ${widget.stats.currentWeekStreak} weeks',
                   label: _currentStreakLabel,
                   colors: const [AppColors.statsOrange, AppColors.statsOrangeDark],
                   onTap: widget.stats.currentWeekStreak > 0 ? () => _showStreakTemporarily(true) : null,
@@ -334,7 +334,7 @@ class _AttendancesTabState extends State<_AttendancesTab> {
               Expanded(
                 child: _GradientStatCard(
                   icon: Emojis.trophy,
-                  value: '${widget.stats.bestWeekStreak} weeks',
+                  value: '${l10n.statsBestStreak} ${widget.stats.bestWeekStreak} weeks',
                   label: _bestStreakLabel,
                   colors: const [AppColors.statsTeal, AppColors.statsTealDark],
                   onTap: widget.stats.bestWeekStreak > 0 ? () => _showStreakTemporarily(false) : null,
@@ -557,7 +557,6 @@ class _DurationTab extends StatelessWidget {
             valueListenable: selectedMonth,
             builder: (_, month, _) {
               final monthAvg = stats.monthlyDurationAverages[month] ?? 0;
-              final untracked = stats.monthlyUntrackedDurationCounts[month - 1];
 
               return Row(
                 children: [
@@ -576,15 +575,6 @@ class _DurationTab extends StatelessWidget {
                       value: _durationLabel(context, stats.yearlyAverageDurationMinutes),
                       label: l10n.statsAvgThisYear,
                       colors: const [AppColors.statsViolet, AppColors.statsVioletDark],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _GradientStatCard(
-                      icon: Emojis.memo,
-                      value: '$untracked',
-                      label: '${l10n.statsUntrackedCount} This Month',
-                      colors: const [AppColors.statsTeal, AppColors.statsTealDark],
                     ),
                   ),
                 ],
@@ -883,9 +873,7 @@ class _GradientStatCard extends StatelessWidget {
               value,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 2 * 0.8),
             Text(
@@ -894,7 +882,7 @@ class _GradientStatCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
                 color: Colors.white.withValues(alpha: 0.9),
-                fontSize: label.length > 20 ? 11 : null, // Smaller font for longer text like dates
+                fontSize: 10, // Smaller font for longer text like dates
               ),
             ),
           ],
@@ -945,6 +933,7 @@ class _VerticalBar extends StatelessWidget {
                   child: Text(
                     value.round().toString(),
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontSize: 10,
                       color: highlighted ? AppColors.statsBlue : cs.onSurfaceVariant,
                       fontWeight: FontWeight.w600,
                     ),
@@ -957,7 +946,8 @@ class _VerticalBar extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            fontSize: (Theme.of(context).textTheme.labelSmall?.fontSize ?? 10) - 1,
+            fontSize: 8.5,
+
             color: highlighted ? AppColors.statsBlue : cs.onSurfaceVariant,
           ),
         ),

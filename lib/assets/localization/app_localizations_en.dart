@@ -267,7 +267,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsBestStreak => 'Best Streak';
 
   @override
-  String get statsFavoriteDay => 'Favorite Day';
+  String get statsFavoriteDay => 'Fav Day';
 
   @override
   String get statsConsistency => 'Consistency';

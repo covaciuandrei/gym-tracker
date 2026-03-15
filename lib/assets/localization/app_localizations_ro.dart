@@ -271,7 +271,7 @@ class AppLocalizationsRo extends AppLocalizations {
   String get statsBestStreak => 'Top Serie';
 
   @override
-  String get statsFavoriteDay => 'Ziua Preferată';
+  String get statsFavoriteDay => 'Ziua Fav';
 
   @override
   String get statsConsistency => 'Consistență';

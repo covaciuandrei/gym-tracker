@@ -605,7 +605,7 @@ abstract class AppLocalizations {
   /// No description provided for @statsFavoriteDay.
   ///
   /// In en, this message translates to:
-  /// **'Favorite Day'**
+  /// **'Fav Day'**
   String get statsFavoriteDay;
 
   /// No description provided for @statsConsistency.
