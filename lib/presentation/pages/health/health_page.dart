@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:auto_route/auto_route.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
@@ -164,15 +165,36 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
     context.read<HealthCubit>().loadProducts(userId);
   }
 
+  void _updateSkeletonFlags({bool? today, bool? products}) {
+    if (!mounted) return;
+
+    Null applyUpdate() {
+      if (!mounted) return;
+      setState(() {
+        if (today != null) {
+          _forceTodaySkeleton = today;
+        }
+        if (products != null) {
+          _forceProductsSkeleton = products;
+        }
+      });
+    }
+
+    if (SchedulerBinding.instance.schedulerPhase == SchedulerPhase.persistentCallbacks) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => applyUpdate());
+      return;
+    }
+
+    applyUpdate();
+  }
+
   void _startTodaySkeletonWindow() {
     if (!mounted) return;
     _todaySkeletonTimer?.cancel();
     _todaySkeletonTimer = null;
     _todayLoadToken++;
     _todayLoadStartedAt = DateTime.now();
-    setState(() {
-      _forceTodaySkeleton = true;
-    });
+    _updateSkeletonFlags(today: true);
   }
 
   void _startProductsSkeletonWindow() {
@@ -181,9 +203,7 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
     _productsSkeletonTimer = null;
     _productsLoadToken++;
     _productsLoadStartedAt = DateTime.now();
-    setState(() {
-      _forceProductsSkeleton = true;
-    });
+    _updateSkeletonFlags(products: true);
   }
 
   void _releaseTodaySkeletonWindow() {
@@ -192,9 +212,7 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
       _todaySkeletonTimer?.cancel();
       _todaySkeletonTimer = null;
       if (mounted && _forceTodaySkeleton) {
-        setState(() {
-          _forceTodaySkeleton = false;
-        });
+        _updateSkeletonFlags(today: false);
       }
       return;
     }
@@ -206,9 +224,7 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
       _todaySkeletonTimer?.cancel();
       _todaySkeletonTimer = null;
       if (mounted && _forceTodaySkeleton) {
-        setState(() {
-          _forceTodaySkeleton = false;
-        });
+        _updateSkeletonFlags(today: false);
       }
       return;
     }
@@ -216,9 +232,7 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
     _todaySkeletonTimer?.cancel();
     _todaySkeletonTimer = Timer(remaining, () {
       if (!mounted || token != _todayLoadToken || !_forceTodaySkeleton) return;
-      setState(() {
-        _forceTodaySkeleton = false;
-      });
+      _updateSkeletonFlags(today: false);
       _todaySkeletonTimer = null;
     });
   }
@@ -229,9 +243,7 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
       _productsSkeletonTimer?.cancel();
       _productsSkeletonTimer = null;
       if (mounted && _forceProductsSkeleton) {
-        setState(() {
-          _forceProductsSkeleton = false;
-        });
+        _updateSkeletonFlags(products: false);
       }
       return;
     }
@@ -243,9 +255,7 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
       _productsSkeletonTimer?.cancel();
       _productsSkeletonTimer = null;
       if (mounted && _forceProductsSkeleton) {
-        setState(() {
-          _forceProductsSkeleton = false;
-        });
+        _updateSkeletonFlags(products: false);
       }
       return;
     }
@@ -253,9 +263,7 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
     _productsSkeletonTimer?.cancel();
     _productsSkeletonTimer = Timer(remaining, () {
       if (!mounted || token != _productsLoadToken || !_forceProductsSkeleton) return;
-      setState(() {
-        _forceProductsSkeleton = false;
-      });
+      _updateSkeletonFlags(products: false);
       _productsSkeletonTimer = null;
     });
   }
