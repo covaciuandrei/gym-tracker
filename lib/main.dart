@@ -1,4 +1,6 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -9,8 +11,7 @@ import 'package:gym_tracker/core/app_router.dart';
 import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/presentation/helpers/locale_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
+
 import 'firebase_options.dart';
 
 void main() async {
@@ -32,9 +33,7 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   if (kDebugMode) {
-    await FirebaseAuth.instance.setSettings(
-      appVerificationDisabledForTesting: true,
-    );
+    await FirebaseAuth.instance.setSettings(appVerificationDisabledForTesting: true);
   }
 
   runApp(const MyApp());
@@ -74,12 +73,10 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       title: 'Gym Tracker',
 
-      // ── Theme ────────────────────────────────────────────────────────────
       theme: CustomTheme.lightTheme,
       darkTheme: CustomTheme.darkTheme,
       themeMode: _themeHelper.themeMode,
 
-      // ── Localizations ────────────────────────────────────────────────────
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -89,10 +86,15 @@ class _MyAppState extends State<MyApp> {
       supportedLocales: AppLocalizations.supportedLocales,
       locale: _localeHelper.locale,
 
-      // ── Routing ──────────────────────────────────────────────────────────
-      routerConfig: _appRouter.config(
-        navigatorObservers: () => [AutoRouteObserver()],
-      ),
+      builder: (context, child) {
+        final mediaQueryData = MediaQuery.of(context);
+        return MediaQuery(
+          data: mediaQueryData.copyWith(textScaler: TextScaler.linear(1.0)),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
+
+      routerConfig: _appRouter.config(navigatorObservers: () => [AutoRouteObserver()]),
     );
   }
 }

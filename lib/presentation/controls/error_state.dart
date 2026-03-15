@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:gym_tracker/presentation/controls/emoji_text.dart';
+import 'package:gym_tracker/presentation/resources/emojis.dart';
 
 /// Full-section error state with an emoji icon, title, message and optional
 /// action buttons.
@@ -18,7 +20,7 @@ import 'package:flutter/material.dart';
 /// Usage — custom action buttons:
 /// ```dart
 /// ErrorStateWidget(
-///   emoji: '⚠️',
+///   emoji: Emojis.warning,
 ///   title: 'Something went wrong',
 ///   message: errorMessage,
 ///   actions: [
@@ -32,7 +34,7 @@ class ErrorStateWidget extends StatelessWidget {
     super.key,
     required this.message,
     this.title = 'Something went wrong',
-    this.emoji = '⚠️',
+    this.emoji = Emojis.warning,
     this.onRetry,
     this.retryLabel = 'Try Again',
     this.actions,
@@ -73,7 +75,7 @@ class ErrorStateWidget extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Emoji icon (4rem ≈ 56px)
-            Text(emoji, style: const TextStyle(fontSize: 56)),
+            EmojiText(emoji, style: const TextStyle(fontSize: 56)),
             const SizedBox(height: 16),
             // Title
             Text(

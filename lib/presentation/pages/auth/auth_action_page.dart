@@ -1,7 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/core/injection.dart';
@@ -12,14 +11,11 @@ import 'package:gym_tracker/presentation/controls/form_card.dart';
 import 'package:gym_tracker/presentation/controls/gradient_button.dart';
 import 'package:gym_tracker/presentation/controls/set_password_card.dart';
 import 'package:gym_tracker/presentation/controls/success_card.dart';
+import 'package:gym_tracker/presentation/resources/emojis.dart';
 
 @RoutePage()
 class AuthActionPage extends StatefulWidget implements AutoRouteWrapper {
-  const AuthActionPage({
-    super.key,
-    @QueryParam('mode') this.mode = '',
-    @QueryParam('oobCode') this.oobCode = '',
-  });
+  const AuthActionPage({super.key, @QueryParam('mode') this.mode = '', @QueryParam('oobCode') this.oobCode = ''});
 
   final String mode;
   final String oobCode;
@@ -29,10 +25,7 @@ class AuthActionPage extends StatefulWidget implements AutoRouteWrapper {
 
   @override
   Widget wrappedRoute(BuildContext context) {
-    return BlocProvider<AuthCubit>(
-      create: (_) => getIt<AuthCubit>(),
-      child: this,
-    );
+    return BlocProvider<AuthCubit>(create: (_) => getIt<AuthCubit>(), child: this);
   }
 }
 
@@ -67,10 +60,7 @@ class _AuthActionPageState extends State<AuthActionPage> {
 
   void _onPasswordReset(BuildContext ctx) {
     if (_formKey.currentState?.validate() != true) return;
-    ctx.read<AuthCubit>().confirmPasswordReset(
-      oobCode: widget.oobCode,
-      newPassword: _passwordCtrl.text,
-    );
+    ctx.read<AuthCubit>().confirmPasswordReset(oobCode: widget.oobCode, newPassword: _passwordCtrl.text);
   }
 
   @override
@@ -91,8 +81,7 @@ class _AuthActionPageState extends State<AuthActionPage> {
         backgroundColor: cs.surfaceContainerLow,
         body: SafeArea(
           child: SingleChildScrollView(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 400),
@@ -105,8 +94,7 @@ class _AuthActionPageState extends State<AuthActionPage> {
                         GradientButton(
                           label: l10n.authActionBackToSignIn,
                           isLoading: false,
-                          onTap: () =>
-                              context.router.replace(const LoginRoute()),
+                          onTap: () => context.router.replace(const LoginRoute()),
                         ),
                       ],
                     ),
@@ -139,18 +127,14 @@ class _AuthActionPageState extends State<AuthActionPage> {
           backgroundColor: cs.surfaceContainerLow,
           body: SafeArea(
             child: SingleChildScrollView(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 400),
                   child: Column(
                     children: [
                       const SizedBox(height: 24),
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 300),
-                        child: _buildContent(ctx, state),
-                      ),
+                      AnimatedSwitcher(duration: const Duration(milliseconds: 300), child: _buildContent(ctx, state)),
                       const SizedBox(height: 24),
                     ],
                   ),
@@ -167,21 +151,17 @@ class _AuthActionPageState extends State<AuthActionPage> {
     final l10n = AppLocalizations.of(ctx);
     final isLoading = state is PendingState;
 
-    // ── Loading (initial or code-verification phase) ──────────────────────────
     if (isLoading && _resetEmail == null) {
       return _LoadingCard(
         key: const ValueKey('loading'),
-        message: widget.mode == 'verifyEmail'
-            ? l10n.authActionVerifyingEmail
-            : l10n.authActionValidatingLink,
+        message: widget.mode == 'verifyEmail' ? l10n.authActionVerifyingEmail : l10n.authActionValidatingLink,
       );
     }
 
-    // ── Email verified ────────────────────────────────────────────────────────
     if (state is AuthEmailVerifiedState) {
       return SuccessCard(
         key: const ValueKey('email-verified'),
-        icon: '✅',
+        icon: Emojis.checkMark,
         title: l10n.authActionEmailVerifiedTitle,
         message: l10n.authActionEmailVerifiedMessage,
         buttonLabel: l10n.authRegisterGoToLogin,
@@ -189,15 +169,11 @@ class _AuthActionPageState extends State<AuthActionPage> {
       );
     }
 
-    // ── Password reset form (code verified, or loading after submit) ──────────
-    if (state is AuthPasswordResetCodeVerifiedState ||
-        (isLoading && _resetEmail != null)) {
+    if (state is AuthPasswordResetCodeVerifiedState || (isLoading && _resetEmail != null)) {
       return SetPasswordCard(
         key: const ValueKey('reset-form'),
         title: l10n.authActionSetNewPasswordTitle,
-        subtitle: (_resetEmail?.isNotEmpty ?? false)
-            ? 'Create a new password for $_resetEmail'
-            : null,
+        subtitle: (_resetEmail?.isNotEmpty ?? false) ? 'Create a new password for $_resetEmail' : null,
         buttonLabel: l10n.authActionResetPasswordButton,
         formKey: _formKey,
         passwordCtrl: _passwordCtrl,
@@ -207,11 +183,10 @@ class _AuthActionPageState extends State<AuthActionPage> {
       );
     }
 
-    // ── Password reset success ────────────────────────────────────────────────
     if (state is AuthPasswordResetConfirmedState) {
       return SuccessCard(
         key: const ValueKey('password-reset'),
-        icon: '🎉',
+        icon: Emojis.party,
         title: l10n.authActionPasswordResetTitle,
         message: l10n.authActionPasswordResetMessage,
         buttonLabel: l10n.authRegisterGoToLogin,
@@ -219,10 +194,7 @@ class _AuthActionPageState extends State<AuthActionPage> {
       );
     }
 
-    // ── Error (invalid code or unknown error) ─────────────────────────────────
-    final errorMessage = state is AuthInvalidActionCodeState
-        ? l10n.errorsInvalidActionCode
-        : l10n.errorsUnknown;
+    final errorMessage = state is AuthInvalidActionCodeState ? l10n.errorsInvalidActionCode : l10n.errorsUnknown;
 
     return _ErrorCard(
       key: ValueKey('error-${state.runtimeType}'),
@@ -233,8 +205,6 @@ class _AuthActionPageState extends State<AuthActionPage> {
     );
   }
 }
-
-// ── Loading card ──────────────────────────────────────────────────────────────
 
 class _LoadingCard extends StatelessWidget {
   const _LoadingCard({super.key, required this.message});
@@ -248,13 +218,7 @@ class _LoadingCard extends StatelessWidget {
 
     return FormCard(
       children: [
-        const Center(
-          child: SizedBox(
-            width: 48,
-            height: 48,
-            child: CircularProgressIndicator(strokeWidth: 3),
-          ),
-        ),
+        const Center(child: SizedBox(width: 48, height: 48, child: CircularProgressIndicator(strokeWidth: 3))),
         const SizedBox(height: 24),
         Text(
           message,
@@ -265,8 +229,6 @@ class _LoadingCard extends StatelessWidget {
     );
   }
 }
-
-// ── Error card ────────────────────────────────────────────────────────────────
 
 class _ErrorCard extends StatelessWidget {
   const _ErrorCard({
@@ -291,18 +253,13 @@ class _ErrorCard extends StatelessWidget {
       message: message,
       actions: [
         GradientButton(
-          label: isResetMode
-              ? l10n.authActionRequestNewLink
-              : l10n.authActionBackToSignIn,
+          label: isResetMode ? l10n.authActionRequestNewLink : l10n.authActionBackToSignIn,
           isLoading: false,
           onTap: isResetMode ? onRequestNewLink : onGoToLogin,
         ),
         if (isResetMode) ...[
           const SizedBox(height: 12),
-          TextButton(
-            onPressed: onGoToLogin,
-            child: Text(l10n.authActionBackToSignIn),
-          ),
+          TextButton(onPressed: onGoToLogin, child: Text(l10n.authActionBackToSignIn)),
         ],
       ],
     );

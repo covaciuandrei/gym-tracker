@@ -204,7 +204,7 @@ class AppLocalizationsRo extends AppLocalizations {
   String get calendarMarkAttended => 'Marchează prezența';
 
   @override
-  String get calendarWentToGym => 'Prezent la sală ✓';
+  String get calendarWentToGym => 'Prezent la sală';
 
   @override
   String get calendarSave => 'Salvează';
@@ -265,16 +265,16 @@ class AppLocalizationsRo extends AppLocalizations {
   String get statsAllTime => 'Total';
 
   @override
-  String get statsCurrentStreak => 'Serie Curentă 🔥';
+  String get statsCurrentStreak => 'Serie Curentă';
 
   @override
-  String get statsBestStreak => 'Top Serie 🏆';
+  String get statsBestStreak => 'Top Serie';
 
   @override
-  String get statsFavoriteDay => 'Ziua Preferată ⭐';
+  String get statsFavoriteDay => 'Ziua Preferată';
 
   @override
-  String get statsConsistency => 'Consistență 🎯';
+  String get statsConsistency => 'Consistență';
 
   @override
   String get statsConsistencyWithoutIcon => 'Consistență';
@@ -289,50 +289,50 @@ class AppLocalizationsRo extends AppLocalizations {
   String get statsStreak1 => 'Prima săptămână finalizată!';
 
   @override
-  String get statsStreak2 => 'Building momentum!';
+  String get statsStreak2 => 'Prinzi avânt!';
 
   @override
-  String get statsStreak4 => 'One month strong! 📅';
+  String get statsStreak4 => 'De o lună în formă!';
 
   @override
-  String get statsStreak8 => 'You\'re on fire! 🔥';
+  String get statsStreak8 => 'Ești on fire!';
 
   @override
-  String get statsStreak12 => 'Consistency king! 👑';
+  String get statsStreak12 => 'Regele consecvenței!';
 
   @override
-  String get statsStreak20 => 'Unstoppable! 💎';
+  String get statsStreak20 => 'De neoprit!';
 
   @override
-  String get statsStreak30 => 'Half-year beast! 🦁';
+  String get statsStreak30 => 'Fiară de jumătate de an!';
 
   @override
-  String get statsStreak40 => 'Legend mode! 🏆';
+  String get statsStreak40 => 'Mod legendă!';
 
   @override
-  String get statsStreak52 => 'Almost a full year! 🌟';
+  String get statsStreak52 => 'Aproape un an întreg!';
 
   @override
-  String get statsStreakMax => 'Absolute GOAT! 🐐';
+  String get statsStreakMax => 'Absolut GOAT!';
 
   @override
-  String get statsTapToSeeDates => 'Tap to see dates';
+  String get statsTapToSeeDates => 'Atinge pentru a vedea datele';
 
   @override
-  String get statsNoStreakYet => 'No streak yet';
+  String get statsNoStreakYet => 'Niciun șir încă';
 
   @override
-  String get statsDaysYouHitGym => 'Days You Hit the Gym';
+  String get statsDaysYouHitGym => 'Zile în care ai fost la sală';
 
   @override
-  String get statsFavoriteDayLegend => 'Favorite day';
+  String get statsFavoriteDayLegend => 'Zi favorită';
 
   @override
-  String get statsFavoriteDaysLegend => 'Favorite days';
+  String get statsFavoriteDaysLegend => 'Zile favorite';
 
   @override
   String statsXThisYear(Object count) {
-    return '${count}x this year';
+    return '${count}x anul acesta';
   }
 
   @override

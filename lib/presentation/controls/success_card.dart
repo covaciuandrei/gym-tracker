@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:gym_tracker/presentation/controls/emoji_text.dart';
 import 'package:gym_tracker/presentation/controls/gradient_button.dart';
 import 'package:gym_tracker/presentation/resources/app_colors.dart';
+import 'package:gym_tracker/presentation/resources/emojis.dart';
 
 /// Reusable success confirmation card.
 ///
@@ -15,7 +17,7 @@ class SuccessCard extends StatelessWidget {
     required this.message,
     required this.buttonLabel,
     required this.onAction,
-    this.icon = '✅',
+    this.icon = Emojis.checkMark,
   });
 
   /// Emoji or short glyph shown at the top of the card.
@@ -40,7 +42,7 @@ class SuccessCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(icon, style: const TextStyle(fontSize: 48)),
+          EmojiText(icon, style: const TextStyle(fontSize: 48)),
           const SizedBox(height: 16),
           Text(
             title,

@@ -1,17 +1,17 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/presentation/controls/custom_text_field.dart';
+import 'package:gym_tracker/presentation/controls/emoji_text.dart';
 import 'package:gym_tracker/presentation/controls/error_banner.dart';
 import 'package:gym_tracker/presentation/controls/form_card.dart';
 import 'package:gym_tracker/presentation/controls/gradient_button.dart';
-
+import 'package:gym_tracker/presentation/resources/emojis.dart';
 
 @RoutePage()
 class LoginPage extends StatefulWidget implements AutoRouteWrapper {
@@ -22,10 +22,7 @@ class LoginPage extends StatefulWidget implements AutoRouteWrapper {
 
   @override
   Widget wrappedRoute(BuildContext context) {
-    return BlocProvider<AuthCubit>(
-      create: (_) => getIt<AuthCubit>(),
-      child: this,
-    );
+    return BlocProvider<AuthCubit>(create: (_) => getIt<AuthCubit>(), child: this);
   }
 }
 
@@ -41,10 +38,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _onSignIn(BuildContext ctx) {
-    ctx.read<AuthCubit>().signIn(
-      email: _emailCtrl.text.trim(),
-      password: _passwordCtrl.text,
-    );
+    ctx.read<AuthCubit>().signIn(email: _emailCtrl.text.trim(), password: _passwordCtrl.text);
   }
 
   @override
@@ -52,11 +46,7 @@ class _LoginPageState extends State<LoginPage> {
     final l10n = AppLocalizations.of(context);
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final labelStyle = tt.bodySmall?.copyWith(
-      fontSize: 14,
-      fontWeight: FontWeight.w500,
-      color: cs.onSurface,
-    );
+    final labelStyle = tt.bodySmall?.copyWith(fontSize: 14, fontWeight: FontWeight.w500, color: cs.onSurface);
 
     return BlocConsumer<AuthCubit, BaseState>(
       listenWhen: (prev, curr) => curr is AuthSignInSuccessState,
@@ -90,27 +80,22 @@ class _LoginPageState extends State<LoginPage> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const SizedBox(height: 24),
-                      // ── Header ─────────────────────────────────────────
-                      const Text('💪', style: TextStyle(fontSize: 48)),
+
+                      const EmojiText(Emojis.biceps, style: TextStyle(fontSize: 48)),
                       const SizedBox(height: 16),
                       Text(
                         l10n.authLoginWelcomeTitle,
-                        style: tt.headlineLarge?.copyWith(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: tt.headlineLarge?.copyWith(fontSize: 28, fontWeight: FontWeight.w700),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
                       Text(
                         l10n.authLoginSubtitle,
-                        style: tt.bodyLarge?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
+                        style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 32),
-                      // ── Card ───────────────────────────────────────────
+
                       FormCard(
                         children: [
                           // Email
@@ -134,20 +119,12 @@ class _LoginPageState extends State<LoginPage> {
                                 style: TextButton.styleFrom(
                                   padding: EdgeInsets.zero,
                                   minimumSize: Size.zero,
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                 ),
-                                onPressed: isLoading
-                                    ? null
-                                    : () => ctx.router
-                                        .push(const ForgotPasswordRoute()),
+                                onPressed: isLoading ? null : () => ctx.router.push(const ForgotPasswordRoute()),
                                 child: Text(
                                   l10n.authLoginForgotPassword,
-                                  style: TextStyle(
-                                    color: cs.primary,
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                  style: TextStyle(color: cs.primary, fontSize: 13, fontWeight: FontWeight.w500),
                                 ),
                               ),
                             ],
@@ -159,8 +136,7 @@ class _LoginPageState extends State<LoginPage> {
                             isPassword: true,
                             textInputAction: TextInputAction.done,
                             autofillHints: const [AutofillHints.password],
-                            onFieldSubmitted:
-                                isLoading ? null : (_) => _onSignIn(ctx),
+                            onFieldSubmitted: isLoading ? null : (_) => _onSignIn(ctx),
                             enabled: !isLoading,
                           ),
                           const SizedBox(height: 20),
@@ -186,7 +162,7 @@ class _LoginPageState extends State<LoginPage> {
                         ],
                       ),
                       const SizedBox(height: 24),
-                      // ── Footer ─────────────────────────────────────────
+
                       Divider(color: cs.outline, thickness: 1),
                       const SizedBox(height: 16),
                       Wrap(
@@ -194,12 +170,7 @@ class _LoginPageState extends State<LoginPage> {
                         crossAxisAlignment: WrapCrossAlignment.center,
                         spacing: 4,
                         children: [
-                          Text(
-                            l10n.authLoginNoAccount,
-                            style: tt.bodyMedium?.copyWith(
-                              color: cs.onSurfaceVariant,
-                            ),
-                          ),
+                          Text(l10n.authLoginNoAccount, style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
                           const SizedBox(width: 4),
                           TextButton(
                             style: TextButton.styleFrom(
@@ -207,16 +178,10 @@ class _LoginPageState extends State<LoginPage> {
                               minimumSize: Size.zero,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
-                            onPressed: isLoading
-                                ? null
-                                : () => ctx.router
-                                    .replace(const RegisterRoute()),
+                            onPressed: isLoading ? null : () => ctx.router.replace(const RegisterRoute()),
                             child: Text(
                               l10n.authLoginSignUp,
-                              style: TextStyle(
-                                color: cs.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
+                              style: TextStyle(color: cs.primary, fontWeight: FontWeight.w600),
                             ),
                           ),
                         ],
@@ -233,4 +198,3 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
-

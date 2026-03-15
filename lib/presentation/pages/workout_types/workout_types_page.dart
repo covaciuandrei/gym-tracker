@@ -10,11 +10,13 @@ import 'package:gym_tracker/cubit/workout/workout_cubit.dart';
 import 'package:gym_tracker/model/training_type.dart';
 import 'package:gym_tracker/presentation/controls/action_bottom_sheet.dart';
 import 'package:gym_tracker/presentation/controls/confirmation_dialog.dart';
+import 'package:gym_tracker/presentation/controls/emoji_text.dart';
 import 'package:gym_tracker/presentation/controls/empty_state.dart';
 import 'package:gym_tracker/presentation/controls/gym_app_bar.dart';
 import 'package:gym_tracker/presentation/controls/main_list_item.dart';
 import 'package:gym_tracker/presentation/controls/primary_button.dart';
 import 'package:gym_tracker/presentation/controls/primary_fab.dart';
+import 'package:gym_tracker/presentation/resources/emojis.dart';
 
 @RoutePage()
 class WorkoutTypesPage extends StatelessWidget implements AutoRouteWrapper {
@@ -173,7 +175,7 @@ class _WorkoutTypesViewState extends State<WorkoutTypesView> {
                     )
                   : types.isEmpty
                   ? EmptyStateWidget(
-                      emoji: '🏋️',
+                      emoji: Emojis.weightLifting,
                       title: l10n.workoutTypesEmptyTitle,
                       message: l10n.workoutTypesEmptyDescription,
                       actionLabel: l10n.workoutTypesCreateFirst,
@@ -195,7 +197,7 @@ class _WorkoutTypesViewState extends State<WorkoutTypesView> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Center(
-                              child: Text(type.icon ?? _workoutTypeIcons.first, style: const TextStyle(fontSize: 24)),
+                              child: EmojiText(type.icon ?? _workoutTypeIcons.first, style: const TextStyle(fontSize: 24)),
                             ),
                           ),
                           trailing: IconButton(
@@ -219,7 +221,7 @@ class _TypeEditorSheet extends StatefulWidget {
     required this.title,
     required this.actionLabel,
     this.initialName = '',
-    this.initialIcon = '🏋️',
+    this.initialIcon = Emojis.weightLifting,
     this.initialColor = '#6366f1',
   });
 
@@ -306,7 +308,7 @@ class _TypeEditorSheetState extends State<_TypeEditorSheet> {
                         borderRadius: BorderRadius.circular(12),
                         border: isSelected ? Border.all(color: cs.primary, width: 2) : null,
                       ),
-                      child: Center(child: Text(icon, style: const TextStyle(fontSize: 24))),
+                      child: Center(child: EmojiText(icon, style: const TextStyle(fontSize: 24))),
                     ),
                   );
                 }).toList(),
@@ -364,7 +366,7 @@ class _TypeEditorSheetState extends State<_TypeEditorSheet> {
                             color: _safeColorFromHex(activeColor).withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Center(child: Text(activeIcon, style: const TextStyle(fontSize: 24))),
+                          child: Center(child: EmojiText(activeIcon, style: const TextStyle(fontSize: 24))),
                         ),
                       );
                     },
@@ -444,24 +446,24 @@ const List<String> _workoutTypeColors = [
 ];
 
 const List<String> _workoutTypeIcons = [
-  '🏋️',
-  '🏃',
-  '🚴',
-  '🧘',
-  '🥊',
-  '🏊',
-  '⚽',
-  '🎾',
-  '🏀',
-  '💪',
-  '🤸',
-  '🚣',
-  '⛹️',
-  '🤾',
-  '🏌️',
-  '🧗',
-  '🎯',
-  '🔥',
-  '⭐',
-  '🌟',
+  Emojis.weightLifting,
+  Emojis.running,
+  Emojis.cycling,
+  Emojis.yoga,
+  Emojis.boxing,
+  Emojis.swimming,
+  Emojis.soccer,
+  Emojis.tennis,
+  Emojis.basketball,
+  Emojis.biceps,
+  Emojis.gymnastics,
+  Emojis.rowing,
+  Emojis.bouncingBall,
+  Emojis.handball,
+  Emojis.golf,
+  Emojis.climbing,
+  Emojis.target,
+  Emojis.fire,
+  Emojis.star,
+  Emojis.glowingStar,
 ];

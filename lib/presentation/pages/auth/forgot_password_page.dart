@@ -1,7 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/core/injection.dart';
@@ -9,10 +8,12 @@ import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/presentation/controls/auth_footer_link.dart';
 import 'package:gym_tracker/presentation/controls/custom_text_field.dart';
+import 'package:gym_tracker/presentation/controls/emoji_text.dart';
 import 'package:gym_tracker/presentation/controls/error_banner.dart';
 import 'package:gym_tracker/presentation/controls/form_card.dart';
 import 'package:gym_tracker/presentation/controls/gradient_button.dart';
 import 'package:gym_tracker/presentation/controls/success_card.dart';
+import 'package:gym_tracker/presentation/resources/emojis.dart';
 
 @RoutePage()
 class ForgotPasswordPage extends StatefulWidget implements AutoRouteWrapper {
@@ -23,10 +24,7 @@ class ForgotPasswordPage extends StatefulWidget implements AutoRouteWrapper {
 
   @override
   Widget wrappedRoute(BuildContext context) {
-    return BlocProvider<AuthCubit>(
-      create: (_) => getIt<AuthCubit>(),
-      child: this,
-    );
+    return BlocProvider<AuthCubit>(create: (_) => getIt<AuthCubit>(), child: this);
   }
 }
 
@@ -52,99 +50,87 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     final tt = Theme.of(context).textTheme;
 
     return BlocBuilder<AuthCubit, BaseState>(
-        buildWhen: (previous, current) =>
-            current is PendingState ||
-            current is AuthPasswordResetSentState ||
-            current is SomethingWentWrongState,
-        builder: (ctx, state) {
-          final isLoading = state is PendingState;
-          final isSuccess = state is AuthPasswordResetSentState;
+      buildWhen: (previous, current) =>
+          current is PendingState || current is AuthPasswordResetSentState || current is SomethingWentWrongState,
+      builder: (ctx, state) {
+        final isLoading = state is PendingState;
+        final isSuccess = state is AuthPasswordResetSentState;
 
-          String? errorMessage;
-          if (state is SomethingWentWrongState) {
-            errorMessage = l10n.errorsUnknown;
-          }
+        String? errorMessage;
+        if (state is SomethingWentWrongState) {
+          errorMessage = l10n.errorsUnknown;
+        }
 
-          return Scaffold(
-            backgroundColor: cs.surfaceContainerLow,
-            body: SafeArea(
-              child: SingleChildScrollView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 400),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
+        return Scaffold(
+          backgroundColor: cs.surfaceContainerLow,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 24),
+
+                      const EmojiText(Emojis.lockedWithKey, style: TextStyle(fontSize: 48)),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.authForgotPasswordTitle,
+                        style: tt.headlineLarge?.copyWith(fontSize: 28, fontWeight: FontWeight.w700),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.authForgotPasswordSubtitle,
+                        style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 32),
+
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 300),
+                        child: isSuccess
+                            ? SuccessCard(
+                                key: const ValueKey('success'),
+                                icon: Emojis.email,
+                                title: l10n.authForgotPasswordSuccessTitle,
+                                message: l10n.authForgotPasswordSent,
+                                buttonLabel: l10n.authForgotPasswordBack,
+                                onAction: () => ctx.router.replace(const LoginRoute()),
+                              )
+                            : _ForgotPasswordCard(
+                                key: const ValueKey('form'),
+                                formKey: _formKey,
+                                emailCtrl: _emailCtrl,
+                                isLoading: isLoading,
+                                errorMessage: errorMessage,
+                                onSubmit: () => _onSubmit(ctx),
+                              ),
+                      ),
+
+                      if (!isSuccess) ...[
                         const SizedBox(height: 24),
-                        // ── Header ───────────────────────────────────────
-                        const Text('🔐', style: TextStyle(fontSize: 48)),
-                        const SizedBox(height: 16),
-                        Text(
-                          l10n.authForgotPasswordTitle,
-                          style: tt.headlineLarge?.copyWith(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w700,
-                          ),
-                          textAlign: TextAlign.center,
+                        AuthFooterLink(
+                          prompt: '',
+                          actionLabel: l10n.authForgotPasswordBack,
+                          enabled: !isLoading,
+                          onTap: () => ctx.router.replace(const LoginRoute()),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          l10n.authForgotPasswordSubtitle,
-                          style: tt.bodyLarge?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 32),
-                        // ── Form card / Success card ──────────────────────
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 300),
-                          child: isSuccess
-                              ? SuccessCard(
-                                  key: const ValueKey('success'),
-                                  icon: '📧',
-                                  title: l10n.authForgotPasswordSuccessTitle,
-                                  message: l10n.authForgotPasswordSent,
-                                  buttonLabel: l10n.authForgotPasswordBack,
-                                  onAction: () =>
-                                      ctx.router.replace(const LoginRoute()),
-                                )
-                              : _ForgotPasswordCard(
-                                  key: const ValueKey('form'),
-                                  formKey: _formKey,
-                                  emailCtrl: _emailCtrl,
-                                  isLoading: isLoading,
-                                  errorMessage: errorMessage,
-                                  onSubmit: () => _onSubmit(ctx),
-                                ),
-                        ),
-                        // ── Footer (hidden on success) ────────────────────
-                        if (!isSuccess) ...[
-                          const SizedBox(height: 24),
-                          AuthFooterLink(
-                            prompt: '',
-                            actionLabel: l10n.authForgotPasswordBack,
-                            enabled: !isLoading,
-                            onTap: () =>
-                                ctx.router.replace(const LoginRoute()),
-                          ),
-                          const SizedBox(height: 24),
-                        ],
+                        const SizedBox(height: 24),
                       ],
-                    ),
+                    ],
                   ),
                 ),
               ),
             ),
-          );
-        },
+          ),
+        );
+      },
     );
   }
 }
-
-// ── Form card ─────────────────────────────────────────────────────────────────
 
 class _ForgotPasswordCard extends StatelessWidget {
   const _ForgotPasswordCard({
@@ -168,16 +154,11 @@ class _ForgotPasswordCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final labelStyle = tt.bodySmall?.copyWith(
-      fontSize: 14,
-      fontWeight: FontWeight.w500,
-      color: cs.onSurface,
-    );
+    final labelStyle = tt.bodySmall?.copyWith(fontSize: 14, fontWeight: FontWeight.w500, color: cs.onSurface);
 
     return FormCard(
       formKey: formKey,
       children: [
-        // ── Email ─────────────────────────────────────────────
         Text(l10n.authForgotPasswordEmail, style: labelStyle),
         const SizedBox(height: 8),
         CustomTextField(
@@ -199,7 +180,7 @@ class _ForgotPasswordCard extends StatelessWidget {
           },
         ),
         const SizedBox(height: 20),
-        // ── Server-side error banner ───────────────────────────
+
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
           child: errorMessage != null
@@ -212,12 +193,8 @@ class _ForgotPasswordCard extends StatelessWidget {
                 )
               : const SizedBox.shrink(),
         ),
-        // ── Submit ────────────────────────────────────────────
-        GradientButton(
-          label: l10n.authForgotPasswordButton,
-          isLoading: isLoading,
-          onTap: onSubmit,
-        ),
+
+        GradientButton(label: l10n.authForgotPasswordButton, isLoading: isLoading, onTap: onSubmit),
       ],
     );
   }

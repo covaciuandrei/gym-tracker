@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/presentation/controls/custom_text_field.dart';
+import 'package:gym_tracker/presentation/controls/emoji_text.dart';
 import 'package:gym_tracker/presentation/controls/error_banner.dart';
 import 'package:gym_tracker/presentation/controls/form_card.dart';
 import 'package:gym_tracker/presentation/controls/gradient_button.dart';
 import 'package:gym_tracker/presentation/controls/password_match_indicator.dart';
 import 'package:gym_tracker/presentation/controls/password_strength_indicator.dart';
+import 'package:gym_tracker/presentation/resources/emojis.dart';
 
 /// Reusable set-/change-password form used in both the password-reset (auth
 /// action) and the in-app change-password (settings) flows.
@@ -46,7 +47,7 @@ import 'package:gym_tracker/presentation/controls/password_strength_indicator.da
 class SetPasswordCard extends StatelessWidget {
   const SetPasswordCard({
     super.key,
-    this.icon = '🔒',
+    this.icon = Emojis.locked,
     required this.title,
     this.subtitle,
     required this.buttonLabel,
@@ -59,7 +60,7 @@ class SetPasswordCard extends StatelessWidget {
     this.errorMessage,
   });
 
-  /// Emoji displayed at the top of the header. Defaults to `'🔒'`.
+  /// Emoji displayed at the top of the header. Defaults to `Emojis.locked`.
   final String icon;
 
   /// Primary title rendered below the [icon].
@@ -94,24 +95,16 @@ class SetPasswordCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final labelStyle = tt.bodySmall?.copyWith(
-      fontSize: 14,
-      fontWeight: FontWeight.w500,
-      color: cs.onSurface,
-    );
+    final labelStyle = tt.bodySmall?.copyWith(fontSize: 14, fontWeight: FontWeight.w500, color: cs.onSurface);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // ── Header ───────────────────────────────────────────────────────────
-        Text(icon, style: const TextStyle(fontSize: 48)),
+        EmojiText(icon, style: const TextStyle(fontSize: 48)),
         const SizedBox(height: 16),
         Text(
           title,
-          style: tt.headlineLarge?.copyWith(
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
-          ),
+          style: tt.headlineLarge?.copyWith(fontSize: 28, fontWeight: FontWeight.w700),
           textAlign: TextAlign.center,
         ),
         if (subtitle != null) ...[
@@ -123,11 +116,10 @@ class SetPasswordCard extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 32),
-        // ── Form ─────────────────────────────────────────────────────────────
+
         FormCard(
           formKey: formKey,
           children: [
-            // ── Current password (settings change-password only) ─────────────
             if (currentPasswordCtrl != null) ...[
               Text(l10n.settingsCurrentPassword, style: labelStyle),
               const SizedBox(height: 8),
@@ -145,7 +137,7 @@ class SetPasswordCard extends StatelessWidget {
               ),
               const SizedBox(height: 20),
             ],
-            // ── New password ─────────────────────────────────────────────────
+
             Text(l10n.settingsNewPassword, style: labelStyle),
             const SizedBox(height: 8),
             CustomTextField(
@@ -158,9 +150,7 @@ class SetPasswordCard extends StatelessWidget {
               validator: (v) {
                 if (v == null || v.isEmpty) return l10n.errorsFieldRequired;
                 if (v.length < 8) return l10n.errorsPasswordTooShort;
-                if (!v.contains(RegExp(r'[A-Z]')) ||
-                    !v.contains(RegExp(r'[a-z]')) ||
-                    !v.contains(RegExp(r'[0-9]'))) {
+                if (!v.contains(RegExp(r'[A-Z]')) || !v.contains(RegExp(r'[a-z]')) || !v.contains(RegExp(r'[0-9]'))) {
                   return l10n.errorsWeakPassword;
                 }
                 return null;
@@ -168,7 +158,7 @@ class SetPasswordCard extends StatelessWidget {
             ),
             PasswordStrengthIndicator(controller: passwordCtrl),
             const SizedBox(height: 20),
-            // ── Confirm password ─────────────────────────────────────────────
+
             Text(l10n.authRegisterConfirmPassword, style: labelStyle),
             const SizedBox(height: 8),
             CustomTextField(
@@ -185,12 +175,9 @@ class SetPasswordCard extends StatelessWidget {
                 return null;
               },
             ),
-            PasswordMatchIndicator(
-              passwordCtrl: passwordCtrl,
-              confirmCtrl: confirmCtrl,
-            ),
+            PasswordMatchIndicator(passwordCtrl: passwordCtrl, confirmCtrl: confirmCtrl),
             const SizedBox(height: 20),
-            // ── Inline error banner (optional) ───────────────────────────────
+
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
               child: errorMessage != null
@@ -203,12 +190,8 @@ class SetPasswordCard extends StatelessWidget {
                     )
                   : const SizedBox.shrink(),
             ),
-            // ── Submit ───────────────────────────────────────────────────────
-            GradientButton(
-              label: buttonLabel,
-              isLoading: isLoading,
-              onTap: onSubmit,
-            ),
+
+            GradientButton(label: buttonLabel, isLoading: isLoading, onTap: onSubmit),
           ],
         ),
       ],

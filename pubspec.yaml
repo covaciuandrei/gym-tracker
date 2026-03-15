@@ -1,6 +1,6 @@
 name: gym_tracker
 description: "Gym Tracker - A personal gym attendance and supplement tracking app."
-publish_to: 'none'
+publish_to: "none"
 
 version: 1.0.0+1
 
@@ -68,6 +68,17 @@ flutter:
   assets:
     - lib/assets/localization/
 
+fonts:
+  - family: Raleway
+    fonts:
+      - asset: lib/assets/fonts/raleway_bold.ttf
+        weight: 600
+      - asset: lib/assets/fonts/raleway_italic.ttf
+        style: italic
+      - asset: lib/assets/fonts/raleway_regular.ttf
+        weight: 400
+      - asset: lib/assets/fonts/raleway_semibold.ttf
+        weight: 500
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

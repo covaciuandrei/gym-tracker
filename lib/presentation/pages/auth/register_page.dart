@@ -1,19 +1,20 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/presentation/controls/custom_text_field.dart';
+import 'package:gym_tracker/presentation/controls/emoji_text.dart';
 import 'package:gym_tracker/presentation/controls/error_banner.dart';
 import 'package:gym_tracker/presentation/controls/form_card.dart';
 import 'package:gym_tracker/presentation/controls/gradient_button.dart';
 import 'package:gym_tracker/presentation/controls/password_match_indicator.dart';
 import 'package:gym_tracker/presentation/controls/password_strength_indicator.dart';
 import 'package:gym_tracker/presentation/controls/success_card.dart';
+import 'package:gym_tracker/presentation/resources/emojis.dart';
 
 @RoutePage()
 class RegisterPage extends StatefulWidget implements AutoRouteWrapper {
@@ -24,10 +25,7 @@ class RegisterPage extends StatefulWidget implements AutoRouteWrapper {
 
   @override
   Widget wrappedRoute(BuildContext context) {
-    return BlocProvider<AuthCubit>(
-      create: (_) => getIt<AuthCubit>(),
-      child: this,
-    );
+    return BlocProvider<AuthCubit>(create: (_) => getIt<AuthCubit>(), child: this);
   }
 }
 
@@ -47,10 +45,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   void _onSubmit(BuildContext ctx) {
     if (_formKey.currentState?.validate() != true) return;
-    ctx.read<AuthCubit>().signUp(
-      email: _emailCtrl.text.trim(),
-      password: _passwordCtrl.text,
-    );
+    ctx.read<AuthCubit>().signUp(email: _emailCtrl.text.trim(), password: _passwordCtrl.text);
   }
 
   @override
@@ -83,8 +78,7 @@ class _RegisterPageState extends State<RegisterPage> {
           backgroundColor: cs.surfaceContainerLow,
           body: SafeArea(
             child: SingleChildScrollView(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 400),
@@ -92,27 +86,22 @@ class _RegisterPageState extends State<RegisterPage> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       const SizedBox(height: 24),
-                      // ── Header ─────────────────────────────────────────
-                      const Text('💪', style: TextStyle(fontSize: 48)),
+
+                      const EmojiText(Emojis.biceps, style: TextStyle(fontSize: 48)),
                       const SizedBox(height: 16),
                       Text(
                         l10n.authRegisterTitle,
-                        style: tt.headlineLarge?.copyWith(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: tt.headlineLarge?.copyWith(fontSize: 28, fontWeight: FontWeight.w700),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
                       Text(
                         l10n.authRegisterSubtitle,
-                        style: tt.bodyLarge?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
+                        style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 32),
-                      // ── Form card / Success card ────────────────────────
+
                       AnimatedSwitcher(
                         duration: const Duration(milliseconds: 300),
                         child: isSuccess
@@ -121,8 +110,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 title: l10n.authRegisterSuccess,
                                 message: l10n.authRegisterSuccessMessage,
                                 buttonLabel: l10n.authRegisterGoToLogin,
-                                onAction: () => ctx.router
-                                    .replace(const LoginRoute()),
+                                onAction: () => ctx.router.replace(const LoginRoute()),
                               )
                             : _RegisterCard(
                                 key: const ValueKey('form'),
@@ -135,7 +123,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 onSubmit: () => _onSubmit(ctx),
                               ),
                       ),
-                      // ── Footer (hidden on success) ──────────────────────
+
                       if (!isSuccess) ...[
                         const SizedBox(height: 24),
                         Divider(color: cs.outline, thickness: 1),
@@ -147,28 +135,19 @@ class _RegisterPageState extends State<RegisterPage> {
                           children: [
                             Text(
                               l10n.authRegisterHaveAccount,
-                              style: tt.bodyMedium?.copyWith(
-                                color: cs.onSurfaceVariant,
-                              ),
+                              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                             ),
                             const SizedBox(width: 4),
                             TextButton(
                               style: TextButton.styleFrom(
                                 padding: EdgeInsets.zero,
                                 minimumSize: Size.zero,
-                                tapTargetSize:
-                                    MaterialTapTargetSize.shrinkWrap,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
-                              onPressed: isLoading
-                                  ? null
-                                  : () => ctx.router
-                                      .replace(const LoginRoute()),
+                              onPressed: isLoading ? null : () => ctx.router.replace(const LoginRoute()),
                               child: Text(
                                 l10n.authRegisterSignIn,
-                                style: TextStyle(
-                                  color: cs.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: TextStyle(color: cs.primary, fontWeight: FontWeight.w600),
                               ),
                             ),
                           ], // Wrap children
@@ -186,8 +165,6 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 }
-
-// ── Form card ─────────────────────────────────────────────────────────────────
 
 class _RegisterCard extends StatelessWidget {
   const _RegisterCard({
@@ -215,16 +192,11 @@ class _RegisterCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final labelStyle = tt.bodySmall?.copyWith(
-      fontSize: 14,
-      fontWeight: FontWeight.w500,
-      color: cs.onSurface,
-    );
+    final labelStyle = tt.bodySmall?.copyWith(fontSize: 14, fontWeight: FontWeight.w500, color: cs.onSurface);
 
     return FormCard(
       formKey: formKey,
       children: [
-        // ── Email ───────────────────────────────────────────────
         Text(l10n.authRegisterEmail, style: labelStyle),
         const SizedBox(height: 8),
         CustomTextField(
@@ -245,7 +217,7 @@ class _RegisterCard extends StatelessWidget {
           },
         ),
         const SizedBox(height: 20),
-        // ── Password ────────────────────────────────────────────
+
         Text(l10n.authRegisterPassword, style: labelStyle),
         const SizedBox(height: 8),
         CustomTextField(
@@ -258,9 +230,7 @@ class _RegisterCard extends StatelessWidget {
           validator: (v) {
             if (v == null || v.isEmpty) return l10n.errorsFieldRequired;
             if (v.length < 8) return l10n.errorsPasswordTooShort;
-            if (!v.contains(RegExp(r'[A-Z]')) ||
-                !v.contains(RegExp(r'[a-z]')) ||
-                !v.contains(RegExp(r'[0-9]'))) {
+            if (!v.contains(RegExp(r'[A-Z]')) || !v.contains(RegExp(r'[a-z]')) || !v.contains(RegExp(r'[0-9]'))) {
               return l10n.errorsWeakPassword;
             }
             return null;
@@ -268,7 +238,7 @@ class _RegisterCard extends StatelessWidget {
         ),
         PasswordStrengthIndicator(controller: passwordCtrl),
         const SizedBox(height: 20),
-        // ── Confirm password ────────────────────────────────────
+
         Text(l10n.authRegisterConfirmPassword, style: labelStyle),
         const SizedBox(height: 8),
         CustomTextField(
@@ -287,12 +257,9 @@ class _RegisterCard extends StatelessWidget {
             return null;
           },
         ),
-        PasswordMatchIndicator(
-          passwordCtrl: passwordCtrl,
-          confirmCtrl: confirmCtrl,
-        ),
+        PasswordMatchIndicator(passwordCtrl: passwordCtrl, confirmCtrl: confirmCtrl),
         const SizedBox(height: 20),
-        // ── Server-side error banner ─────────────────────────────
+
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
           child: errorMessage != null
@@ -305,14 +272,9 @@ class _RegisterCard extends StatelessWidget {
                 )
               : const SizedBox.shrink(),
         ),
-        // ── Submit ──────────────────────────────────────────────
-        GradientButton(
-          label: l10n.authRegisterButton,
-          isLoading: isLoading,
-          onTap: onSubmit,
-        ),
+
+        GradientButton(label: l10n.authRegisterButton, isLoading: isLoading, onTap: onSubmit),
       ],
     );
   }
 }
-

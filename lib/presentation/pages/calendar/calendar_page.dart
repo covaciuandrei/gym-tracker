@@ -13,10 +13,12 @@ import 'package:gym_tracker/model/attendance_day.dart';
 import 'package:gym_tracker/model/supplement_log.dart';
 import 'package:gym_tracker/model/supplement_product.dart';
 import 'package:gym_tracker/model/training_type.dart';
+import 'package:gym_tracker/presentation/controls/emoji_text.dart';
 import 'package:gym_tracker/presentation/controls/gym_app_bar.dart';
 import 'package:gym_tracker/presentation/controls/gym_tab_bar.dart';
 import 'package:gym_tracker/presentation/validators/number_validator.dart';
 import 'package:gym_tracker/service/health/health_service.dart';
+import 'package:gym_tracker/presentation/resources/emojis.dart';
 
 @RoutePage()
 class CalendarPage extends StatefulWidget implements AutoRouteWrapper {
@@ -499,7 +501,7 @@ class _CalendarDayCell extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (workoutType != null)
-                  Text(workoutType!.icon ?? '•', style: const TextStyle(fontSize: 12))
+                  EmojiText(workoutType!.icon ?? '•', style: const TextStyle(fontSize: 12))
                 else if (hasWorkout)
                   Container(
                     width: 8,
@@ -509,7 +511,7 @@ class _CalendarDayCell extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                   ),
-                if (hasSupplement) ...[const SizedBox(width: 4), const Text('💊', style: TextStyle(fontSize: 12))],
+                if (hasSupplement) ...[const SizedBox(width: 4), const EmojiText(Emojis.pill, style: TextStyle(fontSize: 12))],
               ],
             ),
           ],
@@ -869,9 +871,16 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                   children: [
                                     if (_currentAttendance != null && !_editingWorkout) ...[
                                       Center(
-                                        child: Text(
-                                          '${l10n.calendarWentToGym} 💪',
-                                          style: tt.titleLarge?.copyWith(color: cs.onSurfaceVariant),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              l10n.calendarWentToGym,
+                                              style: tt.titleLarge?.copyWith(color: cs.onSurfaceVariant),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            EmojiText(Emojis.biceps, style: tt.titleLarge?.copyWith(color: cs.onSurfaceVariant)),
+                                          ],
                                         ),
                                       ),
                                       const SizedBox(height: 12),
@@ -891,7 +900,7 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                             child: Row(
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
-                                                Text(type?.icon ?? '🏋️', style: const TextStyle(fontSize: 21)),
+                                                EmojiText(type?.icon ?? Emojis.weightLifting, style: const TextStyle(fontSize: 21)),
                                                 const SizedBox(width: 10),
                                                 Expanded(
                                                   child: Column(
@@ -903,9 +912,15 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                                       ),
                                                       const SizedBox(height: 4),
                                                       if (_currentAttendance?.durationMinutes != null)
-                                                        Text(
-                                                          '⏱ ${_formatDuration(_currentAttendance!.durationMinutes)}',
-                                                          style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                                                        Row(
+                                                          children: [
+                                                            EmojiText(Emojis.stopwatch, style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+                                                            const SizedBox(width: 4),
+                                                            Text(
+                                                              _formatDuration(_currentAttendance!.durationMinutes),
+                                                              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                                                            ),
+                                                          ],
                                                         ),
                                                     ],
                                                   ),
@@ -1153,9 +1168,16 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                   children: [
                                     if (_currentLogs.isNotEmpty) ...[
                                       Center(
-                                        child: Text(
-                                          'Supplements taken 💊',
-                                          style: tt.titleMedium?.copyWith(color: cs.onSurfaceVariant),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              'Supplements taken',
+                                              style: tt.titleMedium?.copyWith(color: cs.onSurfaceVariant),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            EmojiText(Emojis.pill, style: tt.titleMedium?.copyWith(color: cs.onSurfaceVariant)),
+                                          ],
                                         ),
                                       ),
                                       const SizedBox(height: 10),
@@ -1501,7 +1523,7 @@ class _SupplementCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('💊', style: TextStyle(fontSize: 22)),
+          const EmojiText(Emojis.pill, style: TextStyle(fontSize: 22)),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -1514,7 +1536,7 @@ class _SupplementCard extends StatelessWidget {
                   style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
-                Text('⏱ $timeText', style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+                Text('\u{23F1} $timeText', style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
               ],
             ),
           ),

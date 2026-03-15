@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:gym_tracker/presentation/controls/emoji_text.dart';
+import 'package:gym_tracker/presentation/resources/emojis.dart';
 
 /// Empty / no-data state with an emoji icon, title, description and an
 /// optional action button.
@@ -10,7 +12,7 @@ import 'package:flutter/material.dart';
 /// Usage:
 /// ```dart
 /// EmptyStateWidget(
-///   emoji: '🏋️',
+///   emoji: Emojis.weightLifting,
 ///   title: 'No workout types yet',
 ///   message: 'Create your first type to start tracking.',
 ///   actionLabel: 'Create',
@@ -22,7 +24,7 @@ class EmptyStateWidget extends StatelessWidget {
     super.key,
     required this.title,
     required this.message,
-    this.emoji = '📭',
+    this.emoji = Emojis.emptyMailbox,
     this.actionLabel,
     this.onAction,
   });
@@ -47,7 +49,7 @@ class EmptyStateWidget extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Emoji icon (4rem ≈ 56px)
-            Text(emoji, style: const TextStyle(fontSize: 56)),
+            EmojiText(emoji, style: const TextStyle(fontSize: 56)),
             const SizedBox(height: 16),
             // Title
             Text(

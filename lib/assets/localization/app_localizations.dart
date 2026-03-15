@@ -473,7 +473,7 @@ abstract class AppLocalizations {
   /// No description provided for @calendarWentToGym.
   ///
   /// In en, this message translates to:
-  /// **'Went to gym ✓'**
+  /// **'Went to gym'**
   String get calendarWentToGym;
 
   /// No description provided for @calendarSave.
@@ -593,25 +593,25 @@ abstract class AppLocalizations {
   /// No description provided for @statsCurrentStreak.
   ///
   /// In en, this message translates to:
-  /// **'Current Streak 🔥'**
+  /// **'Current Streak'**
   String get statsCurrentStreak;
 
   /// No description provided for @statsBestStreak.
   ///
   /// In en, this message translates to:
-  /// **'Best Streak 🏆'**
+  /// **'Best Streak'**
   String get statsBestStreak;
 
   /// No description provided for @statsFavoriteDay.
   ///
   /// In en, this message translates to:
-  /// **'Favorite Day ⭐'**
+  /// **'Favorite Day'**
   String get statsFavoriteDay;
 
   /// No description provided for @statsConsistency.
   ///
   /// In en, this message translates to:
-  /// **'Consistency 🎯'**
+  /// **'Consistency'**
   String get statsConsistency;
 
   /// No description provided for @statsConsistencyWithoutIcon.
@@ -629,13 +629,13 @@ abstract class AppLocalizations {
   /// No description provided for @statsStreak0.
   ///
   /// In en, this message translates to:
-  /// **'Start your journey! 💪'**
+  /// **'Start your journey!'**
   String get statsStreak0;
 
   /// No description provided for @statsStreak1.
   ///
   /// In en, this message translates to:
-  /// **'First week down! 🎉'**
+  /// **'First week down!'**
   String get statsStreak1;
 
   /// No description provided for @statsStreak2.
@@ -647,49 +647,49 @@ abstract class AppLocalizations {
   /// No description provided for @statsStreak4.
   ///
   /// In en, this message translates to:
-  /// **'One month strong! 📅'**
+  /// **'One month strong!'**
   String get statsStreak4;
 
   /// No description provided for @statsStreak8.
   ///
   /// In en, this message translates to:
-  /// **'You\'re on fire! 🔥'**
+  /// **'You\'re on fire!'**
   String get statsStreak8;
 
   /// No description provided for @statsStreak12.
   ///
   /// In en, this message translates to:
-  /// **'Consistency king! 👑'**
+  /// **'Consistency king!'**
   String get statsStreak12;
 
   /// No description provided for @statsStreak20.
   ///
   /// In en, this message translates to:
-  /// **'Unstoppable! 💎'**
+  /// **'Unstoppable!'**
   String get statsStreak20;
 
   /// No description provided for @statsStreak30.
   ///
   /// In en, this message translates to:
-  /// **'Half-year beast! 🦁'**
+  /// **'Half-year beast!'**
   String get statsStreak30;
 
   /// No description provided for @statsStreak40.
   ///
   /// In en, this message translates to:
-  /// **'Legend mode! 🏆'**
+  /// **'Legend mode!'**
   String get statsStreak40;
 
   /// No description provided for @statsStreak52.
   ///
   /// In en, this message translates to:
-  /// **'Almost a full year! 🌟'**
+  /// **'Almost a full year!'**
   String get statsStreak52;
 
   /// No description provided for @statsStreakMax.
   ///
   /// In en, this message translates to:
-  /// **'Absolute GOAT! 🐐'**
+  /// **'Absolute GOAT!'**
   String get statsStreakMax;
 
   /// No description provided for @statsTapToSeeDates.

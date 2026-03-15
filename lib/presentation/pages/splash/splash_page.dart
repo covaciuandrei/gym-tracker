@@ -4,7 +4,9 @@ import 'package:auto_route/auto_route.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
+import 'package:gym_tracker/presentation/controls/emoji_text.dart';
 import 'package:gym_tracker/presentation/resources/app_colors.dart';
+import 'package:gym_tracker/presentation/resources/emojis.dart';
 
 @RoutePage()
 class SplashPage extends StatefulWidget {
@@ -15,7 +17,6 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
-  // ── Entry animation (plays once, 1 400 ms) ──────────────────────────────
   AnimationController? _entryCtrl;
 
   // Logo: elastic pop-in
@@ -33,23 +34,16 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   // Dots loader: fade in last
   Animation<double>? _dotsFade;
 
-  // ── Dots loop animation (repeating, 900 ms) ──────────────────────────────
   AnimationController? _dotsCtrl;
 
   @override
   void initState() {
     super.initState();
 
-    final entryCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    )..forward();
+    final entryCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))..forward();
     _entryCtrl = entryCtrl;
 
-    final dotsCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat();
+    final dotsCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..repeat();
     _dotsCtrl = dotsCtrl;
 
     // Logo: 0.0 → 0.6 elastic scale, 0.0 → 0.3 fade
@@ -152,49 +146,37 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // ── Logo card ───────────────────────────────────────────
                   Opacity(
                     opacity: _logoFade!.value,
-                    child: Transform.scale(
-                      scale: _logoScale!.value,
-                      child: const _LogoCard(),
-                    ),
+                    child: Transform.scale(scale: _logoScale!.value, child: const _LogoCard()),
                   ),
                   const SizedBox(height: 36),
 
-                  // ── App name ────────────────────────────────────────────
                   Opacity(
                     opacity: _titleFade!.value,
                     child: Transform.translate(
                       offset: Offset(0, _titleY!.value),
                       child: Text(
                         'Gym Tracker',
-                        style: tt.displaySmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -0.5,
-                        ),
+                        style: tt.displaySmall?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.5),
                       ),
                     ),
                   ),
                   const SizedBox(height: 10),
 
-                  // ── Subtitle ────────────────────────────────────────────
                   Opacity(
                     opacity: _subtitleFade!.value,
                     child: Transform.translate(
                       offset: Offset(0, _subtitleY!.value),
                       child: Text(
                         'Track your gym journey',
-                        style: tt.bodyLarge?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
+                        style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
                         textAlign: TextAlign.center,
                       ),
                     ),
                   ),
                   const SizedBox(height: 72),
 
-                  // ── Bouncing dots loader ────────────────────────────────
                   Opacity(
                     opacity: _dotsFade!.value,
                     child: _DotsLoader(controller: dotsCtrl, color: cs.primary),
@@ -209,7 +191,6 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   }
 }
 
-// ── Logo card ─────────────────────────────────────────────────────────────────
 //
 // Rounded-square container with the primary gradient and a coloured shadow —
 // the same gradient as Angular's .btn-primary (135deg #6366f1 → #4f46e5).
@@ -237,12 +218,11 @@ class _LogoCard extends StatelessWidget {
           ),
         ],
       ),
-      child: const Center(child: Text('💪', style: TextStyle(fontSize: 56))),
+      child: const Center(child: EmojiText(Emojis.biceps, style: TextStyle(fontSize: 56))),
     );
   }
 }
 
-// ── Three-dot bouncing loader ─────────────────────────────────────────────────
 //
 // Each dot bounces up using a sin wave with a 120° (2π/3) phase offset so
 // they cascade in sequence. Dot brightness also pulses with the bounce.
@@ -261,8 +241,7 @@ class _DotsLoader extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: List.generate(3, (i) {
             // Stagger each dot by 120° around the unit circle
-            final phase =
-                controller.value * 2 * math.pi + i * (2 * math.pi / 3);
+            final phase = controller.value * 2 * math.pi + i * (2 * math.pi / 3);
             final sinVal = math.sin(phase);
             // Only lift upward (negative y) on the positive half of the wave
             final yOffset = sinVal > 0 ? -10.0 * sinVal : 0.0;

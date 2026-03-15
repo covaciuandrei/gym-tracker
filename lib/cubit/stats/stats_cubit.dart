@@ -81,8 +81,6 @@ class StatsCubit extends BaseCubit {
     }
   }
 
-  // ─── Aggregation ──────────────────────────────────────────────────────────
-
   AttendanceStats _computeStats({
     required List<AttendanceDay> yearData,
     required List<AttendanceDay> prevDecember,
@@ -319,8 +317,6 @@ class StatsCubit extends BaseCubit {
       topNutrients: topNutrients.take(5).toList(growable: false),
     );
   }
-
-  // ─── ISO-week streak helpers ──────────────────────────────────────────────
 
   /// Returns the "YYYY-MM-DD" string of the Monday that starts the ISO week
   /// containing [date].

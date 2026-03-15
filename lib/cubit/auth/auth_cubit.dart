@@ -1,11 +1,10 @@
 import 'dart:async';
 
-import 'package:injectable/injectable.dart';
-
 import 'package:gym_tracker/cubit/base_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/model/auth_user.dart';
 import 'package:gym_tracker/service/auth/auth_service.dart';
+import 'package:injectable/injectable.dart';
 
 part 'auth_states.dart';
 
@@ -17,28 +16,17 @@ class AuthCubit extends BaseCubit {
 
   StreamSubscription<AuthUser?>? _authSubscription;
 
-  // ─── Auth state watcher ───────────────────────────────────────────────────
-
   /// Subscribes to [AuthService.currentUser$] and emits
   /// [AuthAuthenticatedState] or [AuthUnauthenticatedState] on every change.
   void watchAuthState() {
     _authSubscription?.cancel();
     _authSubscription = _authService.currentUser$.listen(
-      (user) => safeEmit(
-        user == null
-            ? const AuthUnauthenticatedState()
-            : AuthAuthenticatedState(user: user),
-      ),
+      (user) => safeEmit(user == null ? const AuthUnauthenticatedState() : AuthAuthenticatedState(user: user)),
       onError: (_) => safeEmit(const SomethingWentWrongState()),
     );
   }
 
-  // ─── Sign-in ──────────────────────────────────────────────────────────────
-
-  Future<void> signIn({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> signIn({required String email, required String password}) async {
     safeEmit(const PendingState());
     try {
       final user = await _authService.signIn(email: email, password: password);
@@ -52,12 +40,7 @@ class AuthCubit extends BaseCubit {
     }
   }
 
-  // ─── Sign-up ──────────────────────────────────────────────────────────────
-
-  Future<void> signUp({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> signUp({required String email, required String password}) async {
     safeEmit(const PendingState());
     try {
       await _authService.signUp(email: email, password: password);
@@ -71,8 +54,6 @@ class AuthCubit extends BaseCubit {
     }
   }
 
-  // ─── Sign-out ─────────────────────────────────────────────────────────────
-
   Future<void> signOut() async {
     safeEmit(const PendingState());
     try {
@@ -83,8 +64,6 @@ class AuthCubit extends BaseCubit {
     }
   }
 
-  // ─── Reset password ───────────────────────────────────────────────────────
-
   Future<void> resetPassword(String email) async {
     safeEmit(const PendingState());
     try {
@@ -94,8 +73,6 @@ class AuthCubit extends BaseCubit {
       safeEmit(const SomethingWentWrongState());
     }
   }
-
-  // ─── Verify password reset code ──────────────────────────────────────────
 
   Future<void> verifyPasswordResetCode(String oobCode) async {
     safeEmit(const PendingState());
@@ -109,18 +86,10 @@ class AuthCubit extends BaseCubit {
     }
   }
 
-  // ─── Change password ──────────────────────────────────────────────────────
-
-  Future<void> changePassword({
-    required String currentPassword,
-    required String newPassword,
-  }) async {
+  Future<void> changePassword({required String currentPassword, required String newPassword}) async {
     safeEmit(const PendingState());
     try {
-      await _authService.changePassword(
-        currentPassword: currentPassword,
-        newPassword: newPassword,
-      );
+      await _authService.changePassword(currentPassword: currentPassword, newPassword: newPassword);
       safeEmit(const AuthPasswordChangedState());
     } on InvalidCredentialsException {
       safeEmit(const AuthInvalidCredentialsState());
@@ -128,8 +97,6 @@ class AuthCubit extends BaseCubit {
       safeEmit(const SomethingWentWrongState());
     }
   }
-
-  // ─── Verify email ─────────────────────────────────────────────────────────
 
   Future<void> verifyEmail(String oobCode) async {
     safeEmit(const PendingState());
@@ -143,18 +110,10 @@ class AuthCubit extends BaseCubit {
     }
   }
 
-  // ─── Confirm password reset ───────────────────────────────────────────────
-
-  Future<void> confirmPasswordReset({
-    required String oobCode,
-    required String newPassword,
-  }) async {
+  Future<void> confirmPasswordReset({required String oobCode, required String newPassword}) async {
     safeEmit(const PendingState());
     try {
-      await _authService.confirmPasswordReset(
-        oobCode: oobCode,
-        newPassword: newPassword,
-      );
+      await _authService.confirmPasswordReset(oobCode: oobCode, newPassword: newPassword);
       safeEmit(const AuthPasswordResetConfirmedState());
     } on InvalidActionCodeException {
       safeEmit(const AuthInvalidActionCodeState());
@@ -162,8 +121,6 @@ class AuthCubit extends BaseCubit {
       safeEmit(const SomethingWentWrongState());
     }
   }
-
-  // ─── Lifecycle ────────────────────────────────────────────────────────────
 
   @override
   Future<void> close() async {

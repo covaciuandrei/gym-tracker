@@ -9,11 +9,13 @@ import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/cubit/stats/stats_cubit.dart';
 import 'package:gym_tracker/model/attendance_stats.dart';
 import 'package:gym_tracker/model/training_type.dart';
+import 'package:gym_tracker/presentation/controls/emoji_text.dart';
 import 'package:gym_tracker/presentation/controls/empty_state.dart';
 import 'package:gym_tracker/presentation/controls/error_state.dart';
 import 'package:gym_tracker/presentation/controls/gym_app_bar.dart';
 import 'package:gym_tracker/presentation/controls/gym_tab_bar.dart';
 import 'package:gym_tracker/presentation/resources/app_colors.dart';
+import 'package:gym_tracker/presentation/resources/emojis.dart';
 
 @RoutePage()
 class StatsPage extends StatelessWidget implements AutoRouteWrapper {
@@ -268,7 +270,7 @@ class _AttendancesTabState extends State<_AttendancesTab> {
             children: [
               Expanded(
                 child: _GradientStatCard(
-                  icon: '📅',
+                  icon: Emojis.calendar,
                   value: '${widget.stats.monthlyCount}',
                   label: l10n.statsThisMonth,
                   colors: const [AppColors.statsBluePurple, AppColors.statsBluePurpleDark],
@@ -277,7 +279,7 @@ class _AttendancesTabState extends State<_AttendancesTab> {
               const SizedBox(width: 12),
               Expanded(
                 child: _GradientStatCard(
-                  icon: '🎯',
+                  icon: Emojis.target,
                   value: '${widget.stats.yearlyCount}',
                   label: l10n.statsThisYear,
                   colors: const [AppColors.statsPinkRed, AppColors.statsPinkRedDark],
@@ -286,11 +288,10 @@ class _AttendancesTabState extends State<_AttendancesTab> {
               const SizedBox(width: 12),
               Expanded(
                 child: _GradientStatCard(
-                  icon: '🏆',
+                  icon: Emojis.trophy,
                   value: '${widget.stats.totalCount}',
                   label: l10n.statsAllTime,
                   colors: const [AppColors.statsOrangeAlt, AppColors.statsOrangeAltDark],
-                  // colors: const [AppColors.statsBluePurple, AppColors.statsBluePurpleDark],
                 ),
               ),
             ],
@@ -300,50 +301,51 @@ class _AttendancesTabState extends State<_AttendancesTab> {
             children: [
               Expanded(
                 child: _GradientStatCard(
-                  icon: l10n.statsCurrentStreak,
+                  icon: Emojis.star,
+                  value: _favoriteDayLabel(context, widget.stats.favoriteDaysOfWeek),
+                  label: widget.stats.favoriteDayCount > 0 ? l10n.statsXThisYear(widget.stats.favoriteDayCount) : '0',
+                  colors: const [AppColors.statsViolet, AppColors.statsVioletDark],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _GradientStatCard(
+                  icon: Emojis.target,
+                  value: _getConsistencyPercentage(widget.stats),
+                  label: 'of weeks this year',
+                  colors: const [AppColors.statsPurple, AppColors.statsPurpleDark],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _GradientStatCard(
+                  icon: Emojis.fire,
                   value: '${widget.stats.currentWeekStreak} weeks',
                   label: _currentStreakLabel,
-                  colors: const [AppColors.statsViolet, AppColors.statsVioletDark],
+                  colors: const [AppColors.statsOrange, AppColors.statsOrangeDark],
                   onTap: widget.stats.currentWeekStreak > 0 ? () => _showStreakTemporarily(true) : null,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _GradientStatCard(
-                  icon: l10n.statsBestStreak,
+                  icon: Emojis.trophy,
                   value: '${widget.stats.bestWeekStreak} weeks',
                   label: _bestStreakLabel,
-                  colors: const [AppColors.statsPurple, AppColors.statsPurpleDark],
-                  onTap: widget.stats.bestWeekStreak > 0 ? () => _showStreakTemporarily(false) : null,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _GradientStatCard(
-                  icon: l10n.statsFavoriteDay,
-                  value: _favoriteDayLabel(context, widget.stats.favoriteDaysOfWeek),
-                  label: widget.stats.favoriteDayCount > 0 ? l10n.statsXThisYear(widget.stats.favoriteDayCount) : '0',
-                  colors: const [AppColors.statsOrange, AppColors.statsOrangeDark],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _GradientStatCard(
-                  icon: l10n.statsConsistency,
-                  value: _getConsistencyPercentage(widget.stats),
-                  label: 'of weeks this year',
                   colors: const [AppColors.statsTeal, AppColors.statsTealDark],
+                  onTap: widget.stats.bestWeekStreak > 0 ? () => _showStreakTemporarily(false) : null,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
           _ChartSection(
-            title: '📊 Days You Hit the Gym',
+            title: 'Days You Hit the Gym',
+            titleEmoji: Emojis.barChart,
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -379,7 +381,8 @@ class _AttendancesTabState extends State<_AttendancesTab> {
           ),
           const SizedBox(height: 16),
           _ChartSection(
-            title: '📈 Monthly Breakdown',
+            title: 'Monthly Breakdown',
+            titleEmoji: Emojis.chartIncreasing,
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -445,7 +448,7 @@ class _WorkoutsTab extends StatelessWidget {
             children: [
               Expanded(
                 child: _GradientStatCard(
-                  icon: '🏋️',
+                  icon: Emojis.weightLifting,
                   value: mostUsed == null ? '-' : _typeFor(types, mostUsed.key)?.name ?? '-',
                   label: l10n.statsMostUsed,
                   colors: const [AppColors.primary, AppColors.primaryDark],
@@ -454,7 +457,7 @@ class _WorkoutsTab extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _GradientStatCard(
-                  icon: '📊',
+                  icon: Emojis.barChart,
                   value: '$totalTracked',
                   label: l10n.statsTotalTracked,
                   colors: const [AppColors.statsTeal, AppColors.statsTealDark],
@@ -478,7 +481,11 @@ class _WorkoutsTab extends StatelessWidget {
                   onNext: () => selectedMonth.value = month == 12 ? 1 : month + 1,
                 ),
                 child: entries.isEmpty
-                    ? EmptyStateWidget(title: l10n.statsWorkout, message: l10n.statsThisMonth, emoji: '🏋️')
+                    ? EmptyStateWidget(
+                        title: l10n.statsWorkout,
+                        message: l10n.statsThisMonth,
+                        emoji: Emojis.weightLifting,
+                      )
                     : Column(
                         children: entries
                             .map((entry) {
@@ -486,7 +493,7 @@ class _WorkoutsTab extends StatelessWidget {
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 10),
                                 child: _HorizontalProgress(
-                                  icon: type?.icon ?? '🏋️',
+                                  icon: type?.icon ?? Emojis.weightLifting,
                                   name: type?.name ?? '-',
                                   value: entry.value.toDouble(),
                                   max: maxCount.toDouble(),
@@ -504,7 +511,7 @@ class _WorkoutsTab extends StatelessWidget {
           _ChartSection(
             title: l10n.statsThisYear,
             child: sortedTypes.isEmpty
-                ? EmptyStateWidget(title: l10n.statsWorkout, message: l10n.statsThisYear, emoji: '🏋️')
+                ? EmptyStateWidget(title: l10n.statsWorkout, message: l10n.statsThisYear, emoji: Emojis.weightLifting)
                 : Column(
                     children: sortedTypes
                         .map((entry) {
@@ -513,7 +520,7 @@ class _WorkoutsTab extends StatelessWidget {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 10),
                             child: _HorizontalProgress(
-                              icon: type?.icon ?? '🏋️',
+                              icon: type?.icon ?? Emojis.weightLifting,
                               name: type?.name ?? '-',
                               value: entry.value.toDouble(),
                               max: maxCount,
@@ -556,7 +563,7 @@ class _DurationTab extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _GradientStatCard(
-                      icon: '⏱️',
+                      icon: Emojis.stopwatchFull,
                       value: _durationLabel(context, monthAvg),
                       label: l10n.statsAvgThisMonth,
                       colors: const [AppColors.primary, AppColors.primaryDark],
@@ -565,7 +572,7 @@ class _DurationTab extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _GradientStatCard(
-                      icon: '📊',
+                      icon: Emojis.barChart,
                       value: _durationLabel(context, stats.yearlyAverageDurationMinutes),
                       label: l10n.statsAvgThisYear,
                       colors: const [AppColors.statsViolet, AppColors.statsVioletDark],
@@ -574,7 +581,7 @@ class _DurationTab extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _GradientStatCard(
-                      icon: '📝',
+                      icon: Emojis.memo,
                       value: '$untracked',
                       label: '${l10n.statsUntrackedCount} This Month',
                       colors: const [AppColors.statsTeal, AppColors.statsTealDark],
@@ -600,7 +607,11 @@ class _DurationTab extends StatelessWidget {
                   onNext: () => selectedMonth.value = month == 12 ? 1 : month + 1,
                 ),
                 child: entries.isEmpty
-                    ? EmptyStateWidget(title: l10n.statsDuration, message: l10n.statsThisMonth, emoji: '⏱️')
+                    ? EmptyStateWidget(
+                        title: l10n.statsDuration,
+                        message: l10n.statsThisMonth,
+                        emoji: Emojis.stopwatchFull,
+                      )
                     : Column(
                         children: entries
                             .map((entry) {
@@ -608,7 +619,7 @@ class _DurationTab extends StatelessWidget {
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 10),
                                 child: _HorizontalProgress(
-                                  icon: type?.icon ?? '⏱️',
+                                  icon: type?.icon ?? Emojis.stopwatchFull,
                                   name: type?.name ?? '-',
                                   value: entry.value,
                                   max: maxValue,
@@ -693,7 +704,7 @@ class _HealthTab extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _GradientStatCard(
-                          icon: '💊',
+                          icon: Emojis.pill,
                           value: topMonth == null ? '-' : stats.productNames[topMonth.key] ?? '-',
                           label:
                               '${topMonth == null ? '' : '${topMonth.value.toStringAsFixed(0)}x '}${l10n.statsThisMonth}',
@@ -704,7 +715,7 @@ class _HealthTab extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _GradientStatCard(
-                          icon: '🏆',
+                          icon: Emojis.trophy,
                           value: stats.mostTakenSupplementName ?? '-',
                           label:
                               '${stats.mostTakenSupplementCount <= 0 ? null : '${stats.mostTakenSupplementCount.toStringAsFixed(0)}x '}${l10n.statsMostUsed}',
@@ -719,7 +730,7 @@ class _HealthTab extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _GradientStatCard(
-                          icon: '🎯',
+                          icon: Emojis.target,
                           value: l10n.statsConsistencyWithoutIcon,
                           label: '${stats.healthConsistencyPct.round()}% of weeks this year',
                           colors: const [AppColors.statsCyan, AppColors.statsCyanDark],
@@ -728,7 +739,7 @@ class _HealthTab extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _GradientStatCard(
-                          icon: '💊',
+                          icon: Emojis.pill,
                           value: l10n.statsUniqueSupplements,
                           label: '${stats.productNames.length} different products',
                           colors: const [AppColors.statsEmerald, AppColors.statsEmeraldDark],
@@ -755,7 +766,7 @@ class _HealthTab extends StatelessWidget {
                   onNext: () => selectedMonth.value = month == 12 ? 1 : month + 1,
                 ),
                 child: entries.isEmpty
-                    ? EmptyStateWidget(title: l10n.statsHealth, message: l10n.statsThisMonth, emoji: '💊')
+                    ? EmptyStateWidget(title: l10n.statsHealth, message: l10n.statsThisMonth, emoji: Emojis.pill)
                     : Column(
                         children: entries
                             .take(8)
@@ -764,7 +775,7 @@ class _HealthTab extends StatelessWidget {
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 10),
                                 child: _HorizontalProgress(
-                                  icon: '💊',
+                                  icon: Emojis.pill,
                                   name: stats.productNames[entry.key] ?? '-',
                                   value: entry.value,
                                   max: max,
@@ -785,15 +796,20 @@ class _HealthTab extends StatelessWidget {
 }
 
 class _ChartSection extends StatelessWidget {
-  const _ChartSection({required this.title, required this.child, this.trailing});
+  const _ChartSection({required this.title, required this.child, this.titleEmoji, this.trailing});
 
   final String title;
+
+  /// Optional emoji displayed before [title]. Using a separate field ensures
+  /// EmojiText is used so iOS renders the emoji correctly.
+  final String? titleEmoji;
   final Widget child;
   final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final titleStyle = Theme.of(context).textTheme.titleMedium;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -807,7 +823,14 @@ class _ChartSection extends StatelessWidget {
           children: [
             Row(
               children: [
-                Expanded(child: Text(title, style: Theme.of(context).textTheme.titleMedium)),
+                Expanded(
+                  child: Row(
+                    children: [
+                      if (titleEmoji != null) ...[EmojiText(titleEmoji!, style: titleStyle), const SizedBox(width: 6)],
+                      Expanded(child: Text(title, style: titleStyle)),
+                    ],
+                  ),
+                ),
                 ...trailing != null ? [trailing!] : [],
               ],
             ),
@@ -849,7 +872,7 @@ class _GradientStatCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            EmojiText(
               icon,
               style: Theme.of(
                 context,
@@ -967,7 +990,7 @@ class _HorizontalProgress extends StatelessWidget {
 
     return Row(
       children: [
-        Text(icon),
+        EmojiText(icon),
         const SizedBox(width: 8),
         Expanded(child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis)),
         const SizedBox(width: 8),

@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:gym_tracker/presentation/resources/emojis.dart';
 
 class TrainingType extends Equatable {
   const TrainingType({
@@ -14,7 +15,7 @@ class TrainingType extends Equatable {
   /// Hex color string, e.g. "#FF5733"
   final String color;
 
-  /// Emoji icon, e.g. "💪"
+  /// Emoji icon, e.g. Emojis.biceps
   final String? icon;
 
   @override

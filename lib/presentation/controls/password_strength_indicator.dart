@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 
 /// Animated strength bar + requirements list shown below a password field.
@@ -29,7 +28,7 @@ class PasswordStrengthIndicator extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 8),
-            // ── Strength bar ───────────────────────────────────────────
+
             Row(
               children: [
                 Expanded(
@@ -48,10 +47,7 @@ class PasswordStrengthIndicator extends StatelessWidget {
                             duration: const Duration(milliseconds: 300),
                             curve: Curves.easeOut,
                             width: constraints.maxWidth * strength.fraction,
-                            decoration: BoxDecoration(
-                              color: strength.color,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
+                            decoration: BoxDecoration(color: strength.color, borderRadius: BorderRadius.circular(2)),
                           ),
                         ],
                       ),
@@ -66,35 +62,22 @@ class PasswordStrengthIndicator extends StatelessWidget {
                     child: Text(
                       key: ValueKey(strength),
                       strength.label(l10n),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: strength.color,
-                      ),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: strength.color),
                     ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
-            // ── Requirements ───────────────────────────────────────────
+
             Wrap(
               spacing: 16,
               runSpacing: 2,
               children: [
                 _Requirement(l10n.authPasswordReqLength, pwd.length >= 8),
-                _Requirement(
-                  l10n.authPasswordReqUppercase,
-                  pwd.contains(RegExp(r'[A-Z]')),
-                ),
-                _Requirement(
-                  l10n.authPasswordReqLowercase,
-                  pwd.contains(RegExp(r'[a-z]')),
-                ),
-                _Requirement(
-                  l10n.authPasswordReqNumber,
-                  pwd.contains(RegExp(r'[0-9]')),
-                ),
+                _Requirement(l10n.authPasswordReqUppercase, pwd.contains(RegExp(r'[A-Z]'))),
+                _Requirement(l10n.authPasswordReqLowercase, pwd.contains(RegExp(r'[a-z]'))),
+                _Requirement(l10n.authPasswordReqNumber, pwd.contains(RegExp(r'[0-9]'))),
               ],
             ),
           ],
@@ -103,8 +86,6 @@ class PasswordStrengthIndicator extends StatelessWidget {
     );
   }
 }
-
-// ── Private helpers ───────────────────────────────────────────────────────────
 
 class _Requirement extends StatelessWidget {
   const _Requirement(this.label, this.met);
@@ -118,9 +99,7 @@ class _Requirement extends StatelessWidget {
       '• $label',
       style: TextStyle(
         fontSize: 12,
-        color: met
-            ? const Color(0xFF10B981)
-            : Theme.of(context).colorScheme.onSurfaceVariant,
+        color: met ? const Color(0xFF10B981) : Theme.of(context).colorScheme.onSurfaceVariant,
       ),
     );
   }
@@ -130,22 +109,22 @@ enum _PasswordStrength { weak, fair, strong }
 
 extension _PasswordStrengthX on _PasswordStrength {
   double get fraction => switch (this) {
-        _PasswordStrength.weak => 0.33,
-        _PasswordStrength.fair => 0.66,
-        _PasswordStrength.strong => 1.0,
-      };
+    _PasswordStrength.weak => 0.33,
+    _PasswordStrength.fair => 0.66,
+    _PasswordStrength.strong => 1.0,
+  };
 
   Color get color => switch (this) {
-        _PasswordStrength.weak => const Color(0xFFEF4444),
-        _PasswordStrength.fair => const Color(0xFFEAB308),
-        _PasswordStrength.strong => const Color(0xFF10B981),
-      };
+    _PasswordStrength.weak => const Color(0xFFEF4444),
+    _PasswordStrength.fair => const Color(0xFFEAB308),
+    _PasswordStrength.strong => const Color(0xFF10B981),
+  };
 
   String label(AppLocalizations l10n) => switch (this) {
-        _PasswordStrength.weak => l10n.authPasswordStrengthWeak,
-        _PasswordStrength.fair => l10n.authPasswordStrengthFair,
-        _PasswordStrength.strong => l10n.authPasswordStrengthStrong,
-      };
+    _PasswordStrength.weak => l10n.authPasswordStrengthWeak,
+    _PasswordStrength.fair => l10n.authPasswordStrengthFair,
+    _PasswordStrength.strong => l10n.authPasswordStrengthStrong,
+  };
 }
 
 _PasswordStrength _calcStrength(String pwd) {

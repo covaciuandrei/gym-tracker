@@ -18,6 +18,7 @@ import 'package:gym_tracker/presentation/controls/primary_button.dart';
 import 'package:gym_tracker/presentation/controls/primary_fab.dart';
 import 'package:gym_tracker/presentation/controls/search_input.dart';
 import 'package:gym_tracker/presentation/controls/summary_action_card.dart';
+import 'package:gym_tracker/presentation/resources/emojis.dart';
 
 @RoutePage()
 class HealthPage extends StatefulWidget implements AutoRouteWrapper {
@@ -361,7 +362,7 @@ class _HealthPageState extends State<HealthPage> {
     final grouped = _groupedTodayLogs(_latestTodayEntries);
     if (grouped.isEmpty) {
       return EmptyStateWidget(
-        emoji: '🌅',
+        emoji: Emojis.sunrise,
         title: l10n.healthNoSupplementsToday,
         message: l10n.healthNoSupplementsTodayMessage,
       );
@@ -426,7 +427,7 @@ class _HealthPageState extends State<HealthPage> {
             Expanded(
               child: products.isEmpty
                   ? EmptyStateWidget(
-                      emoji: '🧪',
+                      emoji: Emojis.testTube,
                       title: emptyTitle,
                       message: emptyMessage,
                       actionLabel: emptyActionLabel,
