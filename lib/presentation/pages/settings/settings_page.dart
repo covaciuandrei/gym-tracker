@@ -161,17 +161,28 @@ class _SettingsPageState extends State<SettingsPage> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 32),
-                              Center(
-                                child: TextButton(
-                                  onPressed: isSigningOut ? null : () => ctx.read<AuthCubit>().signOut(),
-                                  child: isSigningOut
-                                      ? SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: CircularProgressIndicator(strokeWidth: 2, color: cs.primary),
-                                        )
-                                      : Text(l10n.profileSignOut, style: TextStyle(color: cs.error)),
+                              const SizedBox(height: 24),
+                              _SectionHeader(title: l10n.profileAccount.toUpperCase()),
+                              Card(
+                                margin: EdgeInsets.zero,
+                                elevation: 0,
+                                color: cs.surfaceContainerHigh,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                child: Column(
+                                  children: [
+                                    ListTile(
+                                      leading: Icon(Icons.logout, color: cs.error),
+                                      title: Text(l10n.profileSignOut, style: tt.titleMedium?.copyWith(color: cs.error)),
+                                      trailing: isSigningOut
+                                          ? SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(strokeWidth: 2, color: cs.primary),
+                                            )
+                                          : Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
+                                      onTap: isSigningOut ? null : () => ctx.read<AuthCubit>().signOut(),
+                                    ),
+                                  ],
                                 ),
                               ),
                               const SizedBox(height: 16),
