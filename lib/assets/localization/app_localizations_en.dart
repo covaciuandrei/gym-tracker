@@ -237,6 +237,76 @@ class AppLocalizationsEn extends AppLocalizations {
   String get calendarSelectProduct => 'Select a product';
 
   @override
+  String get calendarRemove => 'Remove';
+
+  @override
+  String get calendarCancel => 'Cancel';
+
+  @override
+  String get calendarDidYouGoToGym => 'Did you go to the gym?';
+
+  @override
+  String get calendarSelectTypePlaceholder => '-- Select type --';
+
+  @override
+  String get calendarSelectWorkoutTypeOptional =>
+      'Select Workout Type (optional)';
+
+  @override
+  String get calendarDurationLabel => 'Duration:';
+
+  @override
+  String get calendarDurationHint => 'e.g. 60';
+
+  @override
+  String get calendarDurationOptional => 'Duration (optional)';
+
+  @override
+  String get calendarAdd => 'Add';
+
+  @override
+  String get calendarSupplementsTaken => 'Supplements taken';
+
+  @override
+  String get calendarNoSupplementProductsAvailable =>
+      'No supplement products available.';
+
+  @override
+  String get calendarDidYouTakeAnySupplements =>
+      'Did you take any supplements?';
+
+  @override
+  String get calendarAddSupplementLabel => 'Add Supplement:';
+
+  @override
+  String get calendarPleaseSelectSupplement => 'Please select a supplement';
+
+  @override
+  String get calendarSelectSupplementHint => 'Select a supplement...';
+
+  @override
+  String calendarDurationMinutesShort(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count min',
+      one: '$count min',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String calendarDurationHoursShort(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count h',
+      one: '$count h',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get statsTitle => 'Stats';
 
   @override
@@ -327,8 +397,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statsFavoriteDaysLegend => 'Favorite days';
 
   @override
+  String get statsMonthlyBreakdown => 'Monthly Breakdown';
+
+  @override
+  String get statsAverageDurationLegend => 'Average duration';
+
+  @override
+  String get statsOfWeeksThisYear => 'of weeks this year';
+
+  @override
   String statsXThisYear(Object count) {
     return '${count}x this year';
+  }
+
+  @override
+  String statsWeekCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count weeks',
+      one: '$count week',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String statsPercentOfWeeksThisYear(int percent) {
+    return '$percent% of weeks this year';
+  }
+
+  @override
+  String statsDifferentProducts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count different products',
+      one: '1 different product',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String statsCountTimes(int count) {
+    return '${count}x';
   }
 
   @override
@@ -623,6 +734,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get healthNoIngredientsYet => 'No ingredients added yet.';
 
   @override
+  String get healthUnknownProduct => 'Unknown';
+
+  @override
+  String healthServingCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count servings',
+      one: '$count serving',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override
@@ -674,6 +799,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsBuiltWith => 'Built with Flutter + Firebase';
 
   @override
+  String get settingsBuiltWithValue => 'Flutter + Firebase';
+
+  @override
   String get settingsDataMigration => 'Data Migration';
 
   @override
@@ -700,6 +828,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorsUnknown => 'Something went wrong. Please try again.';
 
   @override
+  String get errorsNumbersOnly => 'Please enter only numbers';
+
+  @override
+  String get errorsInvalidNumber => 'Please enter a valid number';
+
+  @override
+  String get errorsPositiveNumber => 'Please enter a positive number';
+
+  @override
   String get errorsFieldRequired => 'This field is required.';
 
   @override
@@ -711,4 +848,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsPasswordChangedSuccess => 'Password changed successfully.';
+
+  @override
+  String authActionCreateNewPasswordFor(String email) {
+    return 'Create a new password for $email';
+  }
+
+  @override
+  String get profileDefaultUserName => 'Gym Tracker User';
+
+  @override
+  String get globalTryAgain => 'Try Again';
 }

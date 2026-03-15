@@ -1,6 +1,8 @@
+import 'package:gym_tracker/assets/localization/app_localizations.dart';
+
 /// Validates that a string contains only numbers and is positive
 class NumberValidator {
-  static String? validatePositiveNumber(String? value) {
+  static String? validatePositiveNumber(String? value, AppLocalizations l10n) {
     if (value == null || value.isEmpty) {
       // Empty is allowed for optional fields
       return null;
@@ -13,26 +15,26 @@ class NumberValidator {
     }
 
     if (!RegExp(r'^\d+$').hasMatch(trimmedValue)) {
-      return 'Please enter only numbers';
+      return l10n.errorsNumbersOnly;
     }
 
     final number = int.tryParse(trimmedValue);
     if (number == null) {
-      return 'Please enter a valid number';
+      return l10n.errorsInvalidNumber;
     }
 
     if (number <= 0) {
-      return 'Please enter a positive number';
+      return l10n.errorsPositiveNumber;
     }
 
     return null;
   }
 
-  static String? validateRequiredPositiveNumber(String? value) {
+  static String? validateRequiredPositiveNumber(String? value, AppLocalizations l10n) {
     if (value == null || value.trim().isEmpty) {
-      return 'This field is required';
+      return l10n.errorsFieldRequired;
     }
 
-    return validatePositiveNumber(value);
+    return validatePositiveNumber(value, l10n);
   }
 }

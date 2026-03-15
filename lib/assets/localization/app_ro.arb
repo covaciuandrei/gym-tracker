@@ -74,6 +74,37 @@
   "calendarNoType": "Fără tip",
   "calendarNoHealthLogs": "Niciun supliment înregistrat pentru această zi.",
   "calendarSelectProduct": "Selectează un produs",
+  "calendarRemove": "Elimină",
+  "calendarCancel": "Anulează",
+  "calendarDidYouGoToGym": "Ai fost la sală?",
+  "calendarSelectTypePlaceholder": "-- Selectează tipul --",
+  "calendarSelectWorkoutTypeOptional": "Selectează tipul de antrenament (opțional)",
+  "calendarDurationLabel": "Durată:",
+  "calendarDurationHint": "ex. 60",
+  "calendarDurationOptional": "Durată (opțional)",
+  "calendarAdd": "Adaugă",
+  "calendarSupplementsTaken": "Suplimente luate",
+  "calendarNoSupplementProductsAvailable": "Nu există produse de suplimente disponibile.",
+  "calendarDidYouTakeAnySupplements": "Ai luat suplimente?",
+  "calendarAddSupplementLabel": "Adaugă supliment:",
+  "calendarPleaseSelectSupplement": "Te rugăm să selectezi un supliment",
+  "calendarSelectSupplementHint": "Selectează un supliment...",
+  "calendarDurationMinutesShort": "{count, plural, =1{{count} min} few{{count} min} other{{count} min}}",
+  "@calendarDurationMinutesShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "calendarDurationHoursShort": "{count, plural, =1{{count} h} few{{count} h} other{{count} h}}",
+  "@calendarDurationHoursShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "statsTitle": "Statistici",
   "statsAttendances": "Prezențe",
   "statsWorkout": "Antrenament",
@@ -228,5 +259,63 @@
   "statsStreak20": "De neoprit!",
   "statsStreak52": "Aproape un an întreg!",
   "statsStreak30": "Fiară de jumătate de an!",
-  "statsXThisYear": "{count}x anul acesta"
+  "statsXThisYear": "{count}x anul acesta",
+  "statsMonthlyBreakdown": "Defalcare lunară",
+  "statsAverageDurationLegend": "Durata medie",
+  "statsOfWeeksThisYear": "din săptămânile acestui an",
+  "statsWeekCount": "{count, plural, =1{{count} săptămână} few{{count} săptămâni} other{{count} de săptămâni}}",
+  "@statsWeekCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsPercentOfWeeksThisYear": "{percent}% din săptămânile acestui an",
+  "@statsPercentOfWeeksThisYear": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "statsDifferentProducts": "{count, plural, =1{1 produs diferit} few{{count} produse diferite} other{{count} de produse diferite}}",
+  "@statsDifferentProducts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsCountTimes": "{count}x",
+  "@statsCountTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "healthUnknownProduct": "Necunoscut",
+  "healthServingCount": "{count, plural, =1{{count} porție} few{{count} porții} other{{count} de porții}}",
+  "@healthServingCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
+  "settingsBuiltWithValue": "Flutter + Firebase",
+  "errorsNumbersOnly": "Te rugăm să introduci doar cifre",
+  "errorsInvalidNumber": "Te rugăm să introduci un număr valid",
+  "errorsPositiveNumber": "Te rugăm să introduci un număr pozitiv",
+  "authActionCreateNewPasswordFor": "Creează o parolă nouă pentru {email}",
+  "@authActionCreateNewPasswordFor": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "profileDefaultUserName": "Utilizator Gym Tracker",
+  "globalTryAgain": "Încearcă din nou"
 }

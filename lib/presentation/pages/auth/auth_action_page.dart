@@ -173,7 +173,7 @@ class _AuthActionPageState extends State<AuthActionPage> {
       return SetPasswordCard(
         key: const ValueKey('reset-form'),
         title: l10n.authActionSetNewPasswordTitle,
-        subtitle: (_resetEmail?.isNotEmpty ?? false) ? 'Create a new password for $_resetEmail' : null,
+        subtitle: (_resetEmail?.isNotEmpty ?? false) ? l10n.authActionCreateNewPasswordFor(_resetEmail!) : null,
         buttonLabel: l10n.authActionResetPasswordButton,
         formKey: _formKey,
         passwordCtrl: _passwordCtrl,

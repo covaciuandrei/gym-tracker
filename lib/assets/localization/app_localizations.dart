@@ -542,6 +542,108 @@ abstract class AppLocalizations {
   /// **'Select a product'**
   String get calendarSelectProduct;
 
+  /// No description provided for @calendarRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get calendarRemove;
+
+  /// No description provided for @calendarCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get calendarCancel;
+
+  /// No description provided for @calendarDidYouGoToGym.
+  ///
+  /// In en, this message translates to:
+  /// **'Did you go to the gym?'**
+  String get calendarDidYouGoToGym;
+
+  /// No description provided for @calendarSelectTypePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'-- Select type --'**
+  String get calendarSelectTypePlaceholder;
+
+  /// No description provided for @calendarSelectWorkoutTypeOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Workout Type (optional)'**
+  String get calendarSelectWorkoutTypeOptional;
+
+  /// No description provided for @calendarDurationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration:'**
+  String get calendarDurationLabel;
+
+  /// No description provided for @calendarDurationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 60'**
+  String get calendarDurationHint;
+
+  /// No description provided for @calendarDurationOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration (optional)'**
+  String get calendarDurationOptional;
+
+  /// No description provided for @calendarAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get calendarAdd;
+
+  /// No description provided for @calendarSupplementsTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'Supplements taken'**
+  String get calendarSupplementsTaken;
+
+  /// No description provided for @calendarNoSupplementProductsAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No supplement products available.'**
+  String get calendarNoSupplementProductsAvailable;
+
+  /// No description provided for @calendarDidYouTakeAnySupplements.
+  ///
+  /// In en, this message translates to:
+  /// **'Did you take any supplements?'**
+  String get calendarDidYouTakeAnySupplements;
+
+  /// No description provided for @calendarAddSupplementLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Supplement:'**
+  String get calendarAddSupplementLabel;
+
+  /// No description provided for @calendarPleaseSelectSupplement.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a supplement'**
+  String get calendarPleaseSelectSupplement;
+
+  /// No description provided for @calendarSelectSupplementHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a supplement...'**
+  String get calendarSelectSupplementHint;
+
+  /// No description provided for @calendarDurationMinutesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{count} min} other{{count} min}}'**
+  String calendarDurationMinutesShort(int count);
+
+  /// No description provided for @calendarDurationHoursShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{count} h} other{{count} h}}'**
+  String calendarDurationHoursShort(int count);
+
   /// No description provided for @statsTitle.
   ///
   /// In en, this message translates to:
@@ -722,11 +824,53 @@ abstract class AppLocalizations {
   /// **'Favorite days'**
   String get statsFavoriteDaysLegend;
 
+  /// No description provided for @statsMonthlyBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Breakdown'**
+  String get statsMonthlyBreakdown;
+
+  /// No description provided for @statsAverageDurationLegend.
+  ///
+  /// In en, this message translates to:
+  /// **'Average duration'**
+  String get statsAverageDurationLegend;
+
+  /// No description provided for @statsOfWeeksThisYear.
+  ///
+  /// In en, this message translates to:
+  /// **'of weeks this year'**
+  String get statsOfWeeksThisYear;
+
   /// No description provided for @statsXThisYear.
   ///
   /// In en, this message translates to:
   /// **'{count}x this year'**
   String statsXThisYear(Object count);
+
+  /// No description provided for @statsWeekCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{count} week} other{{count} weeks}}'**
+  String statsWeekCount(int count);
+
+  /// No description provided for @statsPercentOfWeeksThisYear.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% of weeks this year'**
+  String statsPercentOfWeeksThisYear(int percent);
+
+  /// No description provided for @statsDifferentProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 different product} other{{count} different products}}'**
+  String statsDifferentProducts(int count);
+
+  /// No description provided for @statsCountTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}x'**
+  String statsCountTimes(int count);
 
   /// No description provided for @statsAvgThisMonth.
   ///
@@ -1298,6 +1442,18 @@ abstract class AppLocalizations {
   /// **'No ingredients added yet.'**
   String get healthNoIngredientsYet;
 
+  /// No description provided for @healthUnknownProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get healthUnknownProduct;
+
+  /// No description provided for @healthServingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{{count} serving} other{{count} servings}}'**
+  String healthServingCount(num count);
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:
@@ -1400,6 +1556,12 @@ abstract class AppLocalizations {
   /// **'Built with Flutter + Firebase'**
   String get settingsBuiltWith;
 
+  /// No description provided for @settingsBuiltWithValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Flutter + Firebase'**
+  String get settingsBuiltWithValue;
+
   /// No description provided for @settingsDataMigration.
   ///
   /// In en, this message translates to:
@@ -1448,6 +1610,24 @@ abstract class AppLocalizations {
   /// **'Something went wrong. Please try again.'**
   String get errorsUnknown;
 
+  /// No description provided for @errorsNumbersOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter only numbers'**
+  String get errorsNumbersOnly;
+
+  /// No description provided for @errorsInvalidNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid number'**
+  String get errorsInvalidNumber;
+
+  /// No description provided for @errorsPositiveNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a positive number'**
+  String get errorsPositiveNumber;
+
   /// No description provided for @errorsFieldRequired.
   ///
   /// In en, this message translates to:
@@ -1471,6 +1651,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Password changed successfully.'**
   String get settingsPasswordChangedSuccess;
+
+  /// No description provided for @authActionCreateNewPasswordFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new password for {email}'**
+  String authActionCreateNewPasswordFor(String email);
+
+  /// No description provided for @profileDefaultUserName.
+  ///
+  /// In en, this message translates to:
+  /// **'Gym Tracker User'**
+  String get profileDefaultUserName;
+
+  /// No description provided for @globalTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again'**
+  String get globalTryAgain;
 }
 
 class _AppLocalizationsDelegate

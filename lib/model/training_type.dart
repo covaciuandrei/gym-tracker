@@ -1,13 +1,7 @@
 import 'package:equatable/equatable.dart';
-import 'package:gym_tracker/presentation/resources/emojis.dart';
 
 class TrainingType extends Equatable {
-  const TrainingType({
-    required this.id,
-    required this.name,
-    required this.color,
-    this.icon,
-  });
+  const TrainingType({required this.id, required this.name, required this.color, this.icon});
 
   final String id;
   final String name;

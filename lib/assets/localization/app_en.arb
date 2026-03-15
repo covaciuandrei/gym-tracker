@@ -74,6 +74,37 @@
   "calendarNoType": "No type",
   "calendarNoHealthLogs": "No supplements logged for this day.",
   "calendarSelectProduct": "Select a product",
+  "calendarRemove": "Remove",
+  "calendarCancel": "Cancel",
+  "calendarDidYouGoToGym": "Did you go to the gym?",
+  "calendarSelectTypePlaceholder": "-- Select type --",
+  "calendarSelectWorkoutTypeOptional": "Select Workout Type (optional)",
+  "calendarDurationLabel": "Duration:",
+  "calendarDurationHint": "e.g. 60",
+  "calendarDurationOptional": "Duration (optional)",
+  "calendarAdd": "Add",
+  "calendarSupplementsTaken": "Supplements taken",
+  "calendarNoSupplementProductsAvailable": "No supplement products available.",
+  "calendarDidYouTakeAnySupplements": "Did you take any supplements?",
+  "calendarAddSupplementLabel": "Add Supplement:",
+  "calendarPleaseSelectSupplement": "Please select a supplement",
+  "calendarSelectSupplementHint": "Select a supplement...",
+  "calendarDurationMinutesShort": "{count, plural, =1{{count} min} other{{count} min}}",
+  "@calendarDurationMinutesShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "calendarDurationHoursShort": "{count, plural, =1{{count} h} other{{count} h}}",
+  "@calendarDurationHoursShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "statsTitle": "Stats",
   "statsAttendances": "Attendances",
   "statsWorkout": "Workout",
@@ -104,7 +135,42 @@
   "statsDaysYouHitGym": "Days You Hit the Gym",
   "statsFavoriteDayLegend": "Favorite day",
   "statsFavoriteDaysLegend": "Favorite days",
+  "statsMonthlyBreakdown": "Monthly Breakdown",
+  "statsAverageDurationLegend": "Average duration",
+  "statsOfWeeksThisYear": "of weeks this year",
   "statsXThisYear": "{count}x this year",
+  "statsWeekCount": "{count, plural, =1{{count} week} other{{count} weeks}}",
+  "@statsWeekCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsPercentOfWeeksThisYear": "{percent}% of weeks this year",
+  "@statsPercentOfWeeksThisYear": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "statsDifferentProducts": "{count, plural, =1{1 different product} other{{count} different products}}",
+  "@statsDifferentProducts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsCountTimes": "{count}x",
+  "@statsCountTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "statsAvgThisMonth": "Avg This Month",
   "statsAvgThisYear": "Avg This Year",
   "statsUntrackedCount": "Untracked",
@@ -200,6 +266,15 @@
   "healthIngredientName": "Ingredient",
   "healthAmount": "Amount",
   "healthNoIngredientsYet": "No ingredients added yet.",
+  "healthUnknownProduct": "Unknown",
+  "healthServingCount": "{count, plural, =1{{count} serving} other{{count} servings}}",
+  "@healthServingCount": {
+    "placeholders": {
+      "count": {
+        "type": "num"
+      }
+    }
+  },
   "settingsTitle": "Settings",
   "settingsAbout": "About",
   "settingsSecurity": "Security",
@@ -217,6 +292,7 @@
   "settingsSavePassword": "Save Password",
   "settingsAppVersion": "App Version",
   "settingsBuiltWith": "Built with Flutter + Firebase",
+  "settingsBuiltWithValue": "Flutter + Firebase",
   "settingsDataMigration": "Data Migration",
   "settingsRunMigration": "Run Migration",
   "errorsInvalidCredentials": "Invalid email or password.",
@@ -225,8 +301,21 @@
   "errorsWeakPassword": "Password is too weak.",
   "errorsNetworkError": "Network error. Please check your connection.",
   "errorsUnknown": "Something went wrong. Please try again.",
+  "errorsNumbersOnly": "Please enter only numbers",
+  "errorsInvalidNumber": "Please enter a valid number",
+  "errorsPositiveNumber": "Please enter a positive number",
   "errorsFieldRequired": "This field is required.",
   "errorsPasswordMismatch": "Passwords do not match.",
   "errorsPasswordTooShort": "Password must be at least 6 characters.",
-  "settingsPasswordChangedSuccess": "Password changed successfully."
+  "settingsPasswordChangedSuccess": "Password changed successfully.",
+  "authActionCreateNewPasswordFor": "Create a new password for {email}",
+  "@authActionCreateNewPasswordFor": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "profileDefaultUserName": "Gym Tracker User",
+  "globalTryAgain": "Try Again"
 }

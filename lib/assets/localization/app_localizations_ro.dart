@@ -241,6 +241,78 @@ class AppLocalizationsRo extends AppLocalizations {
   String get calendarSelectProduct => 'Selectează un produs';
 
   @override
+  String get calendarRemove => 'Elimină';
+
+  @override
+  String get calendarCancel => 'Anulează';
+
+  @override
+  String get calendarDidYouGoToGym => 'Ai fost la sală?';
+
+  @override
+  String get calendarSelectTypePlaceholder => '-- Selectează tipul --';
+
+  @override
+  String get calendarSelectWorkoutTypeOptional =>
+      'Selectează tipul de antrenament (opțional)';
+
+  @override
+  String get calendarDurationLabel => 'Durată:';
+
+  @override
+  String get calendarDurationHint => 'ex. 60';
+
+  @override
+  String get calendarDurationOptional => 'Durată (opțional)';
+
+  @override
+  String get calendarAdd => 'Adaugă';
+
+  @override
+  String get calendarSupplementsTaken => 'Suplimente luate';
+
+  @override
+  String get calendarNoSupplementProductsAvailable =>
+      'Nu există produse de suplimente disponibile.';
+
+  @override
+  String get calendarDidYouTakeAnySupplements => 'Ai luat suplimente?';
+
+  @override
+  String get calendarAddSupplementLabel => 'Adaugă supliment:';
+
+  @override
+  String get calendarPleaseSelectSupplement =>
+      'Te rugăm să selectezi un supliment';
+
+  @override
+  String get calendarSelectSupplementHint => 'Selectează un supliment...';
+
+  @override
+  String calendarDurationMinutesShort(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count min',
+      few: '$count min',
+      one: '$count min',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String calendarDurationHoursShort(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count h',
+      few: '$count h',
+      one: '$count h',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get statsTitle => 'Statistici';
 
   @override
@@ -331,8 +403,51 @@ class AppLocalizationsRo extends AppLocalizations {
   String get statsFavoriteDaysLegend => 'Zile favorite';
 
   @override
+  String get statsMonthlyBreakdown => 'Defalcare lunară';
+
+  @override
+  String get statsAverageDurationLegend => 'Durata medie';
+
+  @override
+  String get statsOfWeeksThisYear => 'din săptămânile acestui an';
+
+  @override
   String statsXThisYear(Object count) {
     return '${count}x anul acesta';
+  }
+
+  @override
+  String statsWeekCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count de săptămâni',
+      few: '$count săptămâni',
+      one: '$count săptămână',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String statsPercentOfWeeksThisYear(int percent) {
+    return '$percent% din săptămânile acestui an';
+  }
+
+  @override
+  String statsDifferentProducts(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count de produse diferite',
+      few: '$count produse diferite',
+      one: '1 produs diferit',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String statsCountTimes(int count) {
+    return '${count}x';
   }
 
   @override
@@ -630,6 +745,21 @@ class AppLocalizationsRo extends AppLocalizations {
   String get healthNoIngredientsYet => 'Nu au fost adăugate ingrediente.';
 
   @override
+  String get healthUnknownProduct => 'Necunoscut';
+
+  @override
+  String healthServingCount(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count de porții',
+      few: '$count porții',
+      one: '$count porție',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get settingsTitle => 'Setări';
 
   @override
@@ -681,6 +811,9 @@ class AppLocalizationsRo extends AppLocalizations {
   String get settingsBuiltWith => 'Creat cu Flutter + Firebase';
 
   @override
+  String get settingsBuiltWithValue => 'Flutter + Firebase';
+
+  @override
   String get settingsDataMigration => 'Migrare Date';
 
   @override
@@ -706,6 +839,15 @@ class AppLocalizationsRo extends AppLocalizations {
   String get errorsUnknown => 'Ceva nu a mers bine. Încearcă din nou.';
 
   @override
+  String get errorsNumbersOnly => 'Te rugăm să introduci doar cifre';
+
+  @override
+  String get errorsInvalidNumber => 'Te rugăm să introduci un număr valid';
+
+  @override
+  String get errorsPositiveNumber => 'Te rugăm să introduci un număr pozitiv';
+
+  @override
   String get errorsFieldRequired => 'Acest câmp este obligatoriu.';
 
   @override
@@ -718,4 +860,15 @@ class AppLocalizationsRo extends AppLocalizations {
   @override
   String get settingsPasswordChangedSuccess =>
       'Parola a fost schimbată cu succes.';
+
+  @override
+  String authActionCreateNewPasswordFor(String email) {
+    return 'Creează o parolă nouă pentru $email';
+  }
+
+  @override
+  String get profileDefaultUserName => 'Utilizator Gym Tracker';
+
+  @override
+  String get globalTryAgain => 'Încearcă din nou';
 }

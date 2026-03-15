@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,15 +14,39 @@ import 'package:mocktail/mocktail.dart';
 
 class MockStatsCubit extends Mock implements StatsCubit {}
 
+class MockStackRouter extends Mock implements StackRouter {}
+
+Widget _buildApp({required StatsCubit cubit, required StackRouter router}) {
+  return StackRouterScope(
+    controller: router,
+    stateHash: 0,
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: BlocProvider<StatsCubit>.value(
+        value: cubit,
+        child: const StatsView(userId: 'user-1'),
+      ),
+    ),
+  );
+}
+
 void main() {
+  setUpAll(() {
+    registerFallbackValue(StatsTabKind.attendances);
+  });
+
   MockStatsCubit stubCubit(Stream<BaseState> stream) {
     final cubit = MockStatsCubit();
     when(() => cubit.state).thenReturn(const InitialState());
     when(() => cubit.stream).thenAnswer((_) => stream);
+    when(() => cubit.initYear(any())).thenReturn(null);
     when(
-      () => cubit.load(
+      () => cubit.loadTab(
         userId: any(named: 'userId'),
         year: any(named: 'year'),
+        tab: any(named: 'tab'),
+        force: any(named: 'force'),
       ),
     ).thenAnswer((_) async {});
     return cubit;
@@ -71,23 +96,23 @@ void main() {
     final controller = StreamController<BaseState>.broadcast(sync: true);
     addTearDown(controller.close);
     final cubit = stubCubit(controller.stream);
+    final router = MockStackRouter();
+    when(() => router.canPop()).thenReturn(false);
 
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: BlocProvider<StatsCubit>.value(
-          value: cubit,
-          child: const StatsView(userId: 'user-1'),
-        ),
-      ),
-    );
+    await tester.pumpWidget(_buildApp(cubit: cubit, router: router));
 
     controller.add(
       StatsLoadedState(
-        stats: sampleStats(),
         year: DateTime.now().year,
-        types: const [
+        attendancesStatus: StatsLoadStatus.loaded,
+        workoutsStatus: StatsLoadStatus.loaded,
+        durationStatus: StatsLoadStatus.loaded,
+        healthStatus: StatsLoadStatus.loaded,
+        attendancesStats: sampleStats(),
+        workoutsStats: sampleStats(),
+        durationStats: sampleStats(),
+        healthStats: sampleStats(),
+        types: [
           TrainingType(id: 't1', name: 'Strength', color: '#6366f1', icon: '🏋️'),
           TrainingType(id: 't2', name: 'Cardio', color: '#10b981', icon: '🏃'),
         ],
@@ -96,7 +121,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('Attendances'), findsWidgets);
-    expect(find.text('Workouts'), findsWidgets);
+    expect(find.text('Workout'), findsWidgets);
     expect(find.text('Duration'), findsWidgets);
     expect(find.text('Health'), findsWidgets);
   });

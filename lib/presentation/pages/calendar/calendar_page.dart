@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:auto_route/auto_route.dart';
@@ -16,9 +17,9 @@ import 'package:gym_tracker/model/training_type.dart';
 import 'package:gym_tracker/presentation/controls/emoji_text.dart';
 import 'package:gym_tracker/presentation/controls/gym_app_bar.dart';
 import 'package:gym_tracker/presentation/controls/gym_tab_bar.dart';
+import 'package:gym_tracker/presentation/resources/emojis.dart';
 import 'package:gym_tracker/presentation/validators/number_validator.dart';
 import 'package:gym_tracker/service/health/health_service.dart';
-import 'package:gym_tracker/presentation/resources/emojis.dart';
 
 @RoutePage()
 class CalendarPage extends StatefulWidget implements AutoRouteWrapper {
@@ -34,10 +35,20 @@ class CalendarPage extends StatefulWidget implements AutoRouteWrapper {
 }
 
 class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderStateMixin {
+  static const Duration _minimumSkeletonDuration = Duration(milliseconds: 300);
+
   late final TabController _tabController;
   final ValueNotifier<bool> _yearlyView = ValueNotifier<bool>(false);
   final ValueNotifier<int> _year = ValueNotifier<int>(DateTime.now().year);
   final ValueNotifier<int> _month = ValueNotifier<int>(DateTime.now().month);
+  bool _forceMonthSkeleton = false;
+  bool _forceYearSkeleton = false;
+  int _monthLoadToken = 0;
+  int _yearLoadToken = 0;
+  DateTime? _monthLoadStartedAt;
+  DateTime? _yearLoadStartedAt;
+  Timer? _monthSkeletonTimer;
+  Timer? _yearSkeletonTimer;
 
   String? get _userId => FirebaseAuth.instance.currentUser?.uid;
 
@@ -63,6 +74,8 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
 
   @override
   void dispose() {
+    _monthSkeletonTimer?.cancel();
+    _yearSkeletonTimer?.cancel();
     _tabController.dispose();
     _yearlyView.dispose();
     _year.dispose();
@@ -71,11 +84,109 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
   }
 
   void _loadMonth(String userId) {
+    _startMonthSkeletonWindow();
     context.read<CalendarCubit>().loadMonth(userId: userId, year: _year.value, month: _month.value);
   }
 
   void _loadYear(String userId) {
+    _startYearSkeletonWindow();
     context.read<CalendarCubit>().loadYear(userId: userId, year: _year.value);
+  }
+
+  void _startMonthSkeletonWindow() {
+    if (!mounted) return;
+    _monthSkeletonTimer?.cancel();
+    _monthSkeletonTimer = null;
+    _monthLoadToken++;
+    _monthLoadStartedAt = DateTime.now();
+    setState(() {
+      _forceMonthSkeleton = true;
+    });
+  }
+
+  void _startYearSkeletonWindow() {
+    if (!mounted) return;
+    _yearSkeletonTimer?.cancel();
+    _yearSkeletonTimer = null;
+    _yearLoadToken++;
+    _yearLoadStartedAt = DateTime.now();
+    setState(() {
+      _forceYearSkeleton = true;
+    });
+  }
+
+  void _releaseMonthSkeletonWindow() {
+    final startedAt = _monthLoadStartedAt;
+    if (startedAt == null) {
+      _monthSkeletonTimer?.cancel();
+      _monthSkeletonTimer = null;
+      if (mounted && _forceMonthSkeleton) {
+        setState(() {
+          _forceMonthSkeleton = false;
+        });
+      }
+      return;
+    }
+
+    final token = _monthLoadToken;
+    final elapsed = DateTime.now().difference(startedAt);
+    final remaining = _minimumSkeletonDuration - elapsed;
+    if (remaining <= Duration.zero) {
+      _monthSkeletonTimer?.cancel();
+      _monthSkeletonTimer = null;
+      if (mounted && _forceMonthSkeleton) {
+        setState(() {
+          _forceMonthSkeleton = false;
+        });
+      }
+      return;
+    }
+
+    _monthSkeletonTimer?.cancel();
+    _monthSkeletonTimer = Timer(remaining, () {
+      if (!mounted || token != _monthLoadToken || !_forceMonthSkeleton) return;
+      setState(() {
+        _forceMonthSkeleton = false;
+      });
+      _monthSkeletonTimer = null;
+    });
+  }
+
+  void _releaseYearSkeletonWindow() {
+    final startedAt = _yearLoadStartedAt;
+    if (startedAt == null) {
+      _yearSkeletonTimer?.cancel();
+      _yearSkeletonTimer = null;
+      if (mounted && _forceYearSkeleton) {
+        setState(() {
+          _forceYearSkeleton = false;
+        });
+      }
+      return;
+    }
+
+    final token = _yearLoadToken;
+    final elapsed = DateTime.now().difference(startedAt);
+    final remaining = _minimumSkeletonDuration - elapsed;
+    if (remaining <= Duration.zero) {
+      _yearSkeletonTimer?.cancel();
+      _yearSkeletonTimer = null;
+      if (mounted && _forceYearSkeleton) {
+        setState(() {
+          _forceYearSkeleton = false;
+        });
+      }
+      return;
+    }
+
+    _yearSkeletonTimer?.cancel();
+    _yearSkeletonTimer = Timer(remaining, () {
+      if (!mounted || token != _yearLoadToken || !_forceYearSkeleton) return;
+      setState(() {
+        _forceYearSkeleton = false;
+      });
+      _yearSkeletonTimer = null;
+    });
   }
 
   Future<void> _navigate(int delta) async {
@@ -213,6 +324,13 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
           curr is CalendarSupplementDeletedState ||
           curr is SomethingWentWrongState,
       listener: (ctx, state) {
+        if (state is CalendarMonthLoadedState) {
+          _releaseMonthSkeletonWindow();
+        }
+        if (state is CalendarYearLoadedState) {
+          _releaseYearSkeletonWindow();
+        }
+
         if (state is CalendarDayMarkedState ||
             state is CalendarDayClearedState ||
             state is CalendarSupplementLoggedState ||
@@ -226,6 +344,8 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
         }
 
         if (state is SomethingWentWrongState) {
+          _releaseMonthSkeletonWindow();
+          _releaseYearSkeletonWindow();
           ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
         }
       },
@@ -248,8 +368,8 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
 
                   final title = yearly ? '$selectedYear' : '${_monthName(context, selectedMonth)} $selectedYear';
 
-                  final monthContent = (state is PendingState && !yearly)
-                      ? const Center(child: CircularProgressIndicator())
+                  final monthContent = ((state is PendingState && !yearly) || _forceMonthSkeleton)
+                      ? const _CalendarMonthSkeleton()
                       : monthState != null
                       ? _CalendarMonthView(
                           year: selectedYear,
@@ -259,10 +379,10 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
                           workoutTypes: monthState.workoutTypes,
                           onDayTap: (date) => _showDaySheet(context, date, monthState),
                         )
-                      : const Center(child: CircularProgressIndicator());
+                      : const _CalendarMonthSkeleton();
 
-                  final yearContent = (state is PendingState && yearly)
-                      ? const Center(child: CircularProgressIndicator())
+                  final yearContent = ((state is PendingState && yearly) || _forceYearSkeleton)
+                      ? const _CalendarYearSkeleton()
                       : yearState != null
                       ? _CalendarYearView(
                           year: selectedYear,
@@ -271,7 +391,7 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
                           workoutTypes: yearState.workoutTypes,
                           onDayTap: (date) => _showDaySheet(context, date, yearState),
                         )
-                      : const Center(child: CircularProgressIndicator());
+                      : const _CalendarYearSkeleton();
 
                   return Column(
                     children: [
@@ -294,6 +414,139 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
           ),
         );
       },
+    );
+  }
+}
+
+class _CalendarMonthSkeleton extends StatelessWidget {
+  const _CalendarMonthSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: List.generate(
+            7,
+            (_) => const Expanded(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Center(child: _CalendarSkeletonBox(height: 10, width: 26)),
+              ),
+            ),
+          ),
+        ),
+        Expanded(
+          child: GridView.builder(
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: 42,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 7,
+              childAspectRatio: 1,
+              crossAxisSpacing: 3,
+              mainAxisSpacing: 3,
+            ),
+            itemBuilder: (_, __) => Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Center(child: _CalendarSkeletonBox(height: 14, width: 14)),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CalendarYearSkeleton extends StatelessWidget {
+  const _CalendarYearSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      itemCount: 6,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (_, __) {
+        final cs = Theme.of(context).colorScheme;
+        return Container(
+          decoration: BoxDecoration(
+            color: _calendarPanelBackground(context),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.35)),
+          ),
+          child: const Padding(
+            padding: EdgeInsets.fromLTRB(12, 14, 12, 12),
+            child: Column(
+              children: [
+                _CalendarSkeletonBox(height: 14, width: 90),
+                SizedBox(height: 10),
+                _CalendarYearMiniGridSkeleton(),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CalendarYearMiniGridSkeleton extends StatelessWidget {
+  const _CalendarYearMiniGridSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: List.generate(
+            7,
+            (_) => const Expanded(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 4),
+                child: Center(child: _CalendarSkeletonBox(height: 8, width: 12)),
+              ),
+            ),
+          ),
+        ),
+        GridView.builder(
+          physics: const NeverScrollableScrollPhysics(),
+          shrinkWrap: true,
+          itemCount: 42,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 7,
+            crossAxisSpacing: 3,
+            mainAxisSpacing: 3,
+            childAspectRatio: 1,
+          ),
+          itemBuilder: (_, __) => Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CalendarSkeletonBox extends StatelessWidget {
+  const _CalendarSkeletonBox({required this.height, this.width});
+
+  final double height;
+  final double? width;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(8),
+      ),
     );
   }
 }
@@ -511,7 +764,10 @@ class _CalendarDayCell extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                   ),
-                if (hasSupplement) ...[const SizedBox(width: 4), const EmojiText(Emojis.pill, style: TextStyle(fontSize: 12))],
+                if (hasSupplement) ...[
+                  const SizedBox(width: 4),
+                  const EmojiText(Emojis.pill, style: TextStyle(fontSize: 12)),
+                ],
               ],
             ),
           ],
@@ -769,12 +1025,16 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
     }
   }
 
-  String _formatDuration(int? minutes) {
+  String _formatDuration(BuildContext context, int? minutes) {
+    final l10n = AppLocalizations.of(context);
     if (minutes == null || minutes <= 0) return '';
-    if (minutes < 60) return '${minutes}min';
+    if (minutes < 60) return l10n.calendarDurationMinutesShort(minutes);
     final hours = minutes ~/ 60;
     final mins = minutes % 60;
-    return mins > 0 ? '${hours}h ${mins}min' : '${hours}h';
+    if (mins > 0) {
+      return '${l10n.calendarDurationHoursShort(hours)} ${l10n.calendarDurationMinutesShort(mins)}';
+    }
+    return l10n.calendarDurationHoursShort(hours);
   }
 
   @override
@@ -879,7 +1139,10 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                               style: tt.titleLarge?.copyWith(color: cs.onSurfaceVariant),
                                             ),
                                             const SizedBox(width: 6),
-                                            EmojiText(Emojis.biceps, style: tt.titleLarge?.copyWith(color: cs.onSurfaceVariant)),
+                                            EmojiText(
+                                              Emojis.biceps,
+                                              style: tt.titleLarge?.copyWith(color: cs.onSurfaceVariant),
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -900,7 +1163,10 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                             child: Row(
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
-                                                EmojiText(type?.icon ?? Emojis.weightLifting, style: const TextStyle(fontSize: 21)),
+                                                EmojiText(
+                                                  type?.icon ?? Emojis.weightLifting,
+                                                  style: const TextStyle(fontSize: 21),
+                                                ),
                                                 const SizedBox(width: 10),
                                                 Expanded(
                                                   child: Column(
@@ -914,11 +1180,21 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                                       if (_currentAttendance?.durationMinutes != null)
                                                         Row(
                                                           children: [
-                                                            EmojiText(Emojis.stopwatch, style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+                                                            EmojiText(
+                                                              Emojis.stopwatch,
+                                                              style: tt.bodyMedium?.copyWith(
+                                                                color: cs.onSurfaceVariant,
+                                                              ),
+                                                            ),
                                                             const SizedBox(width: 4),
                                                             Text(
-                                                              _formatDuration(_currentAttendance!.durationMinutes),
-                                                              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                                                              _formatDuration(
+                                                                context,
+                                                                _currentAttendance!.durationMinutes,
+                                                              ),
+                                                              style: tt.bodyMedium?.copyWith(
+                                                                color: cs.onSurfaceVariant,
+                                                              ),
                                                             ),
                                                           ],
                                                         ),
@@ -957,7 +1233,7 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                           ),
                                           onPressed: _busy ? null : _clearWorkout,
-                                          child: const Text('Remove'),
+                                          child: Text(l10n.calendarRemove),
                                         ),
                                       ),
                                       const SizedBox(height: 10),
@@ -970,7 +1246,7 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                             foregroundColor: cs.onSurface,
                                           ),
                                           onPressed: _busy ? null : () => Navigator.of(context).pop(),
-                                          child: const Text('Cancel'),
+                                          child: Text(l10n.calendarCancel),
                                         ),
                                       ),
                                     ] else ...[
@@ -981,7 +1257,7 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                           children: [
                                             Center(
                                               child: Text(
-                                                'Did you go to the gym?',
+                                                l10n.calendarDidYouGoToGym,
                                                 style: tt.titleLarge?.copyWith(
                                                   color: cs.onSurfaceVariant,
                                                   fontWeight: FontWeight.w600,
@@ -1006,8 +1282,8 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                                 return DropdownButtonFormField<String>(
                                                   initialValue: safeTypeId,
                                                   decoration: InputDecoration(
-                                                    hintText: '-- Select type --',
-                                                    labelText: 'Select Workout Type (optional)',
+                                                    hintText: l10n.calendarSelectTypePlaceholder,
+                                                    labelText: l10n.calendarSelectWorkoutTypeOptional,
                                                     filled: true,
                                                     fillColor: cs.surfaceContainerHighest,
                                                     contentPadding: const EdgeInsets.symmetric(
@@ -1030,7 +1306,7 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                                   items: [
                                                     DropdownMenuItem<String>(
                                                       value: null,
-                                                      child: Text('-- Select type --'),
+                                                      child: Text(l10n.calendarSelectTypePlaceholder),
                                                     ),
                                                     ...uniqueTypes.map(
                                                       (type) => DropdownMenuItem<String>(
@@ -1049,7 +1325,7 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                             ),
                                             const SizedBox(height: 16),
                                             Text(
-                                              'Duration:',
+                                              l10n.calendarDurationLabel,
                                               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                                             ),
                                             const SizedBox(height: 6),
@@ -1060,7 +1336,8 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                                     controller: durationController,
                                                     enabled: !_busy,
                                                     keyboardType: TextInputType.number,
-                                                    validator: NumberValidator.validatePositiveNumber,
+                                                    validator: (value) =>
+                                                        NumberValidator.validatePositiveNumber(value, l10n),
                                                     onChanged: (value) {
                                                       // Trigger form validation on change to clear error when input becomes valid/empty
                                                       final isValid = _formKey.currentState?.validate() ?? false;
@@ -1069,8 +1346,8 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                                       });
                                                     },
                                                     decoration: InputDecoration(
-                                                      hintText: 'e.g. 60',
-                                                      labelText: 'Duration (optional)',
+                                                      hintText: l10n.calendarDurationHint,
+                                                      labelText: l10n.calendarDurationOptional,
                                                       filled: true,
                                                       fillColor: cs.surfaceContainerHighest,
                                                       contentPadding: const EdgeInsets.symmetric(
@@ -1103,7 +1380,10 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                                   ),
                                                 ),
                                                 const SizedBox(width: 8),
-                                                Text('min', style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+                                                Text(
+                                                  l10n.statsMinutes,
+                                                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                                                ),
                                               ],
                                             ),
                                             const SizedBox(height: 24),
@@ -1119,8 +1399,8 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                                       foregroundColor: cs.onSurface,
                                                     ),
                                                     onPressed: _busy ? null : () => Navigator.of(context).pop(),
-                                                    child: const Text(
-                                                      'Cancel',
+                                                    child: Text(
+                                                      l10n.calendarCancel,
                                                       style: TextStyle(fontWeight: FontWeight.bold),
                                                     ),
                                                   ),
@@ -1146,8 +1426,8 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                                               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                                             ),
                                                           )
-                                                        : const Text(
-                                                            'Add',
+                                                        : Text(
+                                                            l10n.calendarAdd,
                                                             style: TextStyle(fontWeight: FontWeight.bold),
                                                           ),
                                                   ),
@@ -1172,11 +1452,14 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Text(
-                                              'Supplements taken',
+                                              l10n.calendarSupplementsTaken,
                                               style: tt.titleMedium?.copyWith(color: cs.onSurfaceVariant),
                                             ),
                                             const SizedBox(width: 6),
-                                            EmojiText(Emojis.pill, style: tt.titleMedium?.copyWith(color: cs.onSurfaceVariant)),
+                                            EmojiText(
+                                              Emojis.pill,
+                                              style: tt.titleMedium?.copyWith(color: cs.onSurfaceVariant),
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -1220,7 +1503,7 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
 
                                         if (uniqueProducts.isEmpty) {
                                           return Text(
-                                            'No supplement products available.',
+                                            l10n.calendarNoSupplementProductsAvailable,
                                             style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                                           );
                                         }
@@ -1238,7 +1521,7 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                               if (_currentLogs.isEmpty) ...[
                                                 Center(
                                                   child: Text(
-                                                    'Did you take any supplements?',
+                                                    l10n.calendarDidYouTakeAnySupplements,
                                                     style: tt.titleLarge?.copyWith(
                                                       color: cs.onSurfaceVariant,
                                                       fontWeight: FontWeight.w600,
@@ -1248,7 +1531,7 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                                 const SizedBox(height: 20),
                                               ],
                                               Text(
-                                                'Add Supplement:',
+                                                l10n.calendarAddSupplementLabel,
                                                 style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                                               ),
                                               const SizedBox(height: 6),
@@ -1256,7 +1539,7 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                                 initialValue: safeProductId,
                                                 validator: (value) {
                                                   if (value == null || value.isEmpty) {
-                                                    return 'Please select a supplement';
+                                                    return l10n.calendarPleaseSelectSupplement;
                                                   }
                                                   return null;
                                                 },
@@ -1272,7 +1555,7 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                                         }
                                                       },
                                                 decoration: InputDecoration(
-                                                  hintText: 'Select a supplement...',
+                                                  hintText: l10n.calendarSelectSupplementHint,
                                                   filled: true,
                                                   fillColor: cs.surfaceContainerHighest,
                                                   contentPadding: const EdgeInsets.symmetric(

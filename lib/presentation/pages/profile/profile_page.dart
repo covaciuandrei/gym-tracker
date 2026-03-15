@@ -162,7 +162,7 @@ class _UserCard extends StatelessWidget {
 
     final displayName = (user?.displayName != null && user!.displayName!.trim().isNotEmpty)
         ? user!.displayName!.trim()
-        : 'Gym Tracker User';
+        : l10n.profileDefaultUserName;
     final email = (user?.email != null && user!.email!.trim().isNotEmpty) ? user!.email!.trim() : '-';
     final initialSource = (user?.displayName != null && user!.displayName!.isNotEmpty)
         ? user!.displayName!

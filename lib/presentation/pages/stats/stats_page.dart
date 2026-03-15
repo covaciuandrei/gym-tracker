@@ -10,7 +10,6 @@ import 'package:gym_tracker/cubit/stats/stats_cubit.dart';
 import 'package:gym_tracker/model/attendance_stats.dart';
 import 'package:gym_tracker/model/training_type.dart';
 import 'package:gym_tracker/presentation/controls/emoji_text.dart';
-import 'package:gym_tracker/presentation/controls/empty_state.dart';
 import 'package:gym_tracker/presentation/controls/error_state.dart';
 import 'package:gym_tracker/presentation/controls/gym_app_bar.dart';
 import 'package:gym_tracker/presentation/controls/gym_tab_bar.dart';
@@ -51,16 +50,18 @@ class StatsView extends StatefulWidget {
   State<StatsView> createState() => _StatsViewState();
 }
 
-class _StatsViewState extends State<StatsView> {
+class _StatsViewState extends State<StatsView> with SingleTickerProviderStateMixin {
   final ValueNotifier<int> _selectedYear = ValueNotifier<int>(DateTime.now().year);
   final ValueNotifier<int> _selectedWorkoutMonth = ValueNotifier<int>(DateTime.now().month);
   final ValueNotifier<int> _selectedDurationMonth = ValueNotifier<int>(DateTime.now().month);
   final ValueNotifier<int> _selectedHealthMonth = ValueNotifier<int>(DateTime.now().month);
+  TabController? _tabController;
 
   @override
   void initState() {
     super.initState();
-    _loadYear(_selectedYear.value);
+    _tabController = TabController(length: 4, vsync: this)..addListener(_onTabChanged);
+    _initYearAndLoadActiveTab();
   }
 
   @override
@@ -69,17 +70,60 @@ class _StatsViewState extends State<StatsView> {
     _selectedWorkoutMonth.dispose();
     _selectedDurationMonth.dispose();
     _selectedHealthMonth.dispose();
+    _tabController?.removeListener(_onTabChanged);
+    _tabController?.dispose();
     super.dispose();
   }
 
-  void _loadYear(int year) {
-    context.read<StatsCubit>().load(userId: widget.userId, year: year);
+  void _initYearAndLoadActiveTab() {
+    final year = _selectedYear.value;
+    final cubit = context.read<StatsCubit>();
+    cubit.initYear(year);
+    _loadCurrentTab(force: true);
+  }
+
+  void _onTabChanged() {
+    final controller = _tabController;
+    if (controller == null || controller.indexIsChanging) {
+      return;
+    }
+    _loadCurrentTab();
+  }
+
+  StatsTabKind _tabKindForIndex(int index) {
+    switch (index) {
+      case 0:
+        return StatsTabKind.attendances;
+      case 1:
+        return StatsTabKind.workouts;
+      case 2:
+        return StatsTabKind.duration;
+      case 3:
+        return StatsTabKind.health;
+      default:
+        return StatsTabKind.attendances;
+    }
+  }
+
+  Future<void> _loadCurrentTab({bool force = false}) {
+    final controller = _tabController;
+    if (controller == null) {
+      return Future<void>.value();
+    }
+    final selectedTab = _tabKindForIndex(controller.index);
+    return context.read<StatsCubit>().loadTab(
+      userId: widget.userId,
+      year: _selectedYear.value,
+      tab: selectedTab,
+      force: force,
+    );
   }
 
   void _changeYear(int delta) {
     final nextYear = _selectedYear.value + delta;
     _selectedYear.value = nextYear;
-    _loadYear(nextYear);
+    context.read<StatsCubit>().initYear(nextYear);
+    _loadCurrentTab(force: true);
   }
 
   @override
@@ -87,68 +131,154 @@ class _StatsViewState extends State<StatsView> {
     final l10n = AppLocalizations.of(context);
     final cs = Theme.of(context).colorScheme;
 
-    return DefaultTabController(
-      length: 4,
-      child: Scaffold(
-        backgroundColor: cs.surfaceContainerLow,
-        appBar: GymAppBar(title: l10n.statsTitle, showBackButton: false),
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Column(
-              children: [
-                ValueListenableBuilder<int>(
-                  valueListenable: _selectedYear,
-                  builder: (_, year, _) {
-                    return _YearHeader(title: '$year', onPrevious: () => _changeYear(-1), onNext: () => _changeYear(1));
+    return Scaffold(
+      backgroundColor: cs.surfaceContainerLow,
+      appBar: GymAppBar(title: l10n.statsTitle, showBackButton: false),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            children: [
+              ValueListenableBuilder<int>(
+                valueListenable: _selectedYear,
+                builder: (_, year, _) {
+                  return _YearHeader(title: '$year', onPrevious: () => _changeYear(-1), onNext: () => _changeYear(1));
+                },
+              ),
+              const SizedBox(height: 12),
+              GymTabBar(
+                controller: _tabController,
+                tabs: [l10n.statsAttendances, l10n.statsWorkout, l10n.statsDuration, l10n.statsHealth],
+                labelPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: BlocBuilder<StatsCubit, BaseState>(
+                  buildWhen: (previous, current) => current is StatsLoadedState || current is InitialState,
+                  builder: (ctx, state) {
+                    final currentYear = _selectedYear.value;
+                    if (state is! StatsLoadedState || state.year != currentYear) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final tabController = _tabController;
+                    if (tabController == null) {
+                      return const SizedBox.shrink();
+                    }
+
+                    return TabBarView(
+                      controller: tabController,
+                      children: [
+                        _buildAttendancesTab(state),
+                        _buildWorkoutsTab(state),
+                        _buildDurationTab(state),
+                        _buildHealthTab(state),
+                      ],
+                    );
                   },
                 ),
-                const SizedBox(height: 12),
-                GymTabBar(
-                  tabs: [l10n.statsAttendances, l10n.statsWorkout, l10n.statsDuration, l10n.statsHealth],
-                  labelPadding: EdgeInsets.symmetric(horizontal: 0, vertical: 8),
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: BlocConsumer<StatsCubit, BaseState>(
-                    listenWhen: (_, curr) => curr is SomethingWentWrongState,
-                    listener: (ctx, state) {
-                      if (state is SomethingWentWrongState) {
-                        ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
-                      }
-                    },
-                    builder: (ctx, state) {
-                      final currentYear = _selectedYear.value;
-
-                      if (state is PendingState || state is InitialState) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-
-                      if (state is SomethingWentWrongState) {
-                        return ErrorStateWidget(message: l10n.errorsUnknown, onRetry: () => _loadYear(currentYear));
-                      }
-
-                      if (state is! StatsLoadedState || state.year != currentYear) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-
-                      return TabBarView(
-                        children: [
-                          _AttendancesTab(stats: state.stats),
-                          _WorkoutsTab(stats: state.stats, types: state.types, selectedMonth: _selectedWorkoutMonth),
-                          _DurationTab(stats: state.stats, types: state.types, selectedMonth: _selectedDurationMonth),
-                          _HealthTab(stats: state.stats, selectedMonth: _selectedHealthMonth),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildAttendancesTab(StatsLoadedState state) {
+    switch (state.attendancesStatus) {
+      case StatsLoadStatus.idle:
+      case StatsLoadStatus.loading:
+        return const _AttendancesTabSkeleton();
+      case StatsLoadStatus.error:
+        return ErrorStateWidget(
+          message: AppLocalizations.of(context).errorsUnknown,
+          onRetry: () => context.read<StatsCubit>().loadTab(
+            userId: widget.userId,
+            year: _selectedYear.value,
+            tab: StatsTabKind.attendances,
+            force: true,
+          ),
+        );
+      case StatsLoadStatus.loaded:
+        final stats = state.attendancesStats;
+        if (stats == null) {
+          return const _AttendancesTabSkeleton();
+        }
+        return _AttendancesTab(stats: stats);
+    }
+  }
+
+  Widget _buildWorkoutsTab(StatsLoadedState state) {
+    switch (state.workoutsStatus) {
+      case StatsLoadStatus.idle:
+      case StatsLoadStatus.loading:
+        return const _WorkoutsTabSkeleton();
+      case StatsLoadStatus.error:
+        return ErrorStateWidget(
+          message: AppLocalizations.of(context).errorsUnknown,
+          onRetry: () => context.read<StatsCubit>().loadTab(
+            userId: widget.userId,
+            year: _selectedYear.value,
+            tab: StatsTabKind.workouts,
+            force: true,
+          ),
+        );
+      case StatsLoadStatus.loaded:
+        final stats = state.workoutsStats;
+        if (stats == null) {
+          return const _WorkoutsTabSkeleton();
+        }
+        return _WorkoutsTab(stats: stats, types: state.types, selectedMonth: _selectedWorkoutMonth);
+    }
+  }
+
+  Widget _buildDurationTab(StatsLoadedState state) {
+    switch (state.durationStatus) {
+      case StatsLoadStatus.idle:
+      case StatsLoadStatus.loading:
+        return const _DurationTabSkeleton();
+      case StatsLoadStatus.error:
+        return ErrorStateWidget(
+          message: AppLocalizations.of(context).errorsUnknown,
+          onRetry: () => context.read<StatsCubit>().loadTab(
+            userId: widget.userId,
+            year: _selectedYear.value,
+            tab: StatsTabKind.duration,
+            force: true,
+          ),
+        );
+      case StatsLoadStatus.loaded:
+        final stats = state.durationStats;
+        if (stats == null) {
+          return const _DurationTabSkeleton();
+        }
+        return _DurationTab(stats: stats, types: state.types, selectedMonth: _selectedDurationMonth);
+    }
+  }
+
+  Widget _buildHealthTab(StatsLoadedState state) {
+    switch (state.healthStatus) {
+      case StatsLoadStatus.idle:
+      case StatsLoadStatus.loading:
+        return const _HealthTabSkeleton();
+      case StatsLoadStatus.error:
+        return ErrorStateWidget(
+          message: AppLocalizations.of(context).errorsUnknown,
+          onRetry: () => context.read<StatsCubit>().loadTab(
+            userId: widget.userId,
+            year: _selectedYear.value,
+            tab: StatsTabKind.health,
+            force: true,
+          ),
+        );
+      case StatsLoadStatus.loaded:
+        final stats = state.healthStats;
+        if (stats == null) {
+          return const _HealthTabSkeleton();
+        }
+        return _HealthTab(stats: stats, selectedMonth: _selectedHealthMonth);
+    }
   }
 }
 
@@ -225,15 +355,17 @@ class _AttendancesTabState extends State<_AttendancesTab> {
   }
 
   void _resetLabels() {
-    _currentStreakLabel = 'Tap to see';
-    _bestStreakLabel = 'Tap to see';
+    final l10n = AppLocalizations.of(context);
+    _currentStreakLabel = l10n.statsTapToSeeDates;
+    _bestStreakLabel = l10n.statsTapToSeeDates;
   }
 
   void _showStreakTemporarily(bool isCurrentStreak) {
     final streakInfo = isCurrentStreak ? widget.stats.currentStreakInfo : widget.stats.bestStreakInfo;
     if (streakInfo.count == 0 || streakInfo.startDate.isEmpty || streakInfo.endDate.isEmpty) return;
 
-    final dateRange = _formatDateRange(streakInfo.startDate, streakInfo.endDate);
+    final dateRange = _formatDateRange(context, streakInfo.startDate, streakInfo.endDate);
+    final l10n = AppLocalizations.of(context);
 
     setState(() {
       if (isCurrentStreak) {
@@ -247,9 +379,9 @@ class _AttendancesTabState extends State<_AttendancesTab> {
       if (mounted) {
         setState(() {
           if (isCurrentStreak) {
-            _currentStreakLabel = 'Tap to see';
+            _currentStreakLabel = l10n.statsTapToSeeDates;
           } else {
-            _bestStreakLabel = 'Tap to see';
+            _bestStreakLabel = l10n.statsTapToSeeDates;
           }
         });
       }
@@ -312,7 +444,7 @@ class _AttendancesTabState extends State<_AttendancesTab> {
                 child: _GradientStatCard(
                   icon: Emojis.target,
                   value: '${l10n.statsConsistencyWithoutIcon} ${_getConsistencyPercentage(widget.stats)} ',
-                  label: 'of weeks this year',
+                  label: l10n.statsOfWeeksThisYear,
                   colors: const [AppColors.statsPurple, AppColors.statsPurpleDark],
                 ),
               ),
@@ -324,7 +456,7 @@ class _AttendancesTabState extends State<_AttendancesTab> {
               Expanded(
                 child: _GradientStatCard(
                   icon: Emojis.fire,
-                  value: '${l10n.statsCurrentStreak} ${widget.stats.currentWeekStreak} weeks',
+                  value: '${l10n.statsCurrentStreak} ${l10n.statsWeekCount(widget.stats.currentWeekStreak)}',
                   label: _currentStreakLabel,
                   colors: const [AppColors.statsOrange, AppColors.statsOrangeDark],
                   onTap: widget.stats.currentWeekStreak > 0 ? () => _showStreakTemporarily(true) : null,
@@ -334,7 +466,7 @@ class _AttendancesTabState extends State<_AttendancesTab> {
               Expanded(
                 child: _GradientStatCard(
                   icon: Emojis.trophy,
-                  value: '${l10n.statsBestStreak} ${widget.stats.bestWeekStreak} weeks',
+                  value: '${l10n.statsBestStreak} ${l10n.statsWeekCount(widget.stats.bestWeekStreak)}',
                   label: _bestStreakLabel,
                   colors: const [AppColors.statsTeal, AppColors.statsTealDark],
                   onTap: widget.stats.bestWeekStreak > 0 ? () => _showStreakTemporarily(false) : null,
@@ -344,7 +476,7 @@ class _AttendancesTabState extends State<_AttendancesTab> {
           ),
           const SizedBox(height: 16),
           _ChartSection(
-            title: 'Days You Hit the Gym',
+            title: l10n.statsDaysYouHitGym,
             titleEmoji: Emojis.barChart,
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -356,7 +488,9 @@ class _AttendancesTabState extends State<_AttendancesTab> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Favorite day',
+                  widget.stats.favoriteDaysOfWeek.length > 1
+                      ? l10n.statsFavoriteDaysLegend
+                      : l10n.statsFavoriteDayLegend,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(color: AppColors.statsBlue),
                 ),
               ],
@@ -381,7 +515,7 @@ class _AttendancesTabState extends State<_AttendancesTab> {
           ),
           const SizedBox(height: 16),
           _ChartSection(
-            title: 'Monthly Breakdown',
+            title: l10n.statsMonthlyBreakdown,
             titleEmoji: Emojis.chartIncreasing,
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -396,7 +530,7 @@ class _AttendancesTabState extends State<_AttendancesTab> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Attendances',
+                  l10n.statsAttendances,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.primary),
                 ),
               ],
@@ -481,7 +615,7 @@ class _WorkoutsTab extends StatelessWidget {
                   onNext: () => selectedMonth.value = month == 12 ? 1 : month + 1,
                 ),
                 child: entries.isEmpty
-                    ? EmptyStateWidget(
+                    ? _StatsCompactEmptyState(
                         title: l10n.statsWorkout,
                         message: l10n.statsThisMonth,
                         emoji: Emojis.weightLifting,
@@ -511,7 +645,11 @@ class _WorkoutsTab extends StatelessWidget {
           _ChartSection(
             title: l10n.statsThisYear,
             child: sortedTypes.isEmpty
-                ? EmptyStateWidget(title: l10n.statsWorkout, message: l10n.statsThisYear, emoji: Emojis.weightLifting)
+                ? _StatsCompactEmptyState(
+                    title: l10n.statsWorkout,
+                    message: l10n.statsThisYear,
+                    emoji: Emojis.weightLifting,
+                  )
                 : Column(
                     children: sortedTypes
                         .map((entry) {
@@ -597,7 +735,7 @@ class _DurationTab extends StatelessWidget {
                   onNext: () => selectedMonth.value = month == 12 ? 1 : month + 1,
                 ),
                 child: entries.isEmpty
-                    ? EmptyStateWidget(
+                    ? _StatsCompactEmptyState(
                         title: l10n.statsDuration,
                         message: l10n.statsThisMonth,
                         emoji: Emojis.stopwatchFull,
@@ -626,6 +764,7 @@ class _DurationTab extends StatelessWidget {
           const SizedBox(height: 16),
           _ChartSection(
             title: l10n.statsDuration,
+            titleEmoji: Emojis.stopwatch,
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -639,7 +778,7 @@ class _DurationTab extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Average duration',
+                  l10n.statsAverageDurationLegend,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.primary),
                 ),
               ],
@@ -696,8 +835,9 @@ class _HealthTab extends StatelessWidget {
                         child: _GradientStatCard(
                           icon: Emojis.pill,
                           value: topMonth == null ? '-' : stats.productNames[topMonth.key] ?? '-',
-                          label:
-                              '${topMonth == null ? '' : '${topMonth.value.toStringAsFixed(0)}x '}${l10n.statsThisMonth}',
+                          label: topMonth == null
+                              ? l10n.statsThisMonth
+                              : '${l10n.statsCountTimes(topMonth.value.toInt())} ${l10n.statsThisMonth}',
 
                           colors: const [AppColors.statsEmerald, AppColors.statsEmeraldDark],
                         ),
@@ -707,8 +847,9 @@ class _HealthTab extends StatelessWidget {
                         child: _GradientStatCard(
                           icon: Emojis.trophy,
                           value: stats.mostTakenSupplementName ?? '-',
-                          label:
-                              '${stats.mostTakenSupplementCount <= 0 ? null : '${stats.mostTakenSupplementCount.toStringAsFixed(0)}x '}${l10n.statsMostUsed}',
+                          label: stats.mostTakenSupplementCount <= 0
+                              ? l10n.statsMostUsed
+                              : '${l10n.statsCountTimes(stats.mostTakenSupplementCount.toInt())} ${l10n.statsMostUsed}',
 
                           colors: const [AppColors.statsTeal, AppColors.statsTealDark],
                         ),
@@ -722,7 +863,7 @@ class _HealthTab extends StatelessWidget {
                         child: _GradientStatCard(
                           icon: Emojis.target,
                           value: l10n.statsConsistencyWithoutIcon,
-                          label: '${stats.healthConsistencyPct.round()}% of weeks this year',
+                          label: l10n.statsPercentOfWeeksThisYear(stats.healthConsistencyPct.round()),
                           colors: const [AppColors.statsCyan, AppColors.statsCyanDark],
                         ),
                       ),
@@ -731,7 +872,7 @@ class _HealthTab extends StatelessWidget {
                         child: _GradientStatCard(
                           icon: Emojis.pill,
                           value: l10n.statsUniqueSupplements,
-                          label: '${stats.productNames.length} different products',
+                          label: l10n.statsDifferentProducts(stats.productNames.length),
                           colors: const [AppColors.statsEmerald, AppColors.statsEmeraldDark],
                         ),
                       ),
@@ -756,7 +897,7 @@ class _HealthTab extends StatelessWidget {
                   onNext: () => selectedMonth.value = month == 12 ? 1 : month + 1,
                 ),
                 child: entries.isEmpty
-                    ? EmptyStateWidget(title: l10n.statsHealth, message: l10n.statsThisMonth, emoji: Emojis.pill)
+                    ? _StatsCompactEmptyState(title: l10n.statsHealth, message: l10n.statsThisMonth, emoji: Emojis.pill)
                     : Column(
                         children: entries
                             .take(8)
@@ -780,6 +921,180 @@ class _HealthTab extends StatelessWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _AttendancesTabSkeleton extends StatelessWidget {
+  const _AttendancesTabSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        children: const [
+          _StatsSkeletonRow(cards: 3),
+          SizedBox(height: 12),
+          _StatsSkeletonRow(cards: 2),
+          SizedBox(height: 12),
+          _StatsSkeletonRow(cards: 2),
+          SizedBox(height: 16),
+          _StatsSkeletonSection(),
+          SizedBox(height: 16),
+          _StatsSkeletonSection(),
+        ],
+      ),
+    );
+  }
+}
+
+class _WorkoutsTabSkeleton extends StatelessWidget {
+  const _WorkoutsTabSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        children: const [
+          _StatsSkeletonRow(cards: 2),
+          SizedBox(height: 16),
+          _StatsSkeletonSection(),
+          SizedBox(height: 16),
+          _StatsSkeletonSection(),
+        ],
+      ),
+    );
+  }
+}
+
+class _DurationTabSkeleton extends StatelessWidget {
+  const _DurationTabSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        children: const [
+          _StatsSkeletonRow(cards: 2),
+          SizedBox(height: 16),
+          _StatsSkeletonSection(),
+          SizedBox(height: 16),
+          _StatsSkeletonSection(),
+        ],
+      ),
+    );
+  }
+}
+
+class _HealthTabSkeleton extends StatelessWidget {
+  const _HealthTabSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        children: const [
+          _StatsSkeletonRow(cards: 2),
+          SizedBox(height: 12),
+          _StatsSkeletonRow(cards: 2),
+          SizedBox(height: 16),
+          _StatsSkeletonSection(),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatsSkeletonRow extends StatelessWidget {
+  const _StatsSkeletonRow({required this.cards});
+
+  final int cards;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        for (int index = 0; index < cards; index++) ...[
+          const Expanded(child: _StatsSkeletonCard()),
+          if (index < cards - 1) const SizedBox(width: 12),
+        ],
+      ],
+    );
+  }
+}
+
+class _StatsSkeletonCard extends StatelessWidget {
+  const _StatsSkeletonCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      height: 98,
+      decoration: BoxDecoration(color: cs.surfaceContainerHighest, borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            _SkeletonBox(height: 18, width: 24),
+            SizedBox(height: 10),
+            _SkeletonBox(height: 14, width: 76),
+            SizedBox(height: 6),
+            _SkeletonBox(height: 12, width: 54),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatsSkeletonSection extends StatelessWidget {
+  const _StatsSkeletonSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: cs.surfaceContainerHigh, borderRadius: BorderRadius.circular(16)),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SkeletonBox(height: 16, width: 160),
+          SizedBox(height: 12),
+          _SkeletonBox(height: 12),
+          SizedBox(height: 8),
+          _SkeletonBox(height: 12),
+          SizedBox(height: 8),
+          _SkeletonBox(height: 12, width: 220),
+        ],
+      ),
+    );
+  }
+}
+
+class _SkeletonBox extends StatelessWidget {
+  const _SkeletonBox({required this.height, this.width});
+
+  final double height;
+  final double? width;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      height: height,
+      width: width,
+      decoration: BoxDecoration(
+        color: cs.outlineVariant.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(8),
       ),
     );
   }
@@ -828,6 +1143,53 @@ class _ChartSection extends StatelessWidget {
             child,
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _StatsCompactEmptyState extends StatelessWidget {
+  const _StatsCompactEmptyState({required this.title, required this.message, required this.emoji});
+
+  final String title;
+  final String message;
+  final String emoji;
+
+  @override
+  Widget build(BuildContext context) {
+    final tt = Theme.of(context).textTheme;
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: cs.outlineVariant),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          EmojiText(emoji, style: const TextStyle(fontSize: 34)),
+          const SizedBox(width: 12),
+          Flexible(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: tt.titleMedium),
+                const SizedBox(height: 2),
+                Text(
+                  message,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1153,17 +1515,12 @@ String _getConsistencyPercentage(AttendanceStats stats) {
   return '$consistencyPercentage%';
 }
 
-String _formatDateRange(String start, String end) {
+String _formatDateRange(BuildContext context, String start, String end) {
   if (start.isEmpty || end.isEmpty) return '';
   String fmt(d) {
     final date = DateTime.parse(d);
-    return '${date.day} ${_monthShortEn(date.month)} ${date.year}';
+    return '${date.day} ${_monthShort(context, date.month)} ${date.year}';
   }
 
   return '${fmt(start)} → ${fmt(end)}';
-}
-
-String _monthShortEn(int month) {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return months[month - 1];
 }

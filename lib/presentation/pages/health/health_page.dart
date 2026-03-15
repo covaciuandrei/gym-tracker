@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +15,7 @@ import 'package:gym_tracker/presentation/controls/action_bottom_sheet.dart';
 import 'package:gym_tracker/presentation/controls/confirmation_dialog.dart';
 import 'package:gym_tracker/presentation/controls/empty_state.dart';
 import 'package:gym_tracker/presentation/controls/gym_app_bar.dart';
-import 'package:gym_tracker/presentation/controls/option_toggle.dart';
+import 'package:gym_tracker/presentation/controls/gym_tab_bar.dart';
 import 'package:gym_tracker/presentation/controls/primary_button.dart';
 import 'package:gym_tracker/presentation/controls/primary_fab.dart';
 import 'package:gym_tracker/presentation/controls/search_input.dart';
@@ -37,12 +39,15 @@ class HealthPage extends StatefulWidget implements AutoRouteWrapper {
 
 enum _HealthTab { today, mySupplements, allSupplements }
 
-class _HealthPageState extends State<HealthPage> {
+class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateMixin {
+  static const Duration _minimumSkeletonDuration = Duration(milliseconds: 300);
+
   final ValueNotifier<_HealthTab> _activeTab = ValueNotifier<_HealthTab>(_HealthTab.today);
   final ValueNotifier<String> _mySearch = ValueNotifier<String>('');
   final ValueNotifier<String> _allSearch = ValueNotifier<String>('');
   final TextEditingController _mySearchCtrl = TextEditingController();
   final TextEditingController _allSearchCtrl = TextEditingController();
+  TabController? _tabController;
 
   List<SupplementLog> _latestTodayEntries = const <SupplementLog>[];
   List<SupplementProduct> _latestAllProducts = const <SupplementProduct>[];
@@ -52,6 +57,14 @@ class _HealthPageState extends State<HealthPage> {
   bool _hasProductsData = false;
   bool _requestedTodayLoad = false;
   bool _requestedProductsLoad = false;
+  bool _forceTodaySkeleton = false;
+  bool _forceProductsSkeleton = false;
+  int _todayLoadToken = 0;
+  int _productsLoadToken = 0;
+  DateTime? _todayLoadStartedAt;
+  DateTime? _productsLoadStartedAt;
+  Timer? _todaySkeletonTimer;
+  Timer? _productsSkeletonTimer;
 
   String? get _userId => widget.testUserId ?? FirebaseAuth.instance.currentUser?.uid;
 
@@ -65,24 +78,53 @@ class _HealthPageState extends State<HealthPage> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 3, vsync: this)..addListener(_onTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final userId = _userId;
       if (userId == null) return;
-      final cubit = context.read<HealthCubit>();
-      cubit.loadProducts(userId);
-      cubit.loadDayEntries(userId: userId, date: _todayDateString);
+      _loadProducts(userId);
+      _loadTodayEntries(userId);
     });
   }
 
   @override
   void dispose() {
+    _todaySkeletonTimer?.cancel();
+    _productsSkeletonTimer?.cancel();
+    _tabController?.removeListener(_onTabChanged);
+    _tabController?.dispose();
     _activeTab.dispose();
     _mySearch.dispose();
     _allSearch.dispose();
     _mySearchCtrl.dispose();
     _allSearchCtrl.dispose();
     super.dispose();
+  }
+
+  _HealthTab _tabForIndex(int index) {
+    switch (index) {
+      case 0:
+        return _HealthTab.today;
+      case 1:
+        return _HealthTab.mySupplements;
+      case 2:
+        return _HealthTab.allSupplements;
+      default:
+        return _HealthTab.today;
+    }
+  }
+
+  void _onTabChanged() {
+    final controller = _tabController;
+    if (controller == null || controller.indexIsChanging) {
+      return;
+    }
+
+    final nextTab = _tabForIndex(controller.index);
+    if (_activeTab.value != nextTab) {
+      _activeTab.value = nextTab;
+    }
   }
 
   void _ensureActiveTabData(String userId, _HealthTab activeTab) {
@@ -94,7 +136,7 @@ class _HealthPageState extends State<HealthPage> {
         _requestedTodayLoad = true;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
-          context.read<HealthCubit>().loadDayEntries(userId: userId, date: _todayDateString);
+          _loadTodayEntries(userId);
         });
       }
       return;
@@ -107,9 +149,115 @@ class _HealthPageState extends State<HealthPage> {
       _requestedProductsLoad = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        context.read<HealthCubit>().loadProducts(userId);
+        _loadProducts(userId);
       });
     }
+  }
+
+  void _loadTodayEntries(String userId) {
+    _startTodaySkeletonWindow();
+    context.read<HealthCubit>().loadDayEntries(userId: userId, date: _todayDateString);
+  }
+
+  void _loadProducts(String userId) {
+    _startProductsSkeletonWindow();
+    context.read<HealthCubit>().loadProducts(userId);
+  }
+
+  void _startTodaySkeletonWindow() {
+    if (!mounted) return;
+    _todaySkeletonTimer?.cancel();
+    _todaySkeletonTimer = null;
+    _todayLoadToken++;
+    _todayLoadStartedAt = DateTime.now();
+    setState(() {
+      _forceTodaySkeleton = true;
+    });
+  }
+
+  void _startProductsSkeletonWindow() {
+    if (!mounted) return;
+    _productsSkeletonTimer?.cancel();
+    _productsSkeletonTimer = null;
+    _productsLoadToken++;
+    _productsLoadStartedAt = DateTime.now();
+    setState(() {
+      _forceProductsSkeleton = true;
+    });
+  }
+
+  void _releaseTodaySkeletonWindow() {
+    final startedAt = _todayLoadStartedAt;
+    if (startedAt == null) {
+      _todaySkeletonTimer?.cancel();
+      _todaySkeletonTimer = null;
+      if (mounted && _forceTodaySkeleton) {
+        setState(() {
+          _forceTodaySkeleton = false;
+        });
+      }
+      return;
+    }
+
+    final token = _todayLoadToken;
+    final elapsed = DateTime.now().difference(startedAt);
+    final remaining = _minimumSkeletonDuration - elapsed;
+    if (remaining <= Duration.zero) {
+      _todaySkeletonTimer?.cancel();
+      _todaySkeletonTimer = null;
+      if (mounted && _forceTodaySkeleton) {
+        setState(() {
+          _forceTodaySkeleton = false;
+        });
+      }
+      return;
+    }
+
+    _todaySkeletonTimer?.cancel();
+    _todaySkeletonTimer = Timer(remaining, () {
+      if (!mounted || token != _todayLoadToken || !_forceTodaySkeleton) return;
+      setState(() {
+        _forceTodaySkeleton = false;
+      });
+      _todaySkeletonTimer = null;
+    });
+  }
+
+  void _releaseProductsSkeletonWindow() {
+    final startedAt = _productsLoadStartedAt;
+    if (startedAt == null) {
+      _productsSkeletonTimer?.cancel();
+      _productsSkeletonTimer = null;
+      if (mounted && _forceProductsSkeleton) {
+        setState(() {
+          _forceProductsSkeleton = false;
+        });
+      }
+      return;
+    }
+
+    final token = _productsLoadToken;
+    final elapsed = DateTime.now().difference(startedAt);
+    final remaining = _minimumSkeletonDuration - elapsed;
+    if (remaining <= Duration.zero) {
+      _productsSkeletonTimer?.cancel();
+      _productsSkeletonTimer = null;
+      if (mounted && _forceProductsSkeleton) {
+        setState(() {
+          _forceProductsSkeleton = false;
+        });
+      }
+      return;
+    }
+
+    _productsSkeletonTimer?.cancel();
+    _productsSkeletonTimer = Timer(remaining, () {
+      if (!mounted || token != _productsLoadToken || !_forceProductsSkeleton) return;
+      setState(() {
+        _forceProductsSkeleton = false;
+      });
+      _productsSkeletonTimer = null;
+    });
   }
 
   Future<void> _openProductForm(String userId, {SupplementProduct? initial}) async {
@@ -206,7 +354,7 @@ class _HealthPageState extends State<HealthPage> {
     return MaterialLocalizations.of(context).formatTimeOfDay(tod);
   }
 
-  List<_GroupedTodayLogs> _groupedTodayLogs(List<SupplementLog> entries) {
+  List<_GroupedTodayLogs> _groupedTodayLogs(List<SupplementLog> entries, String unknownLabel) {
     final map = <String, _GroupedTodayLogs>{};
 
     for (final entry in entries) {
@@ -222,7 +370,7 @@ class _HealthPageState extends State<HealthPage> {
 
       map[entry.productId] = _GroupedTodayLogs(
         productId: entry.productId,
-        name: entry.productName ?? 'Unknown',
+        name: entry.productName ?? unknownLabel,
         brand: entry.productBrand ?? '',
         totalServings: entry.servingsTaken,
         entries: [entry],
@@ -257,25 +405,29 @@ class _HealthPageState extends State<HealthPage> {
       listener: (ctx, state) {
         if (state is HealthEntryLoggedState || state is HealthEntryDeletedState) {
           _requestedTodayLoad = false;
-          ctx.read<HealthCubit>().loadDayEntries(userId: userId, date: _todayDateString);
+          _loadTodayEntries(userId);
           return;
         }
         if (state is HealthProductSavedState || state is HealthProductDeletedState) {
           _requestedProductsLoad = false;
-          ctx.read<HealthCubit>().loadProducts(userId);
+          _loadProducts(userId);
           return;
         }
         if (state is SomethingWentWrongState) {
+          _releaseTodaySkeletonWindow();
+          _releaseProductsSkeletonWindow();
           ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
         }
       },
       builder: (ctx, state) {
         if (state is HealthDayEntriesLoadedState) {
+          _releaseTodaySkeletonWindow();
           _hasTodayData = true;
           _requestedTodayLoad = false;
           _latestTodayEntries = state.entries;
         }
         if (state is HealthProductsLoadedState) {
+          _releaseProductsSkeletonWindow();
           _hasProductsData = true;
           _requestedProductsLoad = false;
           _latestAllProducts = state.products;
@@ -299,47 +451,41 @@ class _HealthPageState extends State<HealthPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      OptionToggle(
-                        selectedValue: activeTab.name,
-                        items: [
-                          OptionToggleItem(value: _HealthTab.today.name, label: l10n.healthToday),
-                          OptionToggleItem(value: _HealthTab.mySupplements.name, label: l10n.healthMySupplements),
-                          OptionToggleItem(value: _HealthTab.allSupplements.name, label: l10n.healthAllSupplements),
-                        ],
-                        onSelect: (value) {
-                          _activeTab.value = _HealthTab.values.firstWhere(
-                            (tab) => tab.name == value,
-                            orElse: () => _HealthTab.today,
-                          );
-                        },
+                      GymTabBar(
+                        controller: _tabController,
+                        tabs: [l10n.healthToday, l10n.healthMySupplements, l10n.healthAllSupplements],
+                        labelPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
                       ),
                       const SizedBox(height: 16),
                       Expanded(
-                        child: switch (activeTab) {
-                          _HealthTab.today => _buildTodayTab(context, userId),
-                          _HealthTab.mySupplements => _buildProductsTab(
-                            context,
-                            searchController: _mySearchCtrl,
-                            searchListenable: _mySearch,
-                            searchHint: l10n.healthMySearchHint,
-                            emptyTitle: l10n.healthNoPersonalSupplements,
-                            emptyMessage: l10n.healthNoPersonalSupplementsMessage,
-                            emptyActionLabel: l10n.healthAddSupplement,
-                            onEmptyAction: () => _openProductForm(userId),
-                            onlyMine: true,
-                            userId: userId,
-                          ),
-                          _HealthTab.allSupplements => _buildProductsTab(
-                            context,
-                            searchController: _allSearchCtrl,
-                            searchListenable: _allSearch,
-                            searchHint: l10n.healthAllSearchHint,
-                            emptyTitle: l10n.healthNoSupplementsFound,
-                            emptyMessage: l10n.healthNoSupplementsFoundMessage,
-                            onlyMine: false,
-                            userId: userId,
-                          ),
-                        },
+                        child: TabBarView(
+                          controller: _tabController,
+                          children: [
+                            _buildTodayTab(context, userId),
+                            _buildProductsTab(
+                              context,
+                              searchController: _mySearchCtrl,
+                              searchListenable: _mySearch,
+                              searchHint: l10n.healthMySearchHint,
+                              emptyTitle: l10n.healthNoPersonalSupplements,
+                              emptyMessage: l10n.healthNoPersonalSupplementsMessage,
+                              emptyActionLabel: l10n.healthAddSupplement,
+                              onEmptyAction: () => _openProductForm(userId),
+                              onlyMine: true,
+                              userId: userId,
+                            ),
+                            _buildProductsTab(
+                              context,
+                              searchController: _allSearchCtrl,
+                              searchListenable: _allSearch,
+                              searchHint: l10n.healthAllSearchHint,
+                              emptyTitle: l10n.healthNoSupplementsFound,
+                              emptyMessage: l10n.healthNoSupplementsFoundMessage,
+                              onlyMine: false,
+                              userId: userId,
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -355,11 +501,11 @@ class _HealthPageState extends State<HealthPage> {
   Widget _buildTodayTab(BuildContext context, String userId) {
     final l10n = AppLocalizations.of(context);
 
-    if (!_hasTodayData) {
-      return const Center(child: CircularProgressIndicator());
+    if (!_hasTodayData || _forceTodaySkeleton) {
+      return const _HealthTodaySkeleton();
     }
 
-    final grouped = _groupedTodayLogs(_latestTodayEntries);
+    final grouped = _groupedTodayLogs(_latestTodayEntries, l10n.healthUnknownProduct);
     if (grouped.isEmpty) {
       return EmptyStateWidget(
         emoji: Emojis.sunrise,
@@ -376,8 +522,7 @@ class _HealthPageState extends State<HealthPage> {
         return SummaryActionCard(
           subtitle: item.brand,
           title: item.name,
-          description:
-              '${item.totalServings.toStringAsFixed(item.totalServings % 1 == 0 ? 0 : 1)} ${l10n.healthServings}',
+          description: l10n.healthServingCount(item.totalServings),
           actions: item.entries
               .map(
                 (entry) => ActionChip(
@@ -406,8 +551,8 @@ class _HealthPageState extends State<HealthPage> {
   }) {
     final l10n = AppLocalizations.of(context);
 
-    if (!_hasProductsData) {
-      return const Center(child: CircularProgressIndicator());
+    if (!_hasProductsData || _forceProductsSkeleton) {
+      return const _HealthProductsSkeleton();
     }
 
     final baseProducts = onlyMine ? _latestMyProducts : _latestAllProducts;
@@ -476,6 +621,98 @@ class _HealthPageState extends State<HealthPage> {
           ],
         );
       },
+    );
+  }
+}
+
+class _HealthTodaySkeleton extends StatelessWidget {
+  const _HealthTodaySkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      itemCount: 4,
+      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      itemBuilder: (_, __) => const _HealthCardSkeleton(),
+    );
+  }
+}
+
+class _HealthProductsSkeleton extends StatelessWidget {
+  const _HealthProductsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Column(
+      children: [
+        Container(
+          width: double.infinity,
+          height: 52,
+          decoration: BoxDecoration(color: cs.surfaceContainerHigh, borderRadius: BorderRadius.circular(12)),
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              children: [
+                Icon(Icons.search, size: 18),
+                SizedBox(width: 8),
+                Expanded(child: _HealthSkeletonBox(height: 12)),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Expanded(
+          child: ListView.separated(
+            itemCount: 4,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (_, __) => const _HealthCardSkeleton(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HealthCardSkeleton extends StatelessWidget {
+  const _HealthCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: cs.surfaceContainerHigh, borderRadius: BorderRadius.circular(16)),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _HealthSkeletonBox(height: 12, width: 120),
+          SizedBox(height: 10),
+          _HealthSkeletonBox(height: 16, width: 180),
+          SizedBox(height: 10),
+          _HealthSkeletonBox(height: 12),
+        ],
+      ),
+    );
+  }
+}
+
+class _HealthSkeletonBox extends StatelessWidget {
+  const _HealthSkeletonBox({required this.height, this.width});
+
+  final double height;
+  final double? width;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(8),
+      ),
     );
   }
 }

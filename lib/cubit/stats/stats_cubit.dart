@@ -14,6 +14,14 @@ import 'package:injectable/injectable.dart';
 
 part 'stats_states.dart';
 
+class _WorkoutDurationSourceData {
+  const _WorkoutDurationSourceData({required this.prevDecember, required this.yearData, required this.types});
+
+  final List<AttendanceDay> prevDecember;
+  final List<AttendanceDay> yearData;
+  final List<TrainingType> types;
+}
+
 @injectable
 class StatsCubit extends BaseCubit {
   StatsCubit(this._attendanceService, this._workoutService, this._healthService);
@@ -22,26 +30,204 @@ class StatsCubit extends BaseCubit {
   final WorkoutService _workoutService;
   final HealthService _healthService;
 
-  /// Loads all attendance data for [year] (+ previous December for cross-year
-  /// streak accuracy) and the user's training types, then aggregates into an
-  /// [AttendanceStats] and emits [StatsLoadedState].
-  Future<void> load({required String userId, required int year}) async {
-    safeEmit(const PendingState());
-    try {
-      // Previous December is included so that a streak spanning the year
-      // boundary (e.g. Dec + Jan) counts correctly.
-      final monthFutures = <Future<List<AttendanceDay>>>[
-        _attendanceService
-            .watchMonth(userId: userId, year: year - 1, month: 12)
-            .first
-            .catchError((_) => <AttendanceDay>[]),
-        for (int m = 1; m <= 12; m++)
-          _attendanceService
-              .watchMonth(userId: userId, year: year, month: m)
-              .first
-              .catchError((_) => <AttendanceDay>[]),
-      ];
+  int _activeYearToken = 0;
+  final Map<int, _WorkoutDurationSourceData> _workoutDurationSourceDataByYear = {};
 
+  void initYear(int year) {
+    _activeYearToken++;
+    safeEmit(StatsLoadedState.initial(year));
+  }
+
+  Future<void> loadTab({
+    required String userId,
+    required int year,
+    required StatsTabKind tab,
+    bool force = false,
+  }) async {
+    final stateForYear = _stateForYear(year);
+    final token = _activeYearToken;
+
+    switch (tab) {
+      case StatsTabKind.attendances:
+        await _loadAttendances(userId: userId, year: year, state: stateForYear, token: token, force: force);
+        return;
+      case StatsTabKind.workouts:
+        await _loadWorkouts(userId: userId, year: year, state: stateForYear, token: token, force: force);
+        return;
+      case StatsTabKind.duration:
+        await _loadDuration(userId: userId, year: year, state: stateForYear, token: token, force: force);
+        return;
+      case StatsTabKind.health:
+        await _loadHealth(userId: userId, year: year, state: stateForYear, token: token, force: force);
+        return;
+    }
+  }
+
+  StatsLoadedState _stateForYear(int year) {
+    final current = state;
+    if (current is StatsLoadedState && current.year == year) {
+      return current;
+    }
+    final next = StatsLoadedState.initial(year);
+    safeEmit(next);
+    return next;
+  }
+
+  Future<void> _loadAttendances({
+    required String userId,
+    required int year,
+    required StatsLoadedState state,
+    required int token,
+    required bool force,
+  }) async {
+    if (!force) {
+      if (state.attendancesStatus == StatsLoadStatus.loading || state.attendancesStatus == StatsLoadStatus.loaded) {
+        return;
+      }
+    }
+
+    safeEmit(state.copyWith(attendancesStatus: StatsLoadStatus.loading, clearAttendancesStats: true));
+    try {
+      final monthResults = await Future.wait<List<AttendanceDay>>(_attendanceMonthFutures(userId: userId, year: year));
+      if (!_isRequestActive(year: year, token: token)) return;
+
+      final prevDecember = monthResults[0];
+      final yearData = monthResults.sublist(1).expand((list) => list).toList(growable: false);
+      final stats = _computeStats(
+        yearData: yearData,
+        prevDecember: prevDecember,
+        healthYearData: const <SupplementLog>[],
+        monthlyHealthLogs: _emptyHealthMonths(),
+        products: const <SupplementProduct>[],
+        year: year,
+      );
+
+      final latest = _stateForYear(year);
+      safeEmit(latest.copyWith(attendancesStatus: StatsLoadStatus.loaded, attendancesStats: stats));
+    } catch (_) {
+      if (!_isRequestActive(year: year, token: token)) return;
+      final latest = _stateForYear(year);
+      safeEmit(latest.copyWith(attendancesStatus: StatsLoadStatus.error, clearAttendancesStats: true));
+    }
+  }
+
+  Future<void> _loadWorkouts({
+    required String userId,
+    required int year,
+    required StatsLoadedState state,
+    required int token,
+    required bool force,
+  }) async {
+    if (!force) {
+      if (state.workoutsStatus == StatsLoadStatus.loading || state.workoutsStatus == StatsLoadStatus.loaded) {
+        return;
+      }
+    }
+
+    safeEmit(state.copyWith(workoutsStatus: StatsLoadStatus.loading, clearWorkoutsStats: true));
+    try {
+      final sourceData = await _getWorkoutDurationSourceData(userId: userId, year: year, forceRefresh: force);
+      if (!_isRequestActive(year: year, token: token)) return;
+
+      final stats = _computeStats(
+        yearData: sourceData.yearData,
+        prevDecember: sourceData.prevDecember,
+        healthYearData: const <SupplementLog>[],
+        monthlyHealthLogs: _emptyHealthMonths(),
+        products: const <SupplementProduct>[],
+        year: year,
+      );
+
+      final latest = _stateForYear(year);
+      safeEmit(latest.copyWith(workoutsStatus: StatsLoadStatus.loaded, workoutsStats: stats, types: sourceData.types));
+    } catch (_) {
+      if (!_isRequestActive(year: year, token: token)) return;
+      final latest = _stateForYear(year);
+      safeEmit(
+        latest.copyWith(workoutsStatus: StatsLoadStatus.error, clearWorkoutsStats: true, types: const <TrainingType>[]),
+      );
+    }
+  }
+
+  Future<void> _loadDuration({
+    required String userId,
+    required int year,
+    required StatsLoadedState state,
+    required int token,
+    required bool force,
+  }) async {
+    if (!force) {
+      if (state.durationStatus == StatsLoadStatus.loading || state.durationStatus == StatsLoadStatus.loaded) {
+        return;
+      }
+    }
+
+    safeEmit(state.copyWith(durationStatus: StatsLoadStatus.loading, clearDurationStats: true));
+    try {
+      final sourceData = await _getWorkoutDurationSourceData(userId: userId, year: year, forceRefresh: force);
+      if (!_isRequestActive(year: year, token: token)) return;
+
+      final stats = _computeStats(
+        yearData: sourceData.yearData,
+        prevDecember: sourceData.prevDecember,
+        healthYearData: const <SupplementLog>[],
+        monthlyHealthLogs: _emptyHealthMonths(),
+        products: const <SupplementProduct>[],
+        year: year,
+      );
+
+      final latest = _stateForYear(year);
+      safeEmit(latest.copyWith(durationStatus: StatsLoadStatus.loaded, durationStats: stats, types: sourceData.types));
+    } catch (_) {
+      if (!_isRequestActive(year: year, token: token)) return;
+      final latest = _stateForYear(year);
+      safeEmit(
+        latest.copyWith(durationStatus: StatsLoadStatus.error, clearDurationStats: true, types: const <TrainingType>[]),
+      );
+    }
+  }
+
+  Future<_WorkoutDurationSourceData> _getWorkoutDurationSourceData({
+    required String userId,
+    required int year,
+    required bool forceRefresh,
+  }) async {
+    final cached = _workoutDurationSourceDataByYear[year];
+    if (!forceRefresh && cached != null) {
+      return cached;
+    }
+
+    final futureResults = await Future.wait<dynamic>([
+      Future.wait(_attendanceMonthFutures(userId: userId, year: year)),
+      _workoutService.watchAll(userId).first.catchError((_) => <TrainingType>[]),
+    ]);
+
+    final monthResults = futureResults[0] as List<List<AttendanceDay>>;
+    final types = futureResults[1] as List<TrainingType>;
+    final next = _WorkoutDurationSourceData(
+      prevDecember: monthResults[0],
+      yearData: monthResults.sublist(1).expand((list) => list).toList(growable: false),
+      types: types,
+    );
+    _workoutDurationSourceDataByYear[year] = next;
+    return next;
+  }
+
+  Future<void> _loadHealth({
+    required String userId,
+    required int year,
+    required StatsLoadedState state,
+    required int token,
+    required bool force,
+  }) async {
+    if (!force) {
+      if (state.healthStatus == StatsLoadStatus.loading || state.healthStatus == StatsLoadStatus.loaded) {
+        return;
+      }
+    }
+
+    safeEmit(state.copyWith(healthStatus: StatsLoadStatus.loading, clearHealthStats: true));
+    try {
       final healthMonthFutures = <Future<List<SupplementLog>>>[
         for (int m = 1; m <= 12; m++)
           _healthService
@@ -51,35 +237,51 @@ class StatsCubit extends BaseCubit {
       ];
 
       final futureResults = await Future.wait<dynamic>([
-        Future.wait(monthFutures),
-        _workoutService.watchAll(userId).first.catchError((_) => <TrainingType>[]),
         Future.wait(healthMonthFutures),
         _healthService.watchAllProducts().first.catchError((_) => <SupplementProduct>[]),
       ]);
+      if (!_isRequestActive(year: year, token: token)) return;
 
-      final monthResults = futureResults[0] as List<List<AttendanceDay>>;
-      final types = futureResults[1] as List<TrainingType>;
-      final monthlyHealthLogs = futureResults[2] as List<List<SupplementLog>>;
-      final products = futureResults[3] as List<SupplementProduct>;
-
-      final prevDecember = monthResults[0];
-      final yearData = monthResults.sublist(1).expand((list) => list).toList();
+      final monthlyHealthLogs = futureResults[0] as List<List<SupplementLog>>;
+      final products = futureResults[1] as List<SupplementProduct>;
       final healthYearData = monthlyHealthLogs.expand((list) => list).toList(growable: false);
 
       final stats = _computeStats(
-        yearData: yearData,
-        prevDecember: prevDecember,
+        yearData: const <AttendanceDay>[],
+        prevDecember: const <AttendanceDay>[],
         healthYearData: healthYearData,
         monthlyHealthLogs: monthlyHealthLogs,
         products: products,
         year: year,
       );
 
-      safeEmit(StatsLoadedState(stats: stats, year: year, types: types));
+      final latest = _stateForYear(year);
+      safeEmit(latest.copyWith(healthStatus: StatsLoadStatus.loaded, healthStats: stats));
     } catch (_) {
-      safeEmit(const SomethingWentWrongState());
+      if (!_isRequestActive(year: year, token: token)) return;
+      final latest = _stateForYear(year);
+      safeEmit(latest.copyWith(healthStatus: StatsLoadStatus.error, clearHealthStats: true));
     }
   }
+
+  bool _isRequestActive({required int year, required int token}) {
+    final current = state;
+    return token == _activeYearToken && current is StatsLoadedState && current.year == year;
+  }
+
+  List<Future<List<AttendanceDay>>> _attendanceMonthFutures({required String userId, required int year}) {
+    return <Future<List<AttendanceDay>>>[
+      _attendanceService
+          .watchMonth(userId: userId, year: year - 1, month: 12)
+          .first
+          .catchError((_) => <AttendanceDay>[]),
+      for (int m = 1; m <= 12; m++)
+        _attendanceService.watchMonth(userId: userId, year: year, month: m).first.catchError((_) => <AttendanceDay>[]),
+    ];
+  }
+
+  List<List<SupplementLog>> _emptyHealthMonths() =>
+      List<List<SupplementLog>>.generate(12, (_) => const <SupplementLog>[], growable: false);
 
   AttendanceStats _computeStats({
     required List<AttendanceDay> yearData,

@@ -96,7 +96,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   LabeledValueTile(
                                     icon: Icons.code,
                                     label: l10n.settingsBuiltWith,
-                                    value: 'Flutter + Firebase',
+                                    value: l10n.settingsBuiltWithValue,
                                   ),
                                 ],
                               ),
@@ -172,7 +172,10 @@ class _SettingsPageState extends State<SettingsPage> {
                                   children: [
                                     ListTile(
                                       leading: Icon(Icons.logout, color: cs.error),
-                                      title: Text(l10n.profileSignOut, style: tt.titleMedium?.copyWith(color: cs.error)),
+                                      title: Text(
+                                        l10n.profileSignOut,
+                                        style: tt.titleMedium?.copyWith(color: cs.error),
+                                      ),
                                       trailing: isSigningOut
                                           ? SizedBox(
                                               width: 16,

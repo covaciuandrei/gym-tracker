@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,13 +14,23 @@ import 'package:mocktail/mocktail.dart';
 
 class MockHealthCubit extends Mock implements HealthCubit {}
 
-Widget _buildApp(HealthCubit cubit) {
-  return MaterialApp(
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
-    supportedLocales: AppLocalizations.supportedLocales,
-    home: BlocProvider<HealthCubit>.value(
-      value: cubit,
-      child: const HealthPage(testUserId: 'user-1'),
+class MockStackRouter extends Mock implements StackRouter {}
+
+Future<void> _pumpSkeletonWindow(WidgetTester tester) {
+  return tester.pump(const Duration(milliseconds: 320));
+}
+
+Widget _buildApp({required HealthCubit cubit, required StackRouter router}) {
+  return StackRouterScope(
+    controller: router,
+    stateHash: 0,
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: BlocProvider<HealthCubit>.value(
+        value: cubit,
+        child: const HealthPage(testUserId: 'user-1'),
+      ),
     ),
   );
 }
@@ -80,8 +91,10 @@ void main() {
       final controller = StreamController<BaseState>.broadcast(sync: true);
       addTearDown(controller.close);
       final cubit = stubCubit(controller.stream);
+      final router = MockStackRouter();
+      when(() => router.canPop()).thenReturn(false);
 
-      await tester.pumpWidget(_buildApp(cubit));
+      await tester.pumpWidget(_buildApp(cubit: cubit, router: router));
       await tester.pump();
 
       verify(() => cubit.loadProducts('user-1')).called(1);
@@ -97,13 +110,16 @@ void main() {
       final controller = StreamController<BaseState>.broadcast(sync: true);
       addTearDown(controller.close);
       final cubit = stubCubit(controller.stream);
+      final router = MockStackRouter();
+      when(() => router.canPop()).thenReturn(false);
 
-      await tester.pumpWidget(_buildApp(cubit));
+      await tester.pumpWidget(_buildApp(cubit: cubit, router: router));
       await tester.pump();
 
       controller.add(const HealthProductsLoadedState(products: [], myProducts: []));
       controller.add(const HealthDayEntriesLoadedState(entries: [], date: '2026-03-13'));
       await tester.pump();
+      await _pumpSkeletonWindow(tester);
 
       expect(find.text('No supplements logged today'), findsOneWidget);
     });
@@ -112,8 +128,10 @@ void main() {
       final controller = StreamController<BaseState>.broadcast(sync: true);
       addTearDown(controller.close);
       final cubit = stubCubit(controller.stream);
+      final router = MockStackRouter();
+      when(() => router.canPop()).thenReturn(false);
 
-      await tester.pumpWidget(_buildApp(cubit));
+      await tester.pumpWidget(_buildApp(cubit: cubit, router: router));
       await tester.pump();
 
       controller.add(
@@ -142,6 +160,7 @@ void main() {
       );
       controller.add(const HealthDayEntriesLoadedState(entries: [], date: '2026-03-13'));
       await tester.pump();
+      await _pumpSkeletonWindow(tester);
 
       await tester.tap(find.text('My Supplements'));
       await tester.pump();
@@ -171,6 +190,7 @@ void main() {
         ),
       );
       await tester.pump();
+      await _pumpSkeletonWindow(tester);
 
       expect(find.text('Search my supplements...'), findsOneWidget);
       expect(find.text('Magnesium'), findsOneWidget);
@@ -180,8 +200,10 @@ void main() {
       final controller = StreamController<BaseState>.broadcast(sync: true);
       addTearDown(controller.close);
       final cubit = stubCubit(controller.stream);
+      final router = MockStackRouter();
+      when(() => router.canPop()).thenReturn(false);
 
-      await tester.pumpWidget(_buildApp(cubit));
+      await tester.pumpWidget(_buildApp(cubit: cubit, router: router));
       await tester.pump();
 
       controller.add(
@@ -210,6 +232,7 @@ void main() {
       );
       controller.add(const HealthDayEntriesLoadedState(entries: [], date: '2026-03-13'));
       await tester.pump();
+      await _pumpSkeletonWindow(tester);
 
       await tester.tap(find.text('All Supplements'));
       await tester.pump();
@@ -239,6 +262,7 @@ void main() {
         ),
       );
       await tester.pump();
+      await _pumpSkeletonWindow(tester);
 
       await tester.tap(find.text('Magnesium'));
       await tester.pump();
