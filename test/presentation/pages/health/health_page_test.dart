@@ -87,7 +87,7 @@ void main() {
   }
 
   group('HealthPage', () {
-    testWidgets('loads day entries and products on init', (tester) async {
+    testWidgets('loads only day entries on init', (tester) async {
       final controller = StreamController<BaseState>.broadcast(sync: true);
       addTearDown(controller.close);
       final cubit = stubCubit(controller.stream);
@@ -97,13 +97,13 @@ void main() {
       await tester.pumpWidget(_buildApp(cubit: cubit, router: router));
       await tester.pump();
 
-      verify(() => cubit.loadProducts('user-1')).called(1);
+      verifyNever(() => cubit.loadProducts('user-1'));
       verify(
         () => cubit.loadDayEntries(
           userId: 'user-1',
           date: any(named: 'date'),
         ),
-      ).called(2);
+      ).called(1);
     });
 
     testWidgets('shows empty today state when no logs', (tester) async {

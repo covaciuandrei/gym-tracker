@@ -80,13 +80,6 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this)..addListener(_onTabChanged);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final userId = _userId;
-      if (userId == null) return;
-      _loadProducts(userId);
-      _loadTodayEntries(userId);
-    });
   }
 
   @override
