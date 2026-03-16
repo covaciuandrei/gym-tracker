@@ -1,527 +1,151 @@
 # gym_tracker — Complete Project Context
 
 > **Purpose of this file:** A self-contained reference for any AI agent working on this project.
-> Read this file *instead of* re-analyzing all three source projects from scratch.
-> Last updated: Phase 0 (Project Initialization).
+> Read this file _instead of_ re-analyzing all source projects from scratch.
+> Last updated: 2026-03-16 (implementation refresh).
+
+> **Important:** The sections below are the current implementation snapshot.
+> If any later legacy section conflicts with this snapshot, trust this snapshot and current code in `lib/`.
 
 ---
 
-## 1. What This Project Is
+## 1. What this app is
 
-**gym_tracker** is a Flutter mobile app (iOS + Android only) that is a pixel-perfect migration of an existing Angular web application called `gym-presence-tracker`.
+`gym_tracker` is a Flutter mobile app (Android + iOS) that migrates the Angular app `gym-presence-tracker` to native.
 
-- **Goal:** Replicate every feature and the exact UI design of the Angular app as a native mobile app.
-- **Tech stack:** Flutter 3.41.0, Dart SDK ^3.11.0, Java JDK 17, Firebase (Auth + Firestore).
-- **Platforms:** iOS + Android only. No web. Created with `--platforms=android,ios`.
-- **Location:** `c:\cov\gym-tracker\gym_tracker`
-
----
-
-## 2. Flutter Architecture Rules (from `flutter starting project` + `teamlyst`)
-
-### 2.1 Project Folder Structure
-
-```
-lib/
-  main.dart
-  assets/
-    localization/          ← ARB files + generated AppLocalizations
-    theme/                 ← CustomTheme (light/dark)
-  core/
-    app_router.dart        ← @lazySingleton AppRouter extends RootStackRouter
-    app_router.gr.dart     ← GENERATED — do not edit
-    injection.dart         ← GetIt setup + configureDependencies()
-    injection.config.dart  ← GENERATED — do not edit
-  cubit/
-    base_cubit.dart
-    base_state.dart
-    <feature>/
-      <feature>_cubit.dart
-      <feature>_states.dart
-  data/
-    constants/
-    exceptions/
-    mappers/
-    preferences/
-      preferences_source.dart
-      preferences_keys.dart
-    remote/
-      <feature>/
-        <feature>_dto.dart
-        <feature>_source.dart
-    secure_storage/
-      secure_storage_source.dart
-      secure_storage_keys.dart
-  model/
-    <model>.dart
-    enum/
-  presentation/
-    pages/
-      <feature>/
-        <feature>_page.dart
-    controls/              ← reusable widgets
-    helpers/
-    resources/
-      app_colors.dart
-      app_images.dart
-  service/
-    <feature>/
-      <feature>_service.dart
-      <feature>_service_exceptions.dart  ← part of service file
-  utils/
-```
-
-### 2.2 Dependency Injection (`get_it` + `injectable`)
-
-```dart
-// lib/core/injection.dart
-import 'package:get_it/get_it.dart';
-import 'package:injectable/injectable.dart';
-import 'injection.config.dart';
-
-final getIt = GetIt.instance;
-
-@InjectableInit(
-  initializerName: r'$initGetIt',
-  preferRelativeImports: true,
-  asExtension: false,
-)
-void configureDependencies() => $initGetIt(getIt);
-```
-
-- `configureDependencies()` is called first in `main()`, before `runApp()`.
-- `await getIt.allReady()` is called after `configureDependencies()`.
-- All services use `@injectable` or `@singleton`/`@lazySingleton`.
-- `AppRouter` is `@lazySingleton`.
-- `PreferencesSource` and `SecureStorageSource` use `@injectable`.
-
-### 2.3 Routing (`auto_route`)
-
-```dart
-@lazySingleton
-@AutoRouterConfig(replaceInRouteName: 'Page,Route')
-class AppRouter extends RootStackRouter {
-  @override
-  RouteType get defaultRouteType => const RouteType.material();
-
-  @override
-  final List<AutoRoute> routes = <AutoRoute>[
-    AutoRoute(path: '/splash', page: SplashRoute.page, initial: true, maintainState: false),
-    // ... more routes
-  ];
-}
-```
-
-- ALL pages must be annotated with `@RoutePage()`.
-- All non-nested routes use `maintainState: false` by default.
-- Guards: inline (`DebugGuard()`) or injectable (`getIt<LoggedInGuard>()`).
-- Generated file is `app_router.gr.dart` — never edit by hand.
-
-### 2.4 Page Pattern (BlocProvider + AutoRouteWrapper)
-
-```dart
-@RoutePage()
-class LoginPage extends StatefulWidget implements AutoRouteWrapper {
-  const LoginPage({super.key});
-
-  @override
-  State<LoginPage> createState() => _LoginPageState();
-
-  @override
-  Widget wrappedRoute(BuildContext context) {
-    return BlocProvider<LoginCubit>(
-      create: (context) => getIt<LoginCubit>(),
-      child: this,
-    );
-  }
-}
-
-class _LoginPageState extends State<LoginPage> {
-  @override
-  Widget build(BuildContext context) {
-    return BlocConsumer<LoginCubit, BaseState>(
-      listener: (context, state) { /* handle navigation/dialogs */ },
-      builder: (context, state) {
-        return Scaffold( /* ... */ );
-      },
-    );
-  }
-}
-```
-
-### 2.5 State Management (`flutter_bloc`, `BaseCubit`)
-
-**base_cubit.dart:**
-```dart
-class BaseCubit extends Cubit<BaseState> {
-  BaseCubit() : super(const InitialState());
-
-  void safeEmit(BaseState state) {
-    if (!isClosed) emit(state);
-  }
-}
-```
-
-**base_state.dart:**
-```dart
-@immutable
-class BaseState extends Equatable {
-  const BaseState();
-  @override
-  List<Object?> get props => [];
-}
-
-class InitialState extends BaseState { const InitialState(); }
-class PendingState extends BaseState { const PendingState(); }
-class SomethingWentWrongState extends BaseState { const SomethingWentWrongState(); }
-```
-
-**Feature Cubit pattern:**
-```dart
-// login_cubit.dart
-part 'login_states.dart';
-
-@injectable
-class LoginCubit extends BaseCubit {
-  LoginCubit(this._accountService);
-  final AccountService _accountService;
-
-  Future<void> login({required String email, required String password}) async {
-    safeEmit(const PendingState());
-    try {
-      await _accountService.login(email: email, password: password);
-      safeEmit(const LoginSuccessfullyState());
-    } on EmailNotVerifiedException {
-      safeEmit(const AccountNotYetVerifiedState());
-    } catch (e) {
-      safeEmit(const SomethingWentWrongState());
-    }
-  }
-}
-
-// login_states.dart
-part of 'login_cubit.dart';
-
-class LoginSuccessfullyState extends BaseState {
-  const LoginSuccessfullyState();
-}
-class AccountNotYetVerifiedState extends BaseState {
-  const AccountNotYetVerifiedState();
-}
-```
-
-**Rules:**
-- Always `safeEmit(PendingState())` at the start of async operations.
-- Use `try/catch` with typed custom exceptions.
-- States are `@immutable`, `extends Equatable`, `const` constructors.
-- State files use `part`/`part of` linked to their cubit file.
-- No `copyWith`. Replace state entirely.
-
-### 2.6 Models
-
-```dart
-class AttendanceRecord extends Equatable {
-  const AttendanceRecord({
-    required this.date,
-    required this.timestamp,
-    this.trainingTypeId,
-    this.durationMinutes,
-    this.notes,
-  });
-
-  final String date;         // YYYY-MM-DD
-  final DateTime timestamp;
-  final String? trainingTypeId;
-  final int? durationMinutes;
-  final String? notes;
-
-  @override
-  List<Object?> get props => [date, timestamp, trainingTypeId, durationMinutes, notes];
-}
-```
-
-- All models: `extends Equatable`, `const` constructors, immutable fields.
-- Override `props` for equality.
-- No `copyWith`. Mutations create new instances.
-- Enums in `model/enum/`.
-
-### 2.7 Data Layer (Firestore only, NO SQLite/Drift)
-
-**DTO pattern (json_annotation):**
-```dart
-@JsonSerializable()
-class AttendanceRecordDto {
-  AttendanceRecordDto({ required this.date, required this.timestamp, ... });
-
-  factory AttendanceRecordDto.fromJson(Map<String, dynamic> json) => _$AttendanceRecordDtoFromJson(json);
-  Map<String, dynamic> toJson() => _$AttendanceRecordDtoToJson(this);
-
-  @JsonKey(name: 'date', defaultValue: '')
-  final String date;
-  // ...
-}
-```
-
-**Remote source pattern:**
-```dart
-@injectable
-class AttendanceSource {
-  const AttendanceSource(this._attendanceMapper);
-  final AttendanceMapper _attendanceMapper;
-
-  FirebaseFirestore get _db => FirebaseFirestore.instance;
-
-  // Strict path: users/{userId}/attendances/{yearMonth}/days/{date}
-  CollectionReference<AttendanceRecordDto> _daysRef(String userId, String yearMonth) =>
-      _db.collection('users').doc(userId)
-         .collection('attendances').doc(yearMonth)
-         .collection('days')
-         .withConverter<AttendanceRecordDto>(
-           fromFirestore: (snap, _) => AttendanceRecordDto.fromJson(snap.data()!),
-           toFirestore: (dto, _) => dto.toJson(),
-         );
-}
-```
-
-**Mapper pattern:**
-```dart
-@injectable
-class AttendanceMapper {
-  AttendanceRecord mapDto(AttendanceRecordDto dto) => AttendanceRecord(
-    date: dto.date,
-    timestamp: dto.timestamp.toDate(),
-    trainingTypeId: dto.trainingTypeId,
-    durationMinutes: dto.durationMinutes,
-    notes: dto.notes,
-  );
-
-  AttendanceRecordDto mapModel(AttendanceRecord model) => AttendanceRecordDto(
-    date: model.date,
-    timestamp: Timestamp.fromDate(model.timestamp),
-    trainingTypeId: model.trainingTypeId,
-    durationMinutes: model.durationMinutes,
-    notes: model.notes,
-  );
-}
-```
-
-### 2.8 Service Pattern
-
-```dart
-// attendance_service.dart
-part 'attendance_service_exceptions.dart';
-
-@injectable
-class AttendanceService {
-  const AttendanceService(this._attendanceSource);
-  final AttendanceSource _attendanceSource;
-
-  Future<List<AttendanceRecord>> getMonthAttendance({
-    required String userId,
-    required int year,
-    required int month,
-  }) async {
-    return _attendanceSource.getMonth(userId: userId, year: year, month: month);
-  }
-}
-
-// attendance_service_exceptions.dart
-part of 'attendance_service.dart';
-
-class AttendanceNotFoundException implements Exception {}
-```
-
-### 2.9 Preferences & Secure Storage
-
-```dart
-// PreferencesSource (shared_preferences) — lightweight string/list storage
-// Keys defined in preferences_keys.dart as static const String values
-
-// SecureStorageSource (flutter_secure_storage) — sensitive data (userId, tokens)
-// Keys defined in secure_storage_keys.dart
-```
-
-### 2.10 `main.dart` Pattern
-
-```dart
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  configureDependencies();
-  await getIt.allReady();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(const MyApp());
-}
-
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  final _appRouter = getIt<AppRouter>();
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp.router(
-      debugShowCheckedModeBanner: false,
-      routerConfig: _appRouter.config(
-        navigatorObservers: () => [AutoRouteObserver()],
-      ),
-      title: 'Gym Tracker',
-      // localization + theme delegates
-    );
-  }
-}
-```
-
-### 2.11 Localization
-
-- ARB files in `lib/assets/localization/` (e.g., `app_en.arb`, `app_ro.arb`).
-- Generated via `flutter gen-l10n`.
-- `AppLocalizations.delegate` registered in `MaterialApp.router`.
-- `Intl.defaultLocale` set in `localeResolutionCallback`.
-- `localeResolutionCallback` uses `firstWhereOrNull` on languageCode.
+- Goal: parity with Angular features and close visual parity.
+- Stack: Flutter 3.41.0, Dart ^3.11.0, Firebase Auth + Firestore.
+- Core libs: `flutter_bloc`, `auto_route`, `get_it`, `injectable`, `json_serializable`.
+- Workspace root: `/Users/andreicovaciu/cov/gym-tracker`.
 
 ---
 
-## 3. Firestore Data Schema
+## 2. Current architecture snapshot
 
-### CRITICAL RULE: Never flatten or simplify paths. Preserve exactly as designed.
+### 2.1 Layering
 
-```
-// ─── GLOBAL COLLECTIONS ───────────────────────────────────────────────────
-ingredients/{ingredientId}
-  Fields:
-    id: String              // e.g. "vitamin_c"
-    name: String            // e.g. "Vitamin C"
-    aliases: List<String>?  // e.g. ["Ascorbic Acid"]
-    category: String        // "Vitamin" | "Mineral" | "Performance" | "Amino Acid" | "Fatty Acid" | "Hormone" | "Herbal" | "Other"
-    defaultUnit: String     // "mg" | "mcg" | "IU" | "g" | "servings" | "CFU"
-    safeUpperLimit: number?
-    rda: number?
+Flow used in implemented features:
 
-supplementProducts/{productId}
-  Fields:
-    id: String
-    name: String
-    brand: String
-    ingredients: List<{stdId: String, name: String, amount: number, unit: String}>
-    servingsPerDayDefault: number
-    createdBy: String?      // userId who created it
-    verified: boolean?
+`Page/Control -> Cubit -> Service -> Firestore Source -> Firestore`
 
-// ─── USER ROOT ────────────────────────────────────────────────────────────
-users/{userId}
-  Fields:
-    email: String
-    displayName: String?
-    createdAt: Timestamp
-    lastLoginAt: Timestamp?
-    preferences: {
-      defaultTrainingType: String?
-    }?
-    stats: {
-      totalAttendances: number  // denormalized counter, incremented atomically
-    }?
+- `lib/presentation/`: pages + reusable controls.
+- `lib/cubit/`: feature Cubits + states.
+- `lib/service/`: feature services.
+- `lib/data/remote/`: Firestore sources + DTOs.
+- `lib/data/mappers/`: model/DTO mapping.
+- `lib/model/`: domain models.
 
-// ─── USER SUBCOLLECTIONS ──────────────────────────────────────────────────
-users/{userId}/trainingTypes/{typeId}
-  Fields:
-    name: String                // e.g. "Chest Day"
-    color: String               // hex e.g. "#FF5733"
-    icon: String?               // emoji e.g. "💪"
-    createdAt: Timestamp
+### 2.2 App bootstrap
 
-users/{userId}/attendances/{yearMonth}/days/{date}
-  ⚠️  yearMonth = "YYYY-MM"  (e.g. "2025-03")
-  ⚠️  date     = "YYYY-MM-DD" (e.g. "2025-03-15")
-  Fields:
-    date: String                // "YYYY-MM-DD"
-    timestamp: Timestamp
-    trainingTypeId: String?     // null if no type selected
-    durationMinutes: number?    // null if not tracked
-    notes: String?
+- `main()` calls `configureDependencies()` then `await getIt.allReady()`.
+- `ThemeHelper` and `LocaleHelper` are manually registered after `SharedPreferences.getInstance()`.
+- Firebase initializes via `Firebase.initializeApp(...)`.
+- Debug mode enables `FirebaseAuth` app verification disabled for testing.
 
-users/{userId}/healthLogs/{yearMonth}/entries/{logId}
-  ⚠️  yearMonth = "YYYY-MM"
-  ⚠️  logId    = auto-generated random ID
-  Fields:
-    date: String                // "YYYY-MM-DD"
-    productId: String           // references supplementProducts/{productId}
-    productName: String?        // snapshot of name at time of logging
-    productBrand: String?       // snapshot of brand at time of logging
-    servingsTaken: number
-    timestamp: Timestamp?
-```
+### 2.3 Routing
 
----
+Defined in `lib/core/app_router.dart`:
 
-## 4. App Features (Full List)
+- `/` -> `SplashPage` (initial)
+- `/login` -> `LoginPage`
+- `/register` -> `RegisterPage`
+- `/forgot-password` -> `ForgotPasswordPage`
+- `/auth/action` -> `AuthActionPage`
+- `/app` -> `MainShellPage` with children: `calendar`, `stats`, `health`, `profile`
+- `/workout-types` -> `WorkoutTypesPage`
+- `/settings` -> `SettingsPage`
+- `/change-password` -> `ChangePasswordPage`
 
-### 4.1 Navigation Structure
+Current auth protection style:
 
-The app uses a bottom navigation bar with 5 main tabs:
+- No dedicated `auto_route` guards.
+- `SplashPage` redirects based on `FirebaseAuth.currentUser`.
+- Feature pages also self-redirect to `LoginRoute` when user is missing.
 
-| Tab | Route | Icon |
-|-----|-------|------|
-| Calendar | `/calendar` | 📅 |
-| Stats | `/stats` | 📊 |
-| Health | `/health` | 💊 |
-| Profile | `/profile` | 👤 |
+### 2.4 Implemented feature Cubits
 
-Plus additional screens accessible from tabs:
-- `/workout-types` — accessible from Profile
-- `/settings` — accessible from Profile
-- `/stats/attendances`, `/stats/workouts`, `/stats/duration`, `/stats/health` — sub-tabs of Stats
+- `AuthCubit`: sign in/up/out, reset password, verify/confirm action-code flows, change password, auth stream watch.
+- `CalendarCubit`: month streaming with surrounding-month prefetch, year aggregation load, attendance updates, supplement day-entry actions.
+- `HealthCubit`: day/month entries, product catalog loading, product CRUD, supplement log create/delete.
+- `WorkoutCubit`: workout-type CRUD.
+- `StatsCubit`: per-tab/year lazy loading (`attendances`, `workouts`, `duration`, `health`) with independent load statuses.
+- `SettingsCubit`: app version load via `package_info_plus`.
 
-Auth screens (public, no bottom nav):
-- `/login`
-- `/register`
-- `/forgot-password`
-- `/auth/action` — email verification + password reset handler (OOB codes)
+### 2.5 Services and sources
+
+Services:
+
+- `AuthService`
+- `AttendanceService`
+- `HealthService`
+- `WorkoutService`
+
+Firestore sources:
+
+- `AttendanceDaySource`
+- `HealthSource`
+- `TrainingTypeSource`
+
+Key Firestore families currently used:
+
+- `users/{userId}/attendances/{YYYY-MM}/days/{YYYY-MM-DD}`
+- `users/{userId}/healthLogs/{YYYY-MM}/entries/{entryId}`
+- `users/{userId}/trainingTypes/{typeId}`
+- `supplementProducts/{productId}`
+- `ingredients/{ingredientId}`
+
+### 2.6 UI and shared controls
+
+Reusable controls in active use include:
+
+- Form/auth: `FormCard`, `CustomTextField`, `GradientButton`, `ErrorBanner`, `SuccessCard`, `SetPasswordCard`, password indicators.
+- Layout/navigation: `GymAppBar`, `GymTabBar`.
+- Lists/actions: `MainListItem`, `SummaryActionCard`, `PrimaryFab`, `ActionBottomSheet`, `ConfirmationDialog`, `SearchInput`.
+
+### 2.7 Localization and theming
+
+- Locales: English + Romanian ARB files at `lib/assets/localization/`.
+- `AppLocalizations` wired through `MaterialApp.router`.
+- Theme + locale preference state managed via `ThemeHelper` and `LocaleHelper`.
+
+### 2.8 Testing status (current)
+
+- Test roots: `test/cubit/`, `test/service/`, `test/data/`, `test/presentation/`.
+- Control widget tests currently exist for multiple shared controls (including `gradient_button`, `form_card`, `search_input`, `summary_action_card`, `success_card`, password indicators, and auth footer link).
 
 ---
 
-### 4.2 Feature: Auth
+## 3. Feature implementation summary (current)
 
-**Pages:** Login, Register, ForgotPassword, AuthAction (handles email verification + password reset OOB codes)
+### 3.1 Auth
 
-**Auth flows:**
-- Email + password signup → sends verification email → user must verify before using app
-- Email + password login → check `emailVerified`, show error if not verified
-- Forgot password → sends reset email
-- AuthAction: handles Firebase action codes (`oobCode` param) for email verification and password reset
+- Login, register, forgot-password, and Firebase action-code flows are implemented.
+- Register uses email/password/confirm validation (including strong-password checks).
+- Login rejects unverified email (service signs out unverified user after sign-in attempt).
+- Password change lives in dedicated `ChangePasswordPage` and uses `AuthService.changePassword`.
 
-**AuthService operations:**
-- `signUp(email, password)` → creates account + sends verification email
-- `signIn(email, password)` → signs in, returns `AuthUser`
-- `signOut()`
-- `resetPassword(email)` → sends reset email
-- `verifyEmail(oobCode)` → applies action code
-- `confirmPasswordReset(oobCode, newPassword)`
-- `changePassword(currentPassword, newPassword)` → reauthenticate + updatePassword
-- `currentUser$` → stream of `AuthUser?`
+### 3.2 Main shell
 
-**AuthUser model:**
-```dart
-class AuthUser {
-  final String uid;
-  final String? email;
-  final String? displayName;
-  final bool emailVerified;
-}
-```
+- Bottom navigation shell with 4 tabs: Calendar, Stats, Health, Profile.
+- Tab pages are nested routes under `/app`.
+
+### 3.3 Settings/Profile/Workout types
+
+- Profile shows user card + links to Workout Types and Settings.
+- Settings supports theme toggle, language toggle, app version display, and sign out.
+- Workout types supports list + create/edit/delete with emoji and color selection.
 
 ---
 
 ### 4.3 Feature: Calendar
 
 **Views:**
+
 1. **Monthly view** — 7-column grid (Mon–Sun), current month days + padding days from prev/next month
 2. **Yearly view** — 12 mini-month cards in a grid (2-column on mobile)
 
 **Day cell indicators:**
+
 - `.attended` — blue/accent background on attended days
 - `.today` — special border/highlight for today
 - `.other-month` — dimmed for days outside current month (monthly view only)
@@ -530,16 +154,19 @@ class AuthUser {
 - `supplement-dot` — 💊 indicator if health log exists for that date
 
 **Day popup (bottom sheet on tap):**
+
 - Header: "Day Month Year" (e.g., "15 March 2025")
 - Two tabs: "Workout" | "Health 💊"
 
 **Workout tab:**
+
 - If not attended: show "Mark as attended" button
 - If attended: show "Went to gym ✓" + workout type (tappable to edit)
   - Edit mode: dropdown to select training type + duration field (minutes)
   - Save / Clear (remove attendance) buttons
 
 **Health tab:**
+
 - Lists supplement logs for that date, grouped by product
 - "Add supplement" inline form: select product from dropdown + servings count
 
@@ -554,28 +181,33 @@ class AuthUser {
 **Shell:** Year navigator (prev/next year arrows), 4 tab buttons (sub-navigation):
 
 **Tab 1: Attendances**
+
 - Summary cards row 1: This Month count, This Year count, All Time count
 - Summary cards row 2: Current Weekly Streak 🔥, Best Streak 🏆, Favorite Day 📅
 - Bar chart: Monthly breakdown (12 bars, one per month)
 - Bar chart: Day-of-week breakdown (7 bars, Mon–Sun)
 
 **Streak logic:**
+
 - A "week streak" is consecutive calendar weeks (Mon–Sun) with at least 1 attendance
 - `currentStreak` = number of consecutive weeks ending this week
 - `bestStreak` = max streak ever
 - Streak messages (localized): 0→"Start your journey!", 1→"First week down!", etc.
 
 **Tab 2: Workouts**
+
 - Summary cards: Total tracked workouts this year, most-used type
 - List: workout types ranked by count (color-coded with icon)
 - Bar chart: monthly breakdown by workout type (stacked or grouped)
 
 **Tab 3: Duration**
+
 - Summary cards: Avg this month (minutes), Avg this year (minutes), Untracked count
 - Per-type avg duration list (sorted by avg desc)
 - Bar chart: Monthly avg duration (12 bars)
 
 **Tab 4: Health** (supplement stats)
+
 - Summary: total supplement logs this month, this year
 - Per-product log counts for the selected year
 
@@ -584,9 +216,11 @@ class AuthUser {
 ### 4.5 Feature: Workout Types
 
 **Screen:** List of user's custom training types
+
 - Each card: emoji icon + colored background, type name, color dot, delete (🗑️) button
 
 **Create/Edit modal (bottom sheet):**
+
 - Name text field (max 30 chars)
 - Icon picker: grid of ~30 emojis (🏋️ 🤸 🚴 🏊 🥊 🧘 🏃 ⚽ 🎾 🏀 🏐 🤼 🤺 🎿 ⛷️ 🏂 🤾 🏇 🧗 🛹 🚣 🎱 🏌️ 🏒 🎳 🏹 ⚔️ 🥋 🤸‍♂️ 🏋️‍♀️)
 - Color picker: grid of ~20 hex colors
@@ -599,22 +233,26 @@ class AuthUser {
 ### 4.6 Feature: Health / Supplements
 
 **Views:**
+
 1. **Today** (default) — logs for today, grouped by product
 2. **My Supplements** — products created by me (searchable)
 3. **All Supplements** — all products in global catalog (searchable)
 
 **Today view:**
+
 - Group logs by productId, show productName + brand, total servings taken
 - "Add" button opens inline form (product dropdown + servings)
 - Tap each log group to remove/adjust
 
 **My/All Supplements view:**
+
 - Search bar (filters by name or brand)
 - Each card: product name, brand, ingredient list preview
 - Edit button (opens product form) — only owner can edit
 - "Log Today" button (opens servings dialog)
 
 **Create/Edit Product form:**
+
 - Name + Brand text fields
 - Ingredient picker: search from global `ingredients` catalog, add amount + unit
 - Servings per day default
@@ -625,6 +263,7 @@ class AuthUser {
 ### 4.7 Feature: Profile
 
 **Screen layout:**
+
 - User avatar (initial letter in circle)
 - Display name + email
 - Email verified badge (✓ Verified)
@@ -636,6 +275,7 @@ class AuthUser {
 ### 4.8 Feature: Settings
 
 **Sections:**
+
 1. **About:** App version, "Built with Flutter + Firebase"
 2. **Security:** Change Password inline form (current pw → new pw → confirm)
 3. **General:**
@@ -650,6 +290,7 @@ class AuthUser {
 **Supported languages:** English (`en`), Romanian (`ro`)
 
 **Key namespaces (from Angular i18n):**
+
 - `SETTINGS.*` — settings page
 - `STATS.*` — all stats
 - `CALENDAR.*` — calendar page
@@ -686,12 +327,14 @@ Warning:            #FF9800
 ```
 
 ### Typography
+
 - Uses system fonts / inter-style sans-serif
 - Title: 20px bold
 - Body: 14px regular
 - Caption: 12px
 
 ### Layout patterns
+
 - Bottom navigation bar (5 items, but current app has 4 main tabs)
 - Cards with rounded corners (8–12px radius)
 - Full-width content with horizontal padding (16px)
@@ -703,6 +346,7 @@ Warning:            #FF9800
 ## 7. Shell Scripts
 
 ### `clean_rebuild.sh`
+
 ```sh
 flutter clean
 rm ios/Podfile.lock pubspec.lock
@@ -711,15 +355,18 @@ flutter pub get
 dart run build_runner build --delete-conflicting-outputs
 flutter gen-l10n
 ```
+
 Use when: switching branches, after adding new injectable/json-serializable/auto_route annotations.
 
 ### `generate_assets.sh`
+
 ```sh
 # Runs spider (asset code generator) + gen-l10n + build_runner incrementally
 spider build
 flutter gen-l10n
 dart run build_runner build --delete-conflicting-outputs
 ```
+
 Use when: adding new assets, updating ARB files, or regenerating DI/routing code without full clean.
 
 ---
@@ -801,27 +448,26 @@ dev_dependencies:
     - `Theme.of(context).colorScheme.surface` → card / panel backgrounds
     - `Theme.of(context).scaffoldBackgroundColor` → page background
     - `Theme.of(context).textTheme.*` → text styles (see Rule 14)
-    Never hardcode hex `Color(0xFF…)` values inside widgets either.
+      Never hardcode hex `Color(0xFF…)` values inside widgets either.
 14. **Never hardcode `TextStyle(fontSize:…, fontWeight:…)` in widget `build()` methods** — always use `Theme.of(context).textTheme.*`, with `.copyWith()` only for single-property overrides (e.g. color). The full 15-role mapping is:
 
-    | Role | Size | Weight | Default color | Semantic use |
-    |---|---|---|---|---|
-    | `displayLarge` | 32 | w700 | onSurface | Hero / splash giant text |
-    | `displayMedium` | 28 | w700 | onSurface | App title, avatar initial |
-    | `displaySmall` | 24 | w600 | onSurface | Page title heading |
-    | `headlineLarge` | 22 | w600 | onSurface | Screen/section headline |
-    | `headlineMedium` | 20 | w600 | onSurface | Sub-headline |
-    | `headlineSmall` | 18 | w600 | onSurface | Card heading |
-    | `titleLarge` | 16 | w600 | onSurface | AppBar title, list item title |
-    | `titleMedium` | 15 | w500 | onSurface | List tile title |
-    | `titleSmall` | 14 | w500 | onSurface | Dense list title |
-    | `bodyLarge` | 16 | w400 | onSurface | Body copy |
-    | `bodyMedium` | 14 | w400 | onSurface | Default body / helper text |
-    | `bodySmall` | 12 | w400 | onSurfaceVariant | Captions, subtitles |
-    | `labelLarge` | 14 | w600 | primary | Button label |
-    | `labelMedium` | 12 | w500 | onSurfaceVariant | Chips, badges |
-    | `labelSmall` | 11 | w600 | outline | All-caps section headers (letterSpacing: 1.2) |
-
+    | Role             | Size | Weight | Default color    | Semantic use                                  |
+    | ---------------- | ---- | ------ | ---------------- | --------------------------------------------- |
+    | `displayLarge`   | 32   | w700   | onSurface        | Hero / splash giant text                      |
+    | `displayMedium`  | 28   | w700   | onSurface        | App title, avatar initial                     |
+    | `displaySmall`   | 24   | w600   | onSurface        | Page title heading                            |
+    | `headlineLarge`  | 22   | w600   | onSurface        | Screen/section headline                       |
+    | `headlineMedium` | 20   | w600   | onSurface        | Sub-headline                                  |
+    | `headlineSmall`  | 18   | w600   | onSurface        | Card heading                                  |
+    | `titleLarge`     | 16   | w600   | onSurface        | AppBar title, list item title                 |
+    | `titleMedium`    | 15   | w500   | onSurface        | List tile title                               |
+    | `titleSmall`     | 14   | w500   | onSurface        | Dense list title                              |
+    | `bodyLarge`      | 16   | w400   | onSurface        | Body copy                                     |
+    | `bodyMedium`     | 14   | w400   | onSurface        | Default body / helper text                    |
+    | `bodySmall`      | 12   | w400   | onSurfaceVariant | Captions, subtitles                           |
+    | `labelLarge`     | 14   | w600   | primary          | Button label                                  |
+    | `labelMedium`    | 12   | w500   | onSurfaceVariant | Chips, badges                                 |
+    | `labelSmall`     | 11   | w600   | outline          | All-caps section headers (letterSpacing: 1.2) |
 
 # gym_tracker — Project Context after Phase 1
 
@@ -846,14 +492,14 @@ dev_dependencies:
 
 ## 1. Environment
 
-| Item | Version |
-|---|---|
-| Flutter | 3.41.0 |
-| Dart SDK | ^3.11.0 |
-| Java | JDK 17 |
-| OS | Windows (PowerShell terminal) |
+| Item      | Version                                           |
+| --------- | ------------------------------------------------- |
+| Flutter   | 3.41.0                                            |
+| Dart SDK  | ^3.11.0                                           |
+| Java      | JDK 17                                            |
+| OS        | Windows (PowerShell terminal)                     |
 | Platforms | `android`, `ios` only (`--platforms=android,ios`) |
-| Firebase | Auth + Firestore (prod only, no dev env) |
+| Firebase  | Auth + Firestore (prod only, no dev env)          |
 
 ---
 
@@ -862,7 +508,7 @@ dev_dependencies:
 ```yaml
 name: gym_tracker
 description: "Gym Tracker - A personal gym attendance and supplement tracking app."
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
@@ -918,7 +564,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  generate: true           # enables flutter gen-l10n
+  generate: true # enables flutter gen-l10n
   assets:
     - lib/assets/localization/
 ```
@@ -993,6 +639,7 @@ test/
 ```
 
 **Files still to be created (none yet):**
+
 - `lib/assets/theme/` — `CustomTheme` (light/dark not yet built)
 - `lib/data/constants/`, `lib/data/exceptions/`, `lib/data/mappers/` — empty
 - `lib/data/preferences/`, `lib/data/secure_storage/` — empty
@@ -1006,6 +653,7 @@ test/
 ## 4. Exact source for every boilerplate file
 
 ### `lib/main.dart`
+
 ```dart
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
@@ -1046,6 +694,7 @@ class _MyAppState extends State<MyApp> {
 > and `supportedLocales` to `MaterialApp.router` and wire up the theme.
 
 ### `lib/core/injection.dart`
+
 ```dart
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
@@ -1062,6 +711,7 @@ void configureDependencies() => $initGetIt(getIt);
 ```
 
 ### `lib/core/app_router.dart`
+
 ```dart
 import 'package:auto_route/auto_route.dart';
 import 'package:injectable/injectable.dart';
@@ -1086,6 +736,7 @@ class AppRouter extends RootStackRouter {
 ```
 
 ### `lib/cubit/base_cubit.dart`
+
 ```dart
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
@@ -1100,6 +751,7 @@ class BaseCubit extends Cubit<BaseState> {
 ```
 
 ### `lib/cubit/base_state.dart`
+
 ```dart
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
@@ -1117,6 +769,7 @@ class SomethingWentWrongState extends BaseState { const SomethingWentWrongState(
 ```
 
 ### `lib/presentation/pages/splash/splash_page.dart`
+
 ```dart
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
@@ -1141,6 +794,7 @@ class SplashPage extends StatelessWidget {
 All models: `extends Equatable`, `const` constructors, `@override props`.
 
 ### `AuthUser` (`lib/model/auth_user.dart`)
+
 ```dart
 class AuthUser extends Equatable {
   final String uid;
@@ -1151,6 +805,7 @@ class AuthUser extends Equatable {
 ```
 
 ### `TrainingType` (`lib/model/training_type.dart`)
+
 ```dart
 class TrainingType extends Equatable {
   final String id;
@@ -1161,6 +816,7 @@ class TrainingType extends Equatable {
 ```
 
 ### `AttendanceDay` (`lib/model/attendance_day.dart`)
+
 ```dart
 class AttendanceDay extends Equatable {
   final String date;              // "YYYY-MM-DD"
@@ -1172,6 +828,7 @@ class AttendanceDay extends Equatable {
 ```
 
 ### `ProductIngredient` + `SupplementProduct` (`lib/model/supplement_product.dart`)
+
 ```dart
 class ProductIngredient extends Equatable {
   final String stdId;    // references global ingredients/{id}
@@ -1192,6 +849,7 @@ class SupplementProduct extends Equatable {
 ```
 
 ### `SupplementLog` (`lib/model/supplement_log.dart`)
+
 ```dart
 class SupplementLog extends Equatable {
   final String id;             // Firestore auto-gen doc id
@@ -1211,6 +869,7 @@ class SupplementLog extends Equatable {
 All DTOs: `@JsonSerializable()`, `factory fromJson`, `toJson`, `part '...g.dart'`.
 
 ### ID field pattern (ALL DTOs that have an id)
+
 ```dart
 // The Firestore doc ID is NOT stored as a Firestore field.
 // It is populated from doc.id after a read, never serialized.
@@ -1219,8 +878,10 @@ final String id;
 ```
 
 ### Timestamp fields
+
 Fields that hold Firestore `Timestamp` objects are typed as **`Object`** (non-nullable)
 or **`Object?`** (nullable) on the DTO. This allows:
+
 - Unit tests to pass a plain `String` (no Firebase dep needed)
 - Production code to pass an actual `cloud_firestore.Timestamp`
 
@@ -1228,14 +889,17 @@ The mapper is responsible for calling `.toDate()` on the Timestamp when mapping
 DTO → model.
 
 ### `SupplementProductDto` uses `explicitToJson: true`
+
 ```dart
 @JsonSerializable(explicitToJson: true)  // ← required for nested List<ProductIngredientDto>
 class SupplementProductDto { ... }
 ```
+
 Without this, `toJson()` leaves `ProductIngredientDto` objects raw in the list —
 Firestore would reject them. All other DTOs use plain `@JsonSerializable()`.
 
 ### DTO file locations
+
 ```
 lib/data/remote/
   attendance/attendance_day_dto.dart
@@ -1250,17 +914,20 @@ lib/data/remote/
 ## 7. Code generation
 
 After any annotation change, run:
+
 ```powershell
 cd "c:\cov\gym-tracker\gym_tracker"
 dart run build_runner build --delete-conflicting-outputs
 ```
 
 After any ARB file change, run:
+
 ```powershell
 flutter gen-l10n
 ```
 
 For a full clean rebuild (branch switch, etc.) use `clean_rebuild.sh` or manually:
+
 ```powershell
 flutter clean
 Remove-Item ios/Podfile.lock, pubspec.lock -ErrorAction SilentlyContinue
@@ -1285,14 +952,16 @@ TOTAL: 42 tests, all passing
 ```
 
 Run tests:
+
 ```powershell
 cd "c:\cov\gym-tracker\gym_tracker"
 flutter test
 ```
 
 Each test file covers:
+
 - `fromJson` — field mapping, snake_case keys, default values, `id` excluded
-- `toJson`   — correct key names, `id` absent, nested objects serialized as Maps
+- `toJson` — correct key names, `id` absent, nested objects serialized as Maps
 - Round-trip — `fromJson → toJson` is lossless
 
 ---
@@ -1307,6 +976,7 @@ The following are the suggested next phases. Adjust as needed.
 navigates to Login if unauthenticated, or to the main shell if authenticated.
 
 **Checklist:**
+
 - [ ] Run `flutterfire configure` to generate `firebase_options.dart` and wire
       `Firebase.initializeApp` in `main.dart`
 - [ ] `lib/data/remote/auth/auth_source.dart` — wraps `FirebaseAuth`
@@ -1325,6 +995,7 @@ navigates to Login if unauthenticated, or to the main shell if authenticated.
 - [ ] Write cubit unit tests using `mocktail` (stub `AuthService`)
 
 **Key custom exceptions (minimum set):**
+
 ```dart
 // auth_service_exceptions.dart (part of auth_service.dart)
 class InvalidCredentialsException implements Exception {}
@@ -1376,7 +1047,7 @@ Branch: `master`
 
 ---
 
-## 12. Phase 2  Data Layer (COMPLETE)
+## 12. Phase 2 Data Layer (COMPLETE)
 
 ### Commit: `2f76c6a feat: Phase 2 - data layer services, mappers, sources, and service tests`
 
@@ -1404,13 +1075,13 @@ lib/
       auth_service_exceptions.dart       (part of auth_service.dart)
     attendance/
       attendance_service.dart            AttendanceService
-      attendance_service_exceptions.dart 
+      attendance_service_exceptions.dart
     health/
       health_service.dart                HealthService
-      health_service_exceptions.dart   
+      health_service_exceptions.dart
     workout/
       workout_service.dart               WorkoutService
-      workout_service_exceptions.dart  
+      workout_service_exceptions.dart
 
 test/
   service/
@@ -1444,12 +1115,13 @@ Future<void> changePassword({required String currentPassword, required String ne
 ```
 
 **Exceptions** (all `implements Exception`, `const` constructors):
-- `InvalidCredentialsException`  wrong email/password
-- `EmailNotVerifiedException`  sign-in before verification
-- `EmailAlreadyInUseException`  sign-up with taken email
-- `WeakPasswordException`  password too short
-- `InvalidActionCodeException`  expired/invalid OOB code
-- `AuthUserNotFoundException`  no current user or disabled account
+
+- `InvalidCredentialsException` wrong email/password
+- `EmailNotVerifiedException` sign-in before verification
+- `EmailAlreadyInUseException` sign-up with taken email
+- `WeakPasswordException` password too short
+- `InvalidActionCodeException` expired/invalid OOB code
+- `AuthUserNotFoundException` no current user or disabled account
 
 **Key behaviour:** `signIn` calls `_auth.signOut()` and throws `EmailNotVerifiedException` when `user.emailVerified == false`. `changePassword` re-authenticates before updating.
 
@@ -1483,9 +1155,9 @@ Future<void> upsertDay({required String userId, required AttendanceDay model})
 Future<void> deleteDay({required String userId, required String date})
 ```
 
-**Exceptions:** `AttendanceDayNotFoundException` (defined but not yet thrown  reserved for future use)
+**Exceptions:** `AttendanceDayNotFoundException` (defined but not yet thrown reserved for future use)
 
-**Key behaviour:** yearMonth is always derived from the date string via `date.substring(0, 7)`  never passed in separately from the caller.
+**Key behaviour:** yearMonth is always derived from the date string via `date.substring(0, 7)` never passed in separately from the caller.
 
 ---
 
@@ -1517,51 +1189,56 @@ Future<void> deleteEntry({required String userId, required String date, required
 
 All mappers: `@injectable`, no state, pure mapping functions.
 
-| Mapper | mapDto() in | mapModel() out |
-|--------|------------|----------------|
-| `TrainingTypeMapper` | `TrainingTypeDto`  `TrainingType` | `TrainingType`  `TrainingTypeDto` (accepts optional `Timestamp? createdAt`) |
-| `AttendanceDayMapper` | `AttendanceDayDto`  `AttendanceDay` (calls `.toDate()` on Timestamp) | `AttendanceDay`  `AttendanceDayDto` (calls `Timestamp.fromDate()`) |
-| `SupplementMapper` | `mapProductDto`, `mapLogDto` | `mapProductModel`, `mapLogModel` (handles nested `ProductIngredient``ProductIngredientDto`) |
+| Mapper                | mapDto() in                                                         | mapModel() out                                                                              |
+| --------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `TrainingTypeMapper`  | `TrainingTypeDto` `TrainingType`                                    | `TrainingType` `TrainingTypeDto` (accepts optional `Timestamp? createdAt`)                  |
+| `AttendanceDayMapper` | `AttendanceDayDto` `AttendanceDay` (calls `.toDate()` on Timestamp) | `AttendanceDay` `AttendanceDayDto` (calls `Timestamp.fromDate()`)                           |
+| `SupplementMapper`    | `mapProductDto`, `mapLogDto`                                        | `mapProductModel`, `mapLogModel` (handles nested `ProductIngredient``ProductIngredientDto`) |
 
 ---
 
 ### 12.4 Sources (Firestore access layer)
 
-All sources: `@injectable`, `const` constructor, receive mapper via injection, access `FirebaseFirestore.instance` directly (not injected  matches teamlyst pattern).
+All sources: `@injectable`, `const` constructor, receive mapper via injection, access `FirebaseFirestore.instance` directly (not injected matches teamlyst pattern).
 
 All sources use `.withConverter<Dto>()` on collection references. The `id` field is populated from `snap.id` inside the `fromFirestore` closure (since DTOs exclude it from JSON).
 
-| Source | Collection path | Operations |
-|--------|----------------|------------|
-| `TrainingTypeSource` | `users/{uid}/trainingTypes` | `watchAll`, `getById`, `create`, `update`, `delete` |
-| `AttendanceDaySource` | `users/{uid}/attendances/{YYYY-MM}/days` | `watchMonth`, `getDay`, `upsertDay`, `deleteDay` |
-| `HealthSource` | `supplementProducts` + `users/{uid}/healthLogs/{YYYY-MM}/entries` | full product CRUD + log `watchMonthEntries`, `watchDayEntries`, `createEntry`, `deleteEntry` |
+| Source                | Collection path                                                   | Operations                                                                                   |
+| --------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `TrainingTypeSource`  | `users/{uid}/trainingTypes`                                       | `watchAll`, `getById`, `create`, `update`, `delete`                                          |
+| `AttendanceDaySource` | `users/{uid}/attendances/{YYYY-MM}/days`                          | `watchMonth`, `getDay`, `upsertDay`, `deleteDay`                                             |
+| `HealthSource`        | `supplementProducts` + `users/{uid}/healthLogs/{YYYY-MM}/entries` | full product CRUD + log `watchMonthEntries`, `watchDayEntries`, `createEntry`, `deleteEntry` |
 
 ---
 
 ### 12.5 Design decisions and gotchas
 
-1. **Services are thin orchestration layers**  they delegate to sources and add only business-rule checks (existence guards). Do NOT add Firestore logic to services.
+1. **Services are thin orchestration layers** they delegate to sources and add only business-rule checks (existence guards). Do NOT add Firestore logic to services.
 
 2. **Existence guard pattern:**
+
    ```dart
    final existing = await _source.getById(userId, model.id);
    if (existing == null) throw const TrainingTypeNotFoundException();
    return _source.update(userId, model);
    ```
+
    Used in `WorkoutService.update` and `HealthService.updateProduct`.
 
-3. **yearMonth derivation**  Services always derive `yearMonth` from a date string:
+3. **yearMonth derivation** Services always derive `yearMonth` from a date string:
+
    ```dart
    final yearMonth = model.date.substring(0, 7); // "YYYY-MM-DD"  "YYYY-MM"
    ```
+
    Callers never need to compute or pass `yearMonth` separately.
 
-4. **`signIn` signs out unverified users**  After Firebase returns a `UserCredential` for a valid but unverified account, `AuthService.signIn` immediately calls `_auth.signOut()` before throwing `EmailNotVerifiedException`. This prevents an unverified user from having an active Firebase session.
+4. **`signIn` signs out unverified users** After Firebase returns a `UserCredential` for a valid but unverified account, `AuthService.signIn` immediately calls `_auth.signOut()` before throwing `EmailNotVerifiedException`. This prevents an unverified user from having an active Firebase session.
 
-5. **`FirebaseAuth` is injected**  Unlike Firestore (accessed via `.instance`), `FirebaseAuth` is passed to `AuthService` as a constructor parameter. This is what makes unit testing possible without `firebase_auth_mocks`.
+5. **`FirebaseAuth` is injected** Unlike Firestore (accessed via `.instance`), `FirebaseAuth` is passed to `AuthService` as a constructor parameter. This is what makes unit testing possible without `firebase_auth_mocks`.
 
-6. **`mocktail` `registerFallbackValue` requirement**  When `any()` is used on a parameter whose type is a custom class, mocktail requires a fallback to be registered in `setUpAll`. Required fakes:
+6. **`mocktail` `registerFallbackValue` requirement** When `any()` is used on a parameter whose type is a custom class, mocktail requires a fallback to be registered in `setUpAll`. Required fakes:
+
    ```dart
    class _FakeAuthCredential extends Fake implements AuthCredential {}
    class _FakeTrainingType extends Fake implements TrainingType {}
@@ -1569,7 +1246,7 @@ All sources use `.withConverter<Dto>()` on collection references. The `id` field
    class _FakeSupplementLog extends Fake implements SupplementLog {}
    ```
 
-7. **`widget_test.dart` removed**  The default Flutter counter test was deleted because it tries to pump `MyApp` without a DI environment.
+7. **`widget_test.dart` removed** The default Flutter counter test was deleted because it tries to pump `MyApp` without a DI environment.
 
 ---
 
@@ -1586,6 +1263,7 @@ TOTAL                           94 tests, all passing
 ```
 
 Run:
+
 ```powershell
 cd "c:\cov\gym-tracker\gym_tracker"
 flutter test
@@ -1595,13 +1273,14 @@ flutter test
 
 ### 12.7 What Phase 3 should build
 
-**Phase 3  Firebase setup + Auth cubits + Auth pages**
+**Phase 3 Firebase setup + Auth cubits + Auth pages**
 
 Goals:
-1. Run `flutterfire configure`  generates `lib/firebase_options.dart`
+
+1. Run `flutterfire configure` generates `lib/firebase_options.dart`
 2. Update `main.dart` to call `Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)` after `getIt.allReady()`
 3. Register `FirebaseAuth` in the DI container so `AuthService` receives it
-4. Build `AuthCubit` (watches `AuthService.currentUser$`, emits auth state changes  drives splash navigation)
+4. Build `AuthCubit` (watches `AuthService.currentUser$`, emits auth state changes drives splash navigation)
 5. Build `LoginCubit` + `login_states.dart`
 6. Build `RegisterCubit` + `register_states.dart`
 7. Build `ForgotPasswordCubit` + states
@@ -1611,6 +1290,7 @@ Goals:
 11. Write cubit unit tests using `mocktail` (stub `AuthService`)
 
 **DI registration for FirebaseAuth** (to be added to a `@module` class):
+
 ```dart
 @module
 abstract class FirebaseModule {
@@ -1633,7 +1313,7 @@ Branch: `master`
 
 ---
 
-## 14. Phase 3  State Management (Cubits) (COMPLETE)
+## 14. Phase 3 State Management (Cubits) (COMPLETE)
 
 ### Commit: `f6fb258 feat: Phase 3 - state management cubits and cubit tests`
 
@@ -1696,22 +1376,22 @@ Future<void> confirmPasswordReset({required String oobCode, required String newP
 
 States (all `extends BaseState`, `const` constructors):
 
-| State | Trigger |
-|---|---|
-| `AuthAuthenticatedState(user)` | `watchAuthState`  Firebase user present |
-| `AuthUnauthenticatedState` | `watchAuthState`  no user / sign-out |
-| `AuthSignInSuccessState(user)` | `signIn` succeeded |
-| `AuthSignUpSuccessState` | `signUp` succeeded (email verification pending) |
-| `AuthSignOutSuccessState` | `signOut` succeeded |
-| `AuthEmailNotVerifiedState` | `signIn`  email not yet verified |
-| `AuthEmailAlreadyInUseState` | `signUp`  email taken |
-| `AuthWeakPasswordState` | `signUp`  password too weak |
-| `AuthInvalidCredentialsState` | `signIn`/`changePassword`  wrong credentials |
-| `AuthPasswordResetSentState` | `resetPassword` email sent |
-| `AuthPasswordChangedState` | `changePassword` succeeded |
-| `AuthEmailVerifiedState` | `verifyEmail` succeeded |
-| `AuthInvalidActionCodeState` | `verifyEmail`/`confirmPasswordReset`  expired code |
-| `AuthPasswordResetConfirmedState` | `confirmPasswordReset` succeeded |
+| State                             | Trigger                                           |
+| --------------------------------- | ------------------------------------------------- |
+| `AuthAuthenticatedState(user)`    | `watchAuthState` Firebase user present            |
+| `AuthUnauthenticatedState`        | `watchAuthState` no user / sign-out               |
+| `AuthSignInSuccessState(user)`    | `signIn` succeeded                                |
+| `AuthSignUpSuccessState`          | `signUp` succeeded (email verification pending)   |
+| `AuthSignOutSuccessState`         | `signOut` succeeded                               |
+| `AuthEmailNotVerifiedState`       | `signIn` email not yet verified                   |
+| `AuthEmailAlreadyInUseState`      | `signUp` email taken                              |
+| `AuthWeakPasswordState`           | `signUp` password too weak                        |
+| `AuthInvalidCredentialsState`     | `signIn`/`changePassword` wrong credentials       |
+| `AuthPasswordResetSentState`      | `resetPassword` email sent                        |
+| `AuthPasswordChangedState`        | `changePassword` succeeded                        |
+| `AuthEmailVerifiedState`          | `verifyEmail` succeeded                           |
+| `AuthInvalidActionCodeState`      | `verifyEmail`/`confirmPasswordReset` expired code |
+| `AuthPasswordResetConfirmedState` | `confirmPasswordReset` succeeded                  |
 
 ---
 
@@ -1737,7 +1417,7 @@ Future<void> clearDay({required String userId, required String date})
 
 States: `CalendarMonthLoadedState(days, year, month)`, `CalendarDayMarkedState(day)`, `CalendarDayClearedState(date)`
 
-**Key behaviour:** calling `loadMonth` a second time cancels the previous subscription before creating the new one  safe for month-paging.
+**Key behaviour:** calling `loadMonth` a second time cancels the previous subscription before creating the new one safe for month-paging.
 
 ---
 
@@ -1749,20 +1429,20 @@ Future<void> load({required String userId, required int year})
 
 State: `StatsLoadedState(stats: AttendanceStats, year: int, types: List<TrainingType>)`
 
-**Data loading strategy:** fetches all 12 months of `year` plus the previous December (for cross-year streak accuracy) in parallel via `Future.wait`, then aggregates entirely in-memory. No persistent subscription  call `load()` again to refresh.
+**Data loading strategy:** fetches all 12 months of `year` plus the previous December (for cross-year streak accuracy) in parallel via `Future.wait`, then aggregates entirely in-memory. No persistent subscription call `load()` again to refresh.
 
 **`AttendanceStats` model fields:**
 
-| Field | Type | Description |
-|---|---|---|
-| `totalCount` / `yearlyCount` | `int` | Attendance count for the year |
-| `monthlyCount` | `int` | Count for the current calendar month (or December for past years) |
-| `currentWeekStreak` | `int` | Consecutive ISO weeks ending at current/previous week |
-| `bestWeekStreak` | `int` | Longest consecutive ISO-week run |
-| `favoriteDaysOfWeek` | `List<int>` | `DateTime.weekday` values (1=Mon7=Sun) with max attendance |
-| `typeDistribution` | `Map<String, int>` | trainingTypeId  attendance count |
-| `monthlyDurationAverages` | `Map<int, double>` | month (112)  avg duration minutes |
-| `perTypeDurationAverages` | `Map<String, double>` | trainingTypeId  avg duration minutes |
+| Field                        | Type                  | Description                                                       |
+| ---------------------------- | --------------------- | ----------------------------------------------------------------- |
+| `totalCount` / `yearlyCount` | `int`                 | Attendance count for the year                                     |
+| `monthlyCount`               | `int`                 | Count for the current calendar month (or December for past years) |
+| `currentWeekStreak`          | `int`                 | Consecutive ISO weeks ending at current/previous week             |
+| `bestWeekStreak`             | `int`                 | Longest consecutive ISO-week run                                  |
+| `favoriteDaysOfWeek`         | `List<int>`           | `DateTime.weekday` values (1=Mon7=Sun) with max attendance        |
+| `typeDistribution`           | `Map<String, int>`    | trainingTypeId attendance count                                   |
+| `monthlyDurationAverages`    | `Map<int, double>`    | month (112) avg duration minutes                                  |
+| `perTypeDurationAverages`    | `Map<String, double>` | trainingTypeId avg duration minutes                               |
 
 ---
 
@@ -1777,7 +1457,7 @@ Future<void> deleteEntry({required String userId, required String date, required
 
 States: `HealthDayEntriesLoadedState(entries, date)`, `HealthProductsLoadedState(products)`, `HealthEntryLoggedState(id)`, `HealthEntryDeletedState`
 
-**Key behaviour:** two independent `StreamSubscription`s  one for day entries, one for products. Both are cancelled in `close()`.
+**Key behaviour:** two independent `StreamSubscription`s one for day entries, one for products. Both are cancelled in `close()`.
 
 ---
 
@@ -1786,6 +1466,7 @@ States: `HealthDayEntriesLoadedState(entries, date)`, `HealthProductsLoadedState
 `bloc_test` is incompatible with `auto_route_generator ^9.x` due to conflicting `analyzer` version ranges, so all cubit tests use plain `mocktail` and `flutter_test`.
 
 **Pattern:**
+
 ```dart
 // 1. Subscribe BEFORE triggering the method  cubit.stream is a broadcast stream
 //    and PendingState is emitted synchronously, so the listener must be in place first.
@@ -1802,6 +1483,7 @@ await future;
 ```
 
 For stream-based (void) methods like `loadTypes` and `loadMonth`, `Stream.value(x)` delivers its event on the next microtask. If you need to collect states into a list instead (e.g. for multi-assertion tests), use:
+
 ```dart
 final emitted = <BaseState>[];
 sut.stream.listen(emitted.add);
@@ -1811,6 +1493,7 @@ expect(emitted.whereType<StatsLoadedState>().first.stats.yearlyCount, 3);
 ```
 
 **Run all cubit tests:**
+
 ```powershell
 cd "c:\cov\gym-tracker\gym_tracker"
 flutter test test/cubit/
@@ -1820,7 +1503,8 @@ flutter test test/cubit/
 
 ### 14.4 Design decisions & gotchas
 
-1. **Stream subscriptions and `close()`**  Every cubit that holds a `StreamSubscription` overrides `close()` to cancel it. Pattern:
+1. **Stream subscriptions and `close()`** Every cubit that holds a `StreamSubscription` overrides `close()` to cancel it. Pattern:
+
    ```dart
    @override
    Future<void> close() async {
@@ -1829,17 +1513,17 @@ flutter test test/cubit/
    }
    ```
 
-2. **`loadMonth` replaces the subscription**  Before setting up the new subscription, `_monthSubscription?.cancel()` is called. This prevents stale events from a previous month leaking into the new state.
+2. **`loadMonth` replaces the subscription** Before setting up the new subscription, `_monthSubscription?.cancel()` is called. This prevents stale events from a previous month leaking into the new state.
 
-3. **StatsCubit uses `.first` on streams**  `AttendanceService.watchMonth(...).first` converts the live stream into a one-shot Future. This avoids needing separate `getMonth` methods on the service layer.
+3. **StatsCubit uses `.first` on streams** `AttendanceService.watchMonth(...).first` converts the live stream into a one-shot Future. This avoids needing separate `getMonth` methods on the service layer.
 
-4. **ISO-week streak uses T12:00:00 noon time**  When computing ISO weeks and doing `DateTime.subtract(Duration(days: N))`, the calculation is done at noon local time to avoid any DST-boundary edge cases where subtracting a whole day might land on the wrong calendar date.
+4. **ISO-week streak uses T12:00:00 noon time** When computing ISO weeks and doing `DateTime.subtract(Duration(days: N))`, the calculation is done at noon local time to avoid any DST-boundary edge cases where subtracting a whole day might land on the wrong calendar date.
 
-5. **`monthlyCount` is deterministic for past years**  When `year < DateTime.now().year`, the "current month" defaults to 12 (December) so that `monthlyCount` is stable and does not depend on when the test runs. This makes stats tests for a fixed past year fully deterministic.
+5. **`monthlyCount` is deterministic for past years** When `year < DateTime.now().year`, the "current month" defaults to 12 (December) so that `monthlyCount` is stable and does not depend on when the test runs. This makes stats tests for a fixed past year fully deterministic.
 
-6. **`SomethingWentWrongState` is the uniform catch-all**  All `catch (_)` blocks per the pattern emit `SomethingWentWrongState`. Specific typed exceptions are mapped to specific states (`AuthInvalidCredentialsState`, etc.) before the catch-all.
+6. **`SomethingWentWrongState` is the uniform catch-all** All `catch (_)` blocks per the pattern emit `SomethingWentWrongState`. Specific typed exceptions are mapped to specific states (`AuthInvalidCredentialsState`, etc.) before the catch-all.
 
-7. **`@injectable` on all cubits**  `get_it`/`injectable` manages lifetime. Cubits are registered as transient (new instance per resolution) via the default `@injectable`  NOT `@singleton` or `@lazySingleton`, since each screen creates its own cubit instance.
+7. **`@injectable` on all cubits** `get_it`/`injectable` manages lifetime. Cubits are registered as transient (new instance per resolution) via the default `@injectable` NOT `@singleton` or `@lazySingleton`, since each screen creates its own cubit instance.
 
 ---
 
@@ -1861,6 +1545,7 @@ TOTAL                          151 tests, all passing
 ```
 
 Run:
+
 ```powershell
 cd "c:\cov\gym-tracker\gym_tracker"
 flutter test
@@ -1870,7 +1555,7 @@ flutter test
 
 ### 14.6 What Phase 3.5 should check next
 
-**Phase 3.5  Firebase + DI wiring + Splash + App Router scaffold**
+**Phase 3.5 Firebase + DI wiring + Splash + App Router scaffold**
 
 1. **Run `flutterfire configure`** to generate `lib/firebase_options.dart`
 2. **Add `FirebaseModule`** (a `@module` class) so `get_it` can resolve `FirebaseAuth.instance`:
@@ -1883,8 +1568,8 @@ flutter test
    ```
 3. **Re-run `build_runner`** after adding the module:  
    `dart run build_runner build --delete-conflicting-outputs`
-4. **Update `main.dart`**  call `Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)` and `configureDependencies()` before `runApp`
-5. **Implement real `SplashPage`**  use `AuthCubit.watchAuthState()`, navigate to Login or Home based on the emitted state
+4. **Update `main.dart`** call `Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)` and `configureDependencies()` before `runApp`
+5. **Implement real `SplashPage`** use `AuthCubit.watchAuthState()`, navigate to Login or Home based on the emitted state
 6. **Add all `@RoutePage()` stubs** for Login, Register, ForgotPassword so `AppRouter` generates stubs and `dart analyze` stays clean
 7. **Verify `dart analyze lib/` and `flutter test` are still clean** after wiring
 
@@ -1903,7 +1588,7 @@ Branch: `master`
 
 ---
 
-## 16. Phase 3.5  Logic Integration Audit (COMPLETE)
+## 16. Phase 3.5 Logic Integration Audit (COMPLETE)
 
 ### Commit: `7d534dc fix: Phase 3.5 audit - add FirebaseModule, regenerate DI config, document Firebase init order`
 
@@ -1929,7 +1614,7 @@ UI
          throws   safeEmit(SomethingWentWrongState())
 ```
 
-**Note:** The Phase 3 prompt refers to `markAttendance()` but the implemented method is named `markDay()`  this is intentionally more descriptive. No rename required.
+**Note:** The Phase 3 prompt refers to `markAttendance()` but the implemented method is named `markDay()` this is intentionally more descriptive. No rename required.
 
 ---
 
@@ -1972,19 +1657,20 @@ SplashPage (future)
 
 ### 16.2 Issues found & fixed
 
-#### Issue 1  CRITICAL: `injection.config.dart` was stale  FIXED
+#### Issue 1 CRITICAL: `injection.config.dart` was stale FIXED
 
-`build_runner` had not been re-run after Phases 2 and 3. The generated file only registered `AppRouter`. All 15 other `@injectable` classes were missing  any runtime call to `getIt<AuthCubit>()`, `getIt<WorkoutService>()`, etc. would have thrown.
+`build_runner` had not been re-run after Phases 2 and 3. The generated file only registered `AppRouter`. All 15 other `@injectable` classes were missing any runtime call to `getIt<AuthCubit>()`, `getIt<WorkoutService>()`, etc. would have thrown.
 
 **Fix:** Ran `dart run build_runner build --delete-conflicting-outputs`. The config now registers all 16 classes in the correct order.
 
 ---
 
-#### Issue 2  CRITICAL: No `FirebaseAuth` provider  FIXED
+#### Issue 2 CRITICAL: No `FirebaseAuth` provider FIXED
 
 `AuthService(FirebaseAuth _auth)` requires `FirebaseAuth` to be resolved by `get_it`. Without a `@module` class, build_runner cannot wire the dependency and would have thrown `ArgumentError: FirebaseAuth is not registered inside GetIt`.
 
 **Fix:** Created `lib/core/firebase_module.dart`:
+
 ```dart
 @module
 abstract class FirebaseModule {
@@ -1992,15 +1678,17 @@ abstract class FirebaseModule {
   FirebaseAuth get firebaseAuth => FirebaseAuth.instance;
 }
 ```
+
 `@lazySingleton` ensures `FirebaseAuth.instance` is called exactly once, after Firebase is initialized.
 
 ---
 
-#### Issue 3  IMPORTANT: `main.dart` Firebase init ordering  DOCUMENTED
+#### Issue 3 IMPORTANT: `main.dart` Firebase init ordering DOCUMENTED
 
-`Firebase.initializeApp()` MUST be awaited before `configureDependencies()`, because when `AuthService` is first resolved `FirebaseAuth.instance` is called  Firebase must already be ready. The `main.dart` static analysis was clean, but the runtime ordering would have crashed.
+`Firebase.initializeApp()` MUST be awaited before `configureDependencies()`, because when `AuthService` is first resolved `FirebaseAuth.instance` is called Firebase must already be ready. The `main.dart` static analysis was clean, but the runtime ordering would have crashed.
 
 **Fix:** Added guarded TODO comments in `main.dart`:
+
 ```dart
 // TODO(phase4): Must uncomment after flutterfire configure:
 // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -2012,7 +1700,7 @@ The actual `Firebase.initializeApp()` call will be added in Phase 4 (along with 
 
 ---
 
-### 16.3 DI graph  final registration order
+### 16.3 DI graph final registration order
 
 ```
 @lazySingleton  FirebaseAuth               FirebaseModule
@@ -2036,25 +1724,25 @@ The actual `Firebase.initializeApp()` call will be added in Phase 4 (along with 
 
 **Cycle check:** No cycles detected. The graph is a strict DAG.
 
-**`@factory` vs `@singleton` decision:** All cubits are `@factory` (new instance per `getIt<>()` call), which matches BLoC convention  each page/widget gets its own fresh cubit instance.
+**`@factory` vs `@singleton` decision:** All cubits are `@factory` (new instance per `getIt<>()` call), which matches BLoC convention each page/widget gets its own fresh cubit instance.
 
 ---
 
 ### 16.4 Items with NO issues
 
-- All mapper constructors: no DI dependencies, registered as `@factory` 
-- All sources: inject only their mapper, use `FirebaseFirestore.instance` directly 
-- All services: inject only their source(s) 
-- `WorkoutService.update` existence guard: correctly throws `TrainingTypeNotFoundException` 
-- `HealthService.updateProduct` existence guard: correctly throws `SupplementProductNotFoundException` 
-- `AttendanceService.upsertDay` yearMonth derivation: `date.substring(0, 7)` 
-- All cubits: `close()` cancels all `StreamSubscription`s 
-- `StatsCubit` streak calculation uses T12:00:00 noon time (DST-safe) 
-- `SomethingWentWrongState` is the uniform catch-all in every cubit 
+- All mapper constructors: no DI dependencies, registered as `@factory`
+- All sources: inject only their mapper, use `FirebaseFirestore.instance` directly
+- All services: inject only their source(s)
+- `WorkoutService.update` existence guard: correctly throws `TrainingTypeNotFoundException`
+- `HealthService.updateProduct` existence guard: correctly throws `SupplementProductNotFoundException`
+- `AttendanceService.upsertDay` yearMonth derivation: `date.substring(0, 7)`
+- All cubits: `close()` cancels all `StreamSubscription`s
+- `StatsCubit` streak calculation uses T12:00:00 noon time (DST-safe)
+- `SomethingWentWrongState` is the uniform catch-all in every cubit
 
 ---
 
-### 16.5 Test suite  still 151/151 passing
+### 16.5 Test suite still 151/151 passing
 
 ```powershell
 cd "c:\cov\gym-tracker\gym_tracker"
@@ -2065,23 +1753,24 @@ flutter test
 
 ### 16.6 What Phase 4 should build next
 
-**Phase 4  Firebase setup + Auth feature + App Shell**
+**Phase 4 Firebase setup + Auth feature + App Shell**
 
 Prerequisites (must be done at start of Phase 4):
-1. Run `flutterfire configure` (requires Firebase project + logged-in CLI)  generates `lib/firebase_options.dart`
+
+1. Run `flutterfire configure` (requires Firebase project + logged-in CLI) generates `lib/firebase_options.dart`
 2. Uncomment `Firebase.initializeApp()` in `main.dart`
 
-Then build:
-3. Add `firebase_core` init guard to prevent crash if called before init
-4. Implement real `SplashPage`:
-   - Creates `AuthCubit` via `BlocProvider`
-   - Calls `authCubit.watchAuthState()`
-   - `AuthAuthenticatedState`  navigate to main shell
-   - `AuthUnauthenticatedState`  navigate to `LoginPage`
+Then build: 3. Add `firebase_core` init guard to prevent crash if called before init 4. Implement real `SplashPage`:
+
+- Creates `AuthCubit` via `BlocProvider`
+- Calls `authCubit.watchAuthState()`
+- `AuthAuthenticatedState` navigate to main shell
+- `AuthUnauthenticatedState` navigate to `LoginPage`
+
 5. Create `LoginPage` (`@RoutePage()`, `BlocProvider<AuthCubit>`) with email+password form fields
-6. Create `RegisterPage` (`@RoutePage()`)  sign-up form
-7. Create `ForgotPasswordPage` (`@RoutePage()`)  email reset form
-8. Create `AuthActionPage` (`@RoutePage()`)  handles deep-link OOB codes (`verifyEmail`, `confirmPasswordReset`)
+6. Create `RegisterPage` (`@RoutePage()`) sign-up form
+7. Create `ForgotPasswordPage` (`@RoutePage()`) email reset form
+8. Create `AuthActionPage` (`@RoutePage()`) handles deep-link OOB codes (`verifyEmail`, `confirmPasswordReset`)
 9. Update `AppRouter` with all four auth routes
 10. Implement `AutoRouteGuard` (`AuthGuard`) that redirects to Login when not authenticated
 11. Add main shell page stub (tab bar or bottom navigation) protected by `AuthGuard`
@@ -2191,24 +1880,25 @@ The dark theme uses the `*Dark` surface/text variants; light uses `*Light`.
 
 ### 18.4 Localization namespaces (ARB keys)
 
-| Namespace | Key prefix | Examples |
-|---|---|---|
-| AUTH | `auth*` | `authLoginTitle`, `authRegisterButton`, `authSignOut` |
-| NAV | `nav*` | `navCalendar`, `navStats`, `navHealth`, `navProfile` |
-| CALENDAR | `calendar*` | `calendarMarkAttended`, `calendarWentToGym` |
-| STATS | `stats*` | `statsCurrentStreak`, `statsBestStreak`, `statsStreak0` |
-| MONTHS | `months*` | `monthsJanuary` … `monthsDecember` |
-| WEEKDAYS | `weekdays*` | `weekdaysMonday` … `weekdaysSunday` |
-| WEEKDAYS_MINI | `weekdaysMini*` | `weekdaysMiniMon` … `weekdaysMiniSun` |
-| PROFILE | `profile*` | `profileTitle`, `profileSignOut`, `profileWorkoutTypes` |
-| WORKOUT_TYPES | `workoutTypes*` | `workoutTypesAdd`, `workoutTypesDeleteConfirm` |
-| HEALTH | `health*` | `healthToday`, `healthAddSupplement`, `healthLogToday` |
-| SETTINGS | `settings*` | `settingsThemeDark`, `settingsRunMigration` |
-| ERRORS | `errors*` | `errorsInvalidCredentials`, `errorsPasswordMismatch` |
+| Namespace     | Key prefix      | Examples                                                |
+| ------------- | --------------- | ------------------------------------------------------- |
+| AUTH          | `auth*`         | `authLoginTitle`, `authRegisterButton`, `authSignOut`   |
+| NAV           | `nav*`          | `navCalendar`, `navStats`, `navHealth`, `navProfile`    |
+| CALENDAR      | `calendar*`     | `calendarMarkAttended`, `calendarWentToGym`             |
+| STATS         | `stats*`        | `statsCurrentStreak`, `statsBestStreak`, `statsStreak0` |
+| MONTHS        | `months*`       | `monthsJanuary` … `monthsDecember`                      |
+| WEEKDAYS      | `weekdays*`     | `weekdaysMonday` … `weekdaysSunday`                     |
+| WEEKDAYS_MINI | `weekdaysMini*` | `weekdaysMiniMon` … `weekdaysMiniSun`                   |
+| PROFILE       | `profile*`      | `profileTitle`, `profileSignOut`, `profileWorkoutTypes` |
+| WORKOUT_TYPES | `workoutTypes*` | `workoutTypesAdd`, `workoutTypesDeleteConfirm`          |
+| HEALTH        | `health*`       | `healthToday`, `healthAddSupplement`, `healthLogToday`  |
+| SETTINGS      | `settings*`     | `settingsThemeDark`, `settingsRunMigration`             |
+| ERRORS        | `errors*`       | `errorsInvalidCredentials`, `errorsPasswordMismatch`    |
 
 Generated class: `AppLocalizations` in `lib/assets/localization/`.
 
 Usage in widget:
+
 ```dart
 final l10n = AppLocalizations.of(context);
 Text(l10n.navCalendar);
@@ -2329,14 +2019,11 @@ flutter test
 ~~4. **Implement real `SplashPage`**: `AuthCubit` via `BlocProvider`, `watchAuthState()`~~
 ~~5. **Implement `LoginPage`**: email + password form~~
 ~~6. **Implement `RegisterPage`**: sign-up form~~
-~~7. **Implement `ForgotPasswordPage`**: send reset email form~~
-8. **Implement `AuthActionPage`**: handle OOB codes (email verify + password reset) — deferred
-9. **Add `AuthGuard`**: redirects unauthenticated users to `/login` — deferred
-10. **Apply `AuthGuard`** to the main shell route and sub-routes — deferred
+~~7. **Implement `ForgotPasswordPage`**: send reset email form~~ 8. **Implement `AuthActionPage`**: handle OOB codes (email verify + password reset) — deferred 9. **Add `AuthGuard`**: redirects unauthenticated users to `/login` — deferred 10. **Apply `AuthGuard`** to the main shell route and sub-routes — deferred
 
 ---
 
-## 19. Phase 5 — Auth & Profile UI  *(commit `023ee4b`)*
+## 19. Phase 5 — Auth & Profile UI _(commit `023ee4b`)_
 
 ### 19.1 Overview
 
@@ -2348,24 +2035,24 @@ classes were introduced. Test count stays at **139/139**.
 
 ### 19.2 New files
 
-| File | Purpose |
-|------|---------|
-| `lib/assets/theme/theme_helper.dart` | `ChangeNotifier` persisting dark/light in `SharedPreferences` |
-| `lib/presentation/controls/custom_text_field.dart` | Reusable `TextFormField` with built-in password visibility toggle |
-| `lib/presentation/controls/primary_button.dart` | Full-width `ElevatedButton` with inline `CircularProgressIndicator` |
+| File                                               | Purpose                                                             |
+| -------------------------------------------------- | ------------------------------------------------------------------- |
+| `lib/assets/theme/theme_helper.dart`               | `ChangeNotifier` persisting dark/light in `SharedPreferences`       |
+| `lib/presentation/controls/custom_text_field.dart` | Reusable `TextFormField` with built-in password visibility toggle   |
+| `lib/presentation/controls/primary_button.dart`    | Full-width `ElevatedButton` with inline `CircularProgressIndicator` |
 
 ---
 
 ### 19.3 Modified page stubs → full implementations
 
-| Page | Route | Key cubit interaction |
-|------|-------|-----------------------|
-| `SplashPage` | `/splash` | `watchAuthState()` → `AuthAuthenticatedState` → MainShell, `AuthUnauthenticatedState` → Login |
-| `LoginPage` | `/login` | `signIn()` → `AuthSignInSuccessState` / `AuthInvalidCredentialsState` / `AuthEmailNotVerifiedState` |
-| `RegisterPage` | `/register` | `signUp()` → `AuthSignUpSuccessState` (success screen) / `AuthEmailAlreadyInUseState` / `AuthWeakPasswordState` |
-| `ForgotPasswordPage` | `/forgot-password` | `resetPassword()` → `AuthPasswordResetSentState` (success screen) |
-| `ProfilePage` | `/profile` (shell tab) | `watchAuthState()` for user display; `signOut()` → `AuthSignOutSuccessState` → Login |
-| `SettingsPage` | `/settings` | `changePassword()` → `AuthPasswordChangedState`; `ThemeHelper`; `LocaleHelper` |
+| Page                 | Route                  | Key cubit interaction                                                                                           |
+| -------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `SplashPage`         | `/splash`              | `watchAuthState()` → `AuthAuthenticatedState` → MainShell, `AuthUnauthenticatedState` → Login                   |
+| `LoginPage`          | `/login`               | `signIn()` → `AuthSignInSuccessState` / `AuthInvalidCredentialsState` / `AuthEmailNotVerifiedState`             |
+| `RegisterPage`       | `/register`            | `signUp()` → `AuthSignUpSuccessState` (success screen) / `AuthEmailAlreadyInUseState` / `AuthWeakPasswordState` |
+| `ForgotPasswordPage` | `/forgot-password`     | `resetPassword()` → `AuthPasswordResetSentState` (success screen)                                               |
+| `ProfilePage`        | `/profile` (shell tab) | `watchAuthState()` for user display; `signOut()` → `AuthSignOutSuccessState` → Login                            |
+| `SettingsPage`       | `/settings`            | `changePassword()` → `AuthPasswordChangedState`; `ThemeHelper`; `LocaleHelper`                                  |
 
 ---
 
@@ -2446,6 +2133,7 @@ class _LoginPageState extends State<LoginPage> {
 ```
 
 Key decisions:
+
 - **Each page provides its own `AuthCubit`** via `wrappedRoute`. No global cubit.
 - **Validation**: `Form` + `TextFormField` validators (synchronous); cubit handles async
   failures as emitted states.
@@ -2541,8 +2229,8 @@ class _MyAppState extends State<MyApp> {
 
 One key was added in Phase 5:
 
-| Key | en | ro |
-|-----|----|----|
+| Key                              | en                               | ro                                   |
+| -------------------------------- | -------------------------------- | ------------------------------------ |
 | `settingsPasswordChangedSuccess` | "Password changed successfully." | "Parola a fost schimbată cu succes." |
 
 Run `flutter gen-l10n` after any ARB edit (l10n.yaml exists, so no flags needed).
@@ -2562,7 +2250,7 @@ Run `flutter gen-l10n` after any ARB edit (l10n.yaml exists, so no flags needed)
 
 ---
 
-## 20. Phase 5.5 — Theme Consistency Refactor *(commit `68e6929`)*
+## 20. Phase 5.5 — Theme Consistency Refactor _(commit `68e6929`)_
 
 ### 20.1 Overview
 
@@ -2585,13 +2273,13 @@ outline: AppColors.textMutedLight,
 
 ### 20.3 Color mapping applied everywhere
 
-| AppColors (old ❌) | Theme.of(context) (new ✅) |
-|--------------------|---------------------------|
-| `AppColors.primary` | `cs.primary` |
-| `AppColors.danger` | `cs.error` |
-| `AppColors.textPrimary` | `cs.onSurface` |
-| `AppColors.textSecondary` | `cs.onSurfaceVariant` |
-| `AppColors.textMuted` | `cs.outline` |
+| AppColors (old ❌)         | Theme.of(context) (new ✅)                  |
+| -------------------------- | ------------------------------------------- |
+| `AppColors.primary`        | `cs.primary`                                |
+| `AppColors.danger`         | `cs.error`                                  |
+| `AppColors.textPrimary`    | `cs.onSurface`                              |
+| `AppColors.textSecondary`  | `cs.onSurfaceVariant`                       |
+| `AppColors.textMuted`      | `cs.outline`                                |
 | `AppColors.backgroundDark` | `Theme.of(context).scaffoldBackgroundColor` |
 
 Where `cs = Theme.of(context).colorScheme`. The `const` qualifier was removed from
@@ -2617,7 +2305,7 @@ Still **139/139** — no new tests (refactor only). `dart analyze lib/` — No i
 
 ---
 
-## 21. Phase 5.6 — Full TextTheme Scale + Typography Refactor *(commit `2ef46cb`)*
+## 21. Phase 5.6 — Full TextTheme Scale + Typography Refactor _(commit `2ef46cb`)_
 
 ### 21.1 Overview
 
@@ -2641,23 +2329,23 @@ as arguments (the only place `AppColors` is used).
 
 ### 21.3 Roles defined
 
-| Role | Size | Weight | Default color | Semantic use |
-|---|---|---|---|---|
-| `displayLarge` | 32 | w700 | onSurface | Hero / splash giant text |
-| `displayMedium` | 28 | w700 | onSurface | App title, avatar initial |
-| `displaySmall` | 24 | w600 | onSurface | Page title heading |
-| `headlineLarge` | 22 | w600 | onSurface | Screen/section headline |
-| `headlineMedium` | 20 | w600 | onSurface | Sub-headline |
-| `headlineSmall` | 18 | w600 | onSurface | Card heading |
-| `titleLarge` | 16 | w600 | onSurface | AppBar title, list item title |
-| `titleMedium` | 15 | w500 | onSurface | List tile title |
-| `titleSmall` | 14 | w500 | onSurface | Dense list title |
-| `bodyLarge` | 16 | w400 | onSurface | Body copy |
-| `bodyMedium` | 14 | w400 | onSurface | Default body / helper text |
-| `bodySmall` | 12 | w400 | onSurfaceVariant | Captions, subtitles |
-| `labelLarge` | 14 | w600 | primary | Button label |
-| `labelMedium` | 12 | w500 | onSurfaceVariant | Chips, badges |
-| `labelSmall` | 11 | w600 | outline | All-caps section headers (letterSpacing: 1.2) |
+| Role             | Size | Weight | Default color    | Semantic use                                  |
+| ---------------- | ---- | ------ | ---------------- | --------------------------------------------- |
+| `displayLarge`   | 32   | w700   | onSurface        | Hero / splash giant text                      |
+| `displayMedium`  | 28   | w700   | onSurface        | App title, avatar initial                     |
+| `displaySmall`   | 24   | w600   | onSurface        | Page title heading                            |
+| `headlineLarge`  | 22   | w600   | onSurface        | Screen/section headline                       |
+| `headlineMedium` | 20   | w600   | onSurface        | Sub-headline                                  |
+| `headlineSmall`  | 18   | w600   | onSurface        | Card heading                                  |
+| `titleLarge`     | 16   | w600   | onSurface        | AppBar title, list item title                 |
+| `titleMedium`    | 15   | w500   | onSurface        | List tile title                               |
+| `titleSmall`     | 14   | w500   | onSurface        | Dense list title                              |
+| `bodyLarge`      | 16   | w400   | onSurface        | Body copy                                     |
+| `bodyMedium`     | 14   | w400   | onSurface        | Default body / helper text                    |
+| `bodySmall`      | 12   | w400   | onSurfaceVariant | Captions, subtitles                           |
+| `labelLarge`     | 14   | w600   | primary          | Button label                                  |
+| `labelMedium`    | 12   | w500   | onSurfaceVariant | Chips, badges                                 |
+| `labelSmall`     | 11   | w600   | outline          | All-caps section headers (letterSpacing: 1.2) |
 
 ### 21.4 Files changed
 
@@ -2676,7 +2364,7 @@ Still **139/139**. `dart analyze lib/` — No issues found.
 
 ---
 
-## 22. Phase 6 — Workout Types CRUD UI *(commit TBD)*
+## 22. Phase 6 — Workout Types CRUD UI _(commit TBD)_
 
 ### 22.1 Overview
 
@@ -2685,14 +2373,14 @@ create/edit/delete, backed by the existing `WorkoutCubit` + `WorkoutService`.
 
 ### 22.2 Files changed / created
 
-| File | Status |
-|------|--------|
-| `lib/cubit/workout/workout_cubit.dart` | `updateType(userId, type)` method added |
-| `lib/cubit/workout/workout_states.dart` | `WorkoutTypeUpdatedState` added |
-| `lib/assets/localization/app_en.arb` | 3 new keys (see §22.4) |
-| `lib/assets/localization/app_ro.arb` | 3 new keys (Romanian) |
-| `lib/presentation/pages/workout_types/workout_types_page.dart` | Full implementation (was stub) |
-| `test/cubit/workout/workout_cubit_test.dart` | 3 new `updateType` tests |
+| File                                                           | Status                                  |
+| -------------------------------------------------------------- | --------------------------------------- |
+| `lib/cubit/workout/workout_cubit.dart`                         | `updateType(userId, type)` method added |
+| `lib/cubit/workout/workout_states.dart`                        | `WorkoutTypeUpdatedState` added         |
+| `lib/assets/localization/app_en.arb`                           | 3 new keys (see §22.4)                  |
+| `lib/assets/localization/app_ro.arb`                           | 3 new keys (Romanian)                   |
+| `lib/presentation/pages/workout_types/workout_types_page.dart` | Full implementation (was stub)          |
+| `test/cubit/workout/workout_cubit_test.dart`                   | 3 new `updateType` tests                |
 
 ### 22.3 WorkoutTypesPage architecture
 
@@ -2706,24 +2394,25 @@ create/edit/delete, backed by the existing `WorkoutCubit` + `WorkoutService`.
 
 **State handling summary:**
 
-| State | Builder behavior | Listener side-effect |
-|---|---|---|
-| `null` (`_types`) | Full-screen spinner | — |
-| `WorkoutTypesLoadedState` | Rebuild list | `setState(() => _types = state.types)` |
-| `PendingState` (with loaded types) | List + black overlay | — |
-| `SomethingWentWrongState` | List unchanged (or empty) | Snackbar, unblocks spinner |
+| State                              | Builder behavior          | Listener side-effect                   |
+| ---------------------------------- | ------------------------- | -------------------------------------- |
+| `null` (`_types`)                  | Full-screen spinner       | —                                      |
+| `WorkoutTypesLoadedState`          | Rebuild list              | `setState(() => _types = state.types)` |
+| `PendingState` (with loaded types) | List + black overlay      | —                                      |
+| `SomethingWentWrongState`          | List unchanged (or empty) | Snackbar, unblocks spinner             |
 
 ### 22.4 New ARB keys
 
-| Key | en | ro |
-|-----|----|----|
-| `workoutTypesCancel` | "Cancel" | "Anulează" |
-| `workoutTypesEmpty` | "No workout types yet.\nTap + to add your first type." | (Romanian) |
-| `workoutTypesEditTitle` | "Edit Type" | "Editează Tip" |
+| Key                     | en                                                     | ro             |
+| ----------------------- | ------------------------------------------------------ | -------------- |
+| `workoutTypesCancel`    | "Cancel"                                               | "Anulează"     |
+| `workoutTypesEmpty`     | "No workout types yet.\nTap + to add your first type." | (Romanian)     |
+| `workoutTypesEditTitle` | "Edit Type"                                            | "Editează Tip" |
 
 ### 22.5 Form sheet (`_WorkoutTypeFormSheet`)
 
 Internal `StatefulWidget` (not a page) shown via `showModalBottomSheet`.
+
 - `isScrollControlled: true` + `SingleChildScrollView` for keyboard avoidance
 - Returns a named record `({String name, String emoji, String color})` via `Navigator.pop()`
 - Name: `TextFormField` with `maxLength: 30`, validates non-empty on save
@@ -2760,4 +2449,3 @@ Phase 7 should connect the app to live Firebase and build the main navigation sh
 4. **`AuthGuard`** (`AutoRouteGuard`) — checks `FirebaseAuth.instance.currentUser`; redirects to `/login` if null
 5. **`AuthActionPage`** — handles Firebase OOB action codes (`verifyEmail`, `confirmPasswordReset`) via deep-link query params
 6. **Stub page upgrades**: `CalendarPage`, `StatsPage`, `HealthPage` — at minimum show the bottom nav shell with placeholder content
-
