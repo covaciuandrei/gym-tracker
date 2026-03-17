@@ -34,16 +34,22 @@ class HealthPage extends StatefulWidget implements AutoRouteWrapper {
 
   @override
   Widget wrappedRoute(BuildContext context) {
-    return BlocProvider<HealthCubit>(create: (_) => getIt<HealthCubit>(), child: this);
+    return BlocProvider<HealthCubit>(
+      create: (_) => getIt<HealthCubit>(),
+      child: this,
+    );
   }
 }
 
 enum _HealthTab { today, mySupplements, allSupplements }
 
-class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateMixin {
+class _HealthPageState extends State<HealthPage>
+    with SingleTickerProviderStateMixin {
   static const Duration _minimumSkeletonDuration = Duration(milliseconds: 300);
 
-  final ValueNotifier<_HealthTab> _activeTab = ValueNotifier<_HealthTab>(_HealthTab.today);
+  final ValueNotifier<_HealthTab> _activeTab = ValueNotifier<_HealthTab>(
+    _HealthTab.today,
+  );
   final ValueNotifier<String> _mySearch = ValueNotifier<String>('');
   final ValueNotifier<String> _allSearch = ValueNotifier<String>('');
   final TextEditingController _mySearchCtrl = TextEditingController();
@@ -67,7 +73,8 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
   Timer? _todaySkeletonTimer;
   Timer? _productsSkeletonTimer;
 
-  String? get _userId => widget.testUserId ?? FirebaseAuth.instance.currentUser?.uid;
+  String? get _userId =>
+      widget.testUserId ?? FirebaseAuth.instance.currentUser?.uid;
 
   String get _todayDateString {
     final now = DateTime.now();
@@ -79,7 +86,8 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this)..addListener(_onTabChanged);
+    _tabController = TabController(length: 3, vsync: this)
+      ..addListener(_onTabChanged);
   }
 
   @override
@@ -150,7 +158,10 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
 
   void _loadTodayEntries(String userId) {
     _startTodaySkeletonWindow();
-    context.read<HealthCubit>().loadDayEntries(userId: userId, date: _todayDateString);
+    context.read<HealthCubit>().loadDayEntries(
+      userId: userId,
+      date: _todayDateString,
+    );
   }
 
   void _loadProducts(String userId) {
@@ -173,7 +184,8 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
       });
     }
 
-    if (SchedulerBinding.instance.schedulerPhase == SchedulerPhase.persistentCallbacks) {
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
       WidgetsBinding.instance.addPostFrameCallback((_) => applyUpdate());
       return;
     }
@@ -255,18 +267,20 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
 
     _productsSkeletonTimer?.cancel();
     _productsSkeletonTimer = Timer(remaining, () {
-      if (!mounted || token != _productsLoadToken || !_forceProductsSkeleton) return;
+      if (!mounted || token != _productsLoadToken || !_forceProductsSkeleton)
+        return;
       _updateSkeletonFlags(products: false);
       _productsSkeletonTimer = null;
     });
   }
 
-  Future<void> _openProductForm(String userId, {SupplementProduct? initial}) async {
+  Future<void> _openProductForm(
+    String userId, {
+    SupplementProduct? initial,
+  }) async {
     final l10n = AppLocalizations.of(context);
-    final draft = await showModalBottomSheet<_SupplementProductDraft>(
+    final draft = await showDialog<_SupplementProductDraft>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => _SupplementFormSheet(initial: initial),
     );
     if (draft == null) return;
@@ -287,9 +301,13 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
     );
 
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(isEdit ? l10n.healthProductUpdated : l10n.healthProductCreated)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isEdit ? l10n.healthProductUpdated : l10n.healthProductCreated,
+        ),
+      ),
+    );
   }
 
   Future<void> _deleteProduct(SupplementProduct product) async {
@@ -297,7 +315,8 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
     final shouldDelete = await ConfirmationDialog.show(
       context,
       title: l10n.healthDeleteSupplementTitle,
-      message: '${l10n.healthDelete} "${product.name}"? ${l10n.healthDeleteWarning}',
+      message:
+          '${l10n.healthDelete} "${product.name}"? ${l10n.healthDeleteWarning}',
       cancelLabel: l10n.workoutTypesCancel,
       confirmLabel: l10n.healthDelete,
     );
@@ -317,7 +336,11 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
     );
     if (!shouldDelete) return;
 
-    await context.read<HealthCubit>().deleteEntry(userId: userId, date: entry.date, entryId: entry.id);
+    await context.read<HealthCubit>().deleteEntry(
+      userId: userId,
+      date: entry.date,
+      entryId: entry.id,
+    );
   }
 
   Future<void> _quickLog(String userId, SupplementProduct product) async {
@@ -329,13 +352,18 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
         productId: product.id,
         productName: product.name,
         productBrand: product.brand,
-        servingsTaken: product.servingsPerDayDefault <= 0 ? 1 : product.servingsPerDayDefault,
+        servingsTaken: product.servingsPerDayDefault <= 0
+            ? 1
+            : product.servingsPerDayDefault,
         timestamp: DateTime.now(),
       ),
     );
   }
 
-  List<SupplementProduct> _applyQuery(List<SupplementProduct> products, String query) {
+  List<SupplementProduct> _applyQuery(
+    List<SupplementProduct> products,
+    String query,
+  ) {
     final normalized = query.trim().toLowerCase();
     if (normalized.isEmpty) return products;
 
@@ -355,7 +383,10 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
     return MaterialLocalizations.of(context).formatTimeOfDay(tod);
   }
 
-  List<_GroupedTodayLogs> _groupedTodayLogs(List<SupplementLog> entries, String unknownLabel) {
+  List<_GroupedTodayLogs> _groupedTodayLogs(
+    List<SupplementLog> entries,
+    String unknownLabel,
+  ) {
     final map = <String, _GroupedTodayLogs>{};
 
     for (final entry in entries) {
@@ -404,12 +435,14 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
           curr is HealthProductDeletedState ||
           curr is SomethingWentWrongState,
       listener: (ctx, state) {
-        if (state is HealthEntryLoggedState || state is HealthEntryDeletedState) {
+        if (state is HealthEntryLoggedState ||
+            state is HealthEntryDeletedState) {
           _requestedTodayLoad = false;
           _loadTodayEntries(userId);
           return;
         }
-        if (state is HealthProductSavedState || state is HealthProductDeletedState) {
+        if (state is HealthProductSavedState ||
+            state is HealthProductDeletedState) {
           _requestedProductsLoad = false;
           _loadProducts(userId);
           return;
@@ -417,7 +450,9 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
         if (state is SomethingWentWrongState) {
           _releaseTodaySkeletonWindow();
           _releaseProductsSkeletonWindow();
-          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
+          ScaffoldMessenger.of(
+            ctx,
+          ).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
         }
       },
       builder: (ctx, state) {
@@ -440,22 +475,36 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
           builder: (_, activeTab, _) {
             _ensureActiveTabData(userId, activeTab);
 
-            final showFab = activeTab == _HealthTab.mySupplements || activeTab == _HealthTab.allSupplements;
+            final showFab =
+                activeTab == _HealthTab.mySupplements ||
+                activeTab == _HealthTab.allSupplements;
 
             return Scaffold(
               backgroundColor: cs.surfaceContainerLow,
               appBar: GymAppBar(title: l10n.healthTitle, showBackButton: false),
-              floatingActionButton: showFab ? PrimaryFab(onPressed: () => _openProductForm(userId)) : null,
+              floatingActionButton: showFab
+                  ? PrimaryFab(onPressed: () => _openProductForm(userId))
+                  : null,
               body: SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       GymTabBar(
                         controller: _tabController,
-                        tabs: [l10n.healthToday, l10n.healthMySupplements, l10n.healthAllSupplements],
-                        labelPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
+                        tabs: [
+                          l10n.healthToday,
+                          l10n.healthMySupplements,
+                          l10n.healthAllSupplements,
+                        ],
+                        labelPadding: const EdgeInsets.symmetric(
+                          horizontal: 0,
+                          vertical: 8,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Expanded(
@@ -469,7 +518,8 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
                               searchListenable: _mySearch,
                               searchHint: l10n.healthMySearchHint,
                               emptyTitle: l10n.healthNoPersonalSupplements,
-                              emptyMessage: l10n.healthNoPersonalSupplementsMessage,
+                              emptyMessage:
+                                  l10n.healthNoPersonalSupplementsMessage,
                               emptyActionLabel: l10n.healthAddSupplement,
                               onEmptyAction: () => _openProductForm(userId),
                               onlyMine: true,
@@ -481,7 +531,8 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
                               searchListenable: _allSearch,
                               searchHint: l10n.healthAllSearchHint,
                               emptyTitle: l10n.healthNoSupplementsFound,
-                              emptyMessage: l10n.healthNoSupplementsFoundMessage,
+                              emptyMessage:
+                                  l10n.healthNoSupplementsFoundMessage,
                               onlyMine: false,
                               userId: userId,
                             ),
@@ -506,7 +557,10 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
       return const _HealthTodaySkeleton();
     }
 
-    final grouped = _groupedTodayLogs(_latestTodayEntries, l10n.healthUnknownProduct);
+    final grouped = _groupedTodayLogs(
+      _latestTodayEntries,
+      l10n.healthUnknownProduct,
+    );
     if (grouped.isEmpty) {
       return EmptyStateWidget(
         emoji: Emojis.sunrise,
@@ -588,14 +642,18 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
                             ? '-'
                             : product.ingredients
                                   .take(3)
-                                  .map((ing) => '${ing.amount}${ing.unit} ${ing.name}')
+                                  .map(
+                                    (ing) =>
+                                        '${ing.amount}${ing.unit} ${ing.name}',
+                                  )
                                   .join(', ');
 
                         final actions = <Widget>[];
                         if (product.createdBy == userId) {
                           actions.add(
                             TextButton.icon(
-                              onPressed: () => _openProductForm(userId, initial: product),
+                              onPressed: () =>
+                                  _openProductForm(userId, initial: product),
                               icon: const Icon(Icons.edit_outlined),
                               label: Text(l10n.healthEditAction),
                             ),
@@ -614,7 +672,9 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
                           title: product.name,
                           description: description,
                           actions: actions,
-                          onTap: onlyMine ? null : () => _quickLog(userId, product),
+                          onTap: onlyMine
+                              ? null
+                              : () => _quickLog(userId, product),
                         );
                       },
                     ),
@@ -650,7 +710,10 @@ class _HealthProductsSkeleton extends StatelessWidget {
         Container(
           width: double.infinity,
           height: 52,
-          decoration: BoxDecoration(color: cs.surfaceContainerHigh, borderRadius: BorderRadius.circular(12)),
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: const Padding(
             padding: EdgeInsets.symmetric(horizontal: 12),
             child: Row(
@@ -684,7 +747,10 @@ class _HealthCardSkeleton extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: cs.surfaceContainerHigh, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -711,7 +777,9 @@ class _HealthSkeletonBox extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.45),
+        color: Theme.of(
+          context,
+        ).colorScheme.outlineVariant.withValues(alpha: 0.45),
         borderRadius: BorderRadius.circular(8),
       ),
     );
@@ -743,12 +811,16 @@ class _SupplementFormSheetState extends State<_SupplementFormSheet> {
     final initial = widget.initial;
     _nameCtrl = TextEditingController(text: initial?.name ?? '');
     _brandCtrl = TextEditingController(text: initial?.brand ?? '');
-    _servingsCtrl = TextEditingController(text: (initial?.servingsPerDayDefault ?? 1).toString());
+    _servingsCtrl = TextEditingController(
+      text: (initial?.servingsPerDayDefault ?? 1).toString(),
+    );
     _nameValue = ValueNotifier<String>(initial?.name ?? '');
     _ingredientNameCtrl = TextEditingController();
     _ingredientAmountCtrl = TextEditingController();
     _ingredientUnit = ValueNotifier<String>('mg');
-    _ingredients = ValueNotifier<List<ProductIngredient>>(initial?.ingredients ?? <ProductIngredient>[]);
+    _ingredients = ValueNotifier<List<ProductIngredient>>(
+      initial?.ingredients ?? <ProductIngredient>[],
+    );
   }
 
   @override
@@ -766,7 +838,9 @@ class _SupplementFormSheetState extends State<_SupplementFormSheet> {
 
   String _slug(String input) {
     final normalized = input.trim().toLowerCase();
-    final keep = normalized.replaceAll(RegExp(r'[^a-z0-9\s]'), '').replaceAll(RegExp(r'\s+'), '_');
+    final keep = normalized
+        .replaceAll(RegExp(r'[^a-z0-9\s]'), '')
+        .replaceAll(RegExp(r'\s+'), '_');
     return keep.isEmpty ? 'custom_ingredient' : keep;
   }
 
@@ -775,7 +849,10 @@ class _SupplementFormSheetState extends State<_SupplementFormSheet> {
     final amountCtrl = _ingredientAmountCtrl;
     final unit = _ingredientUnit;
     final ingredients = _ingredients;
-    if (nameCtrl == null || amountCtrl == null || unit == null || ingredients == null) {
+    if (nameCtrl == null ||
+        amountCtrl == null ||
+        unit == null ||
+        ingredients == null) {
       return;
     }
 
@@ -787,7 +864,12 @@ class _SupplementFormSheetState extends State<_SupplementFormSheet> {
 
     ingredients.value = [
       ...ingredients.value,
-      ProductIngredient(stdId: _slug(name), name: name, amount: amount, unit: unit.value),
+      ProductIngredient(
+        stdId: _slug(name),
+        name: name,
+        amount: amount,
+        unit: unit.value,
+      ),
     ];
     nameCtrl.clear();
     amountCtrl.clear();
@@ -796,7 +878,9 @@ class _SupplementFormSheetState extends State<_SupplementFormSheet> {
   void _removeIngredient(ProductIngredient ingredient) {
     final ingredients = _ingredients;
     if (ingredients == null) return;
-    ingredients.value = ingredients.value.where((item) => item != ingredient).toList(growable: false);
+    ingredients.value = ingredients.value
+        .where((item) => item != ingredient)
+        .toList(growable: false);
   }
 
   @override
@@ -832,7 +916,10 @@ class _SupplementFormSheetState extends State<_SupplementFormSheet> {
         children: [
           Text(l10n.healthProductName, style: tt.titleMedium),
           const SizedBox(height: 8),
-          TextField(controller: nameCtrl, onChanged: (value) => nameValue.value = value),
+          TextField(
+            controller: nameCtrl,
+            onChanged: (value) => nameValue.value = value,
+          ),
           const SizedBox(height: 16),
           Text(l10n.healthBrand, style: tt.titleMedium),
           const SizedBox(height: 8),
@@ -840,7 +927,10 @@ class _SupplementFormSheetState extends State<_SupplementFormSheet> {
           const SizedBox(height: 16),
           Text(l10n.healthServingsPerDay, style: tt.titleMedium),
           const SizedBox(height: 8),
-          TextField(controller: servingsCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+          TextField(
+            controller: servingsCtrl,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          ),
           const SizedBox(height: 24),
           Text(l10n.healthIngredients, style: tt.titleMedium),
           const SizedBox(height: 8),
@@ -849,7 +939,9 @@ class _SupplementFormSheetState extends State<_SupplementFormSheet> {
               Expanded(
                 child: TextField(
                   controller: ingredientNameCtrl,
-                  decoration: InputDecoration(hintText: l10n.healthIngredientName),
+                  decoration: InputDecoration(
+                    hintText: l10n.healthIngredientName,
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
@@ -857,7 +949,9 @@ class _SupplementFormSheetState extends State<_SupplementFormSheet> {
                 width: 96,
                 child: TextField(
                   controller: ingredientAmountCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: InputDecoration(hintText: l10n.healthAmount),
                 ),
               ),
@@ -868,7 +962,12 @@ class _SupplementFormSheetState extends State<_SupplementFormSheet> {
                   return DropdownButton<String>(
                     value: unit,
                     items: const ['mg', 'mcg', 'g', 'IU', 'ml']
-                        .map((value) => DropdownMenuItem<String>(value: value, child: Text(value)))
+                        .map(
+                          (value) => DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          ),
+                        )
                         .toList(growable: false),
                     onChanged: (value) {
                       if (value == null) return;
@@ -877,7 +976,10 @@ class _SupplementFormSheetState extends State<_SupplementFormSheet> {
                   );
                 },
               ),
-              IconButton(onPressed: _addIngredient, icon: const Icon(Icons.add_circle_outline)),
+              IconButton(
+                onPressed: _addIngredient,
+                icon: const Icon(Icons.add_circle_outline),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -893,7 +995,9 @@ class _SupplementFormSheetState extends State<_SupplementFormSheet> {
                       (ingredient) => ListTile(
                         contentPadding: EdgeInsets.zero,
                         title: Text(ingredient.name),
-                        subtitle: Text('${ingredient.amount} ${ingredient.unit}'),
+                        subtitle: Text(
+                          '${ingredient.amount} ${ingredient.unit}',
+                        ),
                         trailing: IconButton(
                           onPressed: () => _removeIngredient(ingredient),
                           icon: const Icon(Icons.remove_circle_outline),
@@ -909,7 +1013,10 @@ class _SupplementFormSheetState extends State<_SupplementFormSheet> {
       footer: Row(
         children: [
           Expanded(
-            child: OutlinedButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.workoutTypesCancel)),
+            child: OutlinedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l10n.workoutTypesCancel),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -921,18 +1028,24 @@ class _SupplementFormSheetState extends State<_SupplementFormSheet> {
                   builder: (_, currentName, _) {
                     final name = currentName.trim();
                     return PrimaryButton(
-                      label: isEdit ? l10n.healthSave : l10n.healthAddSupplement,
+                      label: isEdit
+                          ? l10n.healthSave
+                          : l10n.healthAddSupplement,
                       isLoading: false,
                       onPressed: name.isEmpty || values.isEmpty
                           ? null
                           : () {
-                              final servings = double.tryParse(servingsCtrl.text.trim()) ?? 1;
+                              final servings =
+                                  double.tryParse(servingsCtrl.text.trim()) ??
+                                  1;
                               Navigator.of(context).pop(
                                 _SupplementProductDraft(
                                   name: name,
                                   brand: brandCtrl.text.trim(),
                                   ingredients: values,
-                                  servingsPerDayDefault: servings <= 0 ? 1 : servings,
+                                  servingsPerDayDefault: servings <= 0
+                                      ? 1
+                                      : servings,
                                 ),
                               );
                             },
@@ -977,7 +1090,10 @@ class _GroupedTodayLogs {
   final double totalServings;
   final List<SupplementLog> entries;
 
-  _GroupedTodayLogs copyWith({double? totalServings, List<SupplementLog>? entries}) {
+  _GroupedTodayLogs copyWith({
+    double? totalServings,
+    List<SupplementLog>? entries,
+  }) {
     return _GroupedTodayLogs(
       productId: productId,
       name: name,

@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
@@ -24,7 +27,10 @@ class WorkoutTypesPage extends StatelessWidget implements AutoRouteWrapper {
 
   @override
   Widget wrappedRoute(BuildContext context) {
-    return BlocProvider<WorkoutCubit>(create: (_) => getIt<WorkoutCubit>(), child: this);
+    return BlocProvider<WorkoutCubit>(
+      create: (_) => getIt<WorkoutCubit>(),
+      child: this,
+    );
   }
 
   @override
@@ -52,44 +58,111 @@ class WorkoutTypesView extends StatefulWidget {
 }
 
 class _WorkoutTypesViewState extends State<WorkoutTypesView> {
-  final ValueNotifier<List<TrainingType>> _types = ValueNotifier<List<TrainingType>>(<TrainingType>[]);
+  static const Duration _minimumSkeletonDuration = Duration(milliseconds: 300);
+
+  final ValueNotifier<List<TrainingType>> _types =
+      ValueNotifier<List<TrainingType>>(<TrainingType>[]);
   final ValueNotifier<bool> _hasLoadedAtLeastOnce = ValueNotifier<bool>(false);
+
+  bool _forceSkeleton = true;
+  DateTime? _loadStartedAt;
+  Timer? _skeletonTimer;
+  int _loadToken = 0;
 
   @override
   void initState() {
     super.initState();
+    _startSkeletonWindow();
     context.read<WorkoutCubit>().loadTypes(widget.userId);
   }
 
   @override
   void dispose() {
+    _skeletonTimer?.cancel();
     _types.dispose();
     _hasLoadedAtLeastOnce.dispose();
     super.dispose();
   }
 
+  void _startSkeletonWindow() {
+    if (!mounted) return;
+    _skeletonTimer?.cancel();
+    _skeletonTimer = null;
+    _loadToken++;
+    _loadStartedAt = DateTime.now();
+    _updateSkeleton(true);
+  }
+
+  void _releaseSkeletonWindow() {
+    final startedAt = _loadStartedAt;
+    if (startedAt == null) {
+      _skeletonTimer?.cancel();
+      _skeletonTimer = null;
+      if (mounted && _forceSkeleton) _updateSkeleton(false);
+      return;
+    }
+
+    final token = _loadToken;
+    final elapsed = DateTime.now().difference(startedAt);
+    final remaining = _minimumSkeletonDuration - elapsed;
+
+    if (remaining <= Duration.zero) {
+      _skeletonTimer?.cancel();
+      _skeletonTimer = null;
+      if (mounted && _forceSkeleton) _updateSkeleton(false);
+      return;
+    }
+
+    _skeletonTimer?.cancel();
+    _skeletonTimer = Timer(remaining, () {
+      if (!mounted || token != _loadToken || !_forceSkeleton) return;
+      _updateSkeleton(false);
+      _skeletonTimer = null;
+    });
+  }
+
+  void _updateSkeleton(bool show) {
+    if (!mounted) return;
+
+    void apply() {
+      if (!mounted) return;
+      setState(() => _forceSkeleton = show);
+    }
+
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => apply());
+      return;
+    }
+    apply();
+  }
+
   Future<void> _openCreateModal(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
-    final draft = await showModalBottomSheet<_TypeDraft>(
+    final draft = await showDialog<_TypeDraft>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _TypeEditorSheet(title: l10n.workoutTypesCreateTitle, actionLabel: l10n.workoutTypesCreate),
+      builder: (_) => _TypeEditorSheet(
+        title: l10n.workoutTypesCreateTitle,
+        actionLabel: l10n.workoutTypesCreate,
+      ),
     );
     if (draft == null) return;
 
     await context.read<WorkoutCubit>().createType(
       widget.userId,
-      TrainingType(id: '', name: draft.name, color: draft.color, icon: draft.icon),
+      TrainingType(
+        id: '',
+        name: draft.name,
+        color: draft.color,
+        icon: draft.icon,
+      ),
     );
   }
 
   Future<void> _openEditModal(BuildContext context, TrainingType type) async {
     final l10n = AppLocalizations.of(context);
-    final draft = await showModalBottomSheet<_TypeDraft>(
+    final draft = await showDialog<_TypeDraft>(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (_) => _TypeEditorSheet(
         title: l10n.workoutTypesEditTitle,
         actionLabel: l10n.workoutTypesSave,
@@ -102,16 +175,25 @@ class _WorkoutTypesViewState extends State<WorkoutTypesView> {
 
     await context.read<WorkoutCubit>().updateType(
       widget.userId,
-      TrainingType(id: type.id, name: draft.name, color: draft.color, icon: draft.icon),
+      TrainingType(
+        id: type.id,
+        name: draft.name,
+        color: draft.color,
+        icon: draft.icon,
+      ),
     );
   }
 
-  Future<void> _showDeleteConfirm(BuildContext context, TrainingType type) async {
+  Future<void> _showDeleteConfirm(
+    BuildContext context,
+    TrainingType type,
+  ) async {
     final l10n = AppLocalizations.of(context);
     final shouldDelete = await ConfirmationDialog.show(
       context,
       title: l10n.workoutTypesDeleteTitle,
-      message: '${l10n.workoutTypesDelete} ${type.name}? ${l10n.workoutTypesDeleteWarning}',
+      message:
+          '${l10n.workoutTypesDelete} ${type.name}? ${l10n.workoutTypesDeleteWarning}',
       cancelLabel: l10n.workoutTypesCancel,
       confirmLabel: l10n.workoutTypesDelete,
     );
@@ -137,20 +219,27 @@ class _WorkoutTypesViewState extends State<WorkoutTypesView> {
         if (state is WorkoutTypesLoadedState) {
           _types.value = state.types;
           _hasLoadedAtLeastOnce.value = true;
+          _releaseSkeletonWindow();
           return;
         }
 
-        if (state is WorkoutTypeCreatedState || state is WorkoutTypeUpdatedState || state is WorkoutTypeDeletedState) {
+        if (state is WorkoutTypeCreatedState ||
+            state is WorkoutTypeUpdatedState ||
+            state is WorkoutTypeDeletedState) {
+          _startSkeletonWindow();
           ctx.read<WorkoutCubit>().loadTypes(widget.userId);
           return;
         }
 
         if (state is SomethingWentWrongState) {
-          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
+          _releaseSkeletonWindow();
+          ScaffoldMessenger.of(
+            ctx,
+          ).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
         }
       },
       builder: (ctx, state) {
-        final showInitialLoading = state is PendingState && !_hasLoadedAtLeastOnce.value;
+        final showSkeleton = !_hasLoadedAtLeastOnce.value || _forceSkeleton;
 
         return ValueListenableBuilder<List<TrainingType>>(
           valueListenable: _types,
@@ -159,20 +248,18 @@ class _WorkoutTypesViewState extends State<WorkoutTypesView> {
               backgroundColor: cs.surfaceContainerLow,
               appBar: GymAppBar(
                 title: l10n.workoutTypesTitle,
-                actions: [IconButton(icon: const Icon(Icons.add), onPressed: () => _openCreateModal(context))],
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.add),
+                    onPressed: () => _openCreateModal(context),
+                  ),
+                ],
               ),
-              floatingActionButton: PrimaryFab(onPressed: () => _openCreateModal(context)),
-              body: showInitialLoading
-                  ? Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          CircularProgressIndicator(color: cs.primary),
-                          const SizedBox(height: 16),
-                          Text(l10n.workoutTypesLoading, style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant)),
-                        ],
-                      ),
-                    )
+              floatingActionButton: PrimaryFab(
+                onPressed: () => _openCreateModal(context),
+              ),
+              body: showSkeleton
+                  ? const _WorkoutTypesSkeleton()
                   : types.isEmpty
                   ? EmptyStateWidget(
                       emoji: Emojis.weightLifting,
@@ -182,7 +269,10 @@ class _WorkoutTypesViewState extends State<WorkoutTypesView> {
                       onAction: () => _openCreateModal(context),
                     )
                   : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       itemCount: types.length,
                       itemBuilder: (_, index) {
                         final type = types[index];
@@ -197,7 +287,10 @@ class _WorkoutTypesViewState extends State<WorkoutTypesView> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Center(
-                              child: EmojiText(type.icon ?? _workoutTypeIcons.first, style: const TextStyle(fontSize: 24)),
+                              child: EmojiText(
+                                type.icon ?? _workoutTypeIcons.first,
+                                style: const TextStyle(fontSize: 24),
+                              ),
                             ),
                           ),
                           trailing: IconButton(
@@ -269,7 +362,10 @@ class _TypeEditorSheetState extends State<_TypeEditorSheet> {
     final selectedIcon = _selectedIcon;
     final selectedColor = _selectedColor;
 
-    if (nameCtrl == null || nameValue == null || selectedIcon == null || selectedColor == null) {
+    if (nameCtrl == null ||
+        nameValue == null ||
+        selectedIcon == null ||
+        selectedColor == null) {
       return const SizedBox.shrink();
     }
 
@@ -284,7 +380,9 @@ class _TypeEditorSheetState extends State<_TypeEditorSheet> {
             controller: nameCtrl,
             maxLength: 30,
             onChanged: (value) => nameValue.value = value,
-            decoration: InputDecoration(hintText: l10n.workoutTypesNamePlaceholder),
+            decoration: InputDecoration(
+              hintText: l10n.workoutTypesNamePlaceholder,
+            ),
           ),
           const SizedBox(height: 16),
           Text(l10n.workoutTypesIcon, style: tt.titleMedium),
@@ -304,11 +402,20 @@ class _TypeEditorSheetState extends State<_TypeEditorSheet> {
                       width: 44,
                       height: 44,
                       decoration: BoxDecoration(
-                        color: isSelected ? cs.primaryContainer : cs.surfaceContainerHighest,
+                        color: isSelected
+                            ? cs.primaryContainer
+                            : cs.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(12),
-                        border: isSelected ? Border.all(color: cs.primary, width: 2) : null,
+                        border: isSelected
+                            ? Border.all(color: cs.primary, width: 2)
+                            : null,
                       ),
-                      child: Center(child: EmojiText(icon, style: const TextStyle(fontSize: 24))),
+                      child: Center(
+                        child: EmojiText(
+                          icon,
+                          style: const TextStyle(fontSize: 24),
+                        ),
+                      ),
                     ),
                   );
                 }).toList(),
@@ -335,9 +442,17 @@ class _TypeEditorSheetState extends State<_TypeEditorSheet> {
                       decoration: BoxDecoration(
                         color: _safeColorFromHex(hex),
                         shape: BoxShape.circle,
-                        border: isSelected ? Border.all(color: cs.onSurface, width: 2) : null,
+                        border: isSelected
+                            ? Border.all(color: cs.onSurface, width: 2)
+                            : null,
                       ),
-                      child: isSelected ? const Icon(Icons.check, size: 18, color: Colors.white) : null,
+                      child: isSelected
+                          ? const Icon(
+                              Icons.check,
+                              size: 18,
+                              color: Colors.white,
+                            )
+                          : null,
                     ),
                   );
                 }).toList(),
@@ -358,15 +473,24 @@ class _TypeEditorSheetState extends State<_TypeEditorSheet> {
                     builder: (_, activeName, _) {
                       return MainListItem(
                         margin: EdgeInsets.zero,
-                        title: activeName.trim().isEmpty ? l10n.workoutTypesPreviewName : activeName.trim(),
+                        title: activeName.trim().isEmpty
+                            ? l10n.workoutTypesPreviewName
+                            : activeName.trim(),
                         leading: Container(
                           width: 44,
                           height: 44,
                           decoration: BoxDecoration(
-                            color: _safeColorFromHex(activeColor).withValues(alpha: 0.2),
+                            color: _safeColorFromHex(
+                              activeColor,
+                            ).withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Center(child: EmojiText(activeIcon, style: const TextStyle(fontSize: 24))),
+                          child: Center(
+                            child: EmojiText(
+                              activeIcon,
+                              style: const TextStyle(fontSize: 24),
+                            ),
+                          ),
                         ),
                       );
                     },
@@ -380,7 +504,10 @@ class _TypeEditorSheetState extends State<_TypeEditorSheet> {
       footer: Row(
         children: [
           Expanded(
-            child: OutlinedButton(onPressed: () => Navigator.of(context).pop(), child: Text(l10n.workoutTypesCancel)),
+            child: OutlinedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l10n.workoutTypesCancel),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -399,9 +526,13 @@ class _TypeEditorSheetState extends State<_TypeEditorSheet> {
                           onPressed: activeName.trim().isEmpty
                               ? null
                               : () {
-                                  Navigator.of(
-                                    context,
-                                  ).pop(_TypeDraft(name: activeName.trim(), icon: icon, color: color));
+                                  Navigator.of(context).pop(
+                                    _TypeDraft(
+                                      name: activeName.trim(),
+                                      icon: icon,
+                                      color: color,
+                                    ),
+                                  );
                                 },
                         );
                       },
@@ -418,7 +549,11 @@ class _TypeEditorSheetState extends State<_TypeEditorSheet> {
 }
 
 class _TypeDraft {
-  const _TypeDraft({required this.name, required this.icon, required this.color});
+  const _TypeDraft({
+    required this.name,
+    required this.icon,
+    required this.color,
+  });
 
   final String name;
   final String icon;
@@ -427,7 +562,10 @@ class _TypeDraft {
 
 Color _safeColorFromHex(String hex) {
   final normalized = hex.replaceAll('#', '');
-  final value = int.tryParse(normalized.length == 6 ? 'FF$normalized' : normalized, radix: 16);
+  final value = int.tryParse(
+    normalized.length == 6 ? 'FF$normalized' : normalized,
+    radix: 16,
+  );
   if (value == null) return const Color(0xFF6366F1);
   return Color(value);
 }
@@ -467,3 +605,84 @@ const List<String> _workoutTypeIcons = [
   Emojis.star,
   Emojis.glowingStar,
 ];
+
+class _WorkoutTypesSkeleton extends StatelessWidget {
+  const _WorkoutTypesSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      itemCount: 6,
+      itemBuilder: (_, __) => const _WorkoutTypeSkeletonItem(),
+    );
+  }
+}
+
+class _WorkoutTypeSkeletonItem extends StatelessWidget {
+  const _WorkoutTypeSkeletonItem();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: cs.outline),
+        ),
+        child: Row(
+          children: [
+            // Icon placeholder
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: cs.outlineVariant.withValues(alpha: 0.45),
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            const SizedBox(width: 14),
+            // Text placeholders
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 14,
+                    width: 120,
+                    decoration: BoxDecoration(
+                      color: cs.outlineVariant.withValues(alpha: 0.45),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    height: 10,
+                    width: 80,
+                    decoration: BoxDecoration(
+                      color: cs.outlineVariant.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Trailing action placeholder
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: cs.outlineVariant.withValues(alpha: 0.3),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
