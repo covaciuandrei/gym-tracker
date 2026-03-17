@@ -1,5 +1,8 @@
 # Copilot Instructions — gym_tracker
 
+> **Rules:** All coding rules and conventions are in `.github/rules.md`.
+> This file contains the AI role, reference data, and the Angular architecture map.
+
 ## 1. Role
 
 You are an **Expert Senior Flutter Architect** specializing in pixel-perfect Flutter
@@ -8,7 +11,7 @@ auto_route, and clean architecture.
 
 ---
 
-## 2. Environment (non-negotiable)
+## 2. Environment (quick reference)
 
 | Item             | Version                                     |
 | ---------------- | ------------------------------------------- |
@@ -120,145 +123,7 @@ decoration: BoxDecoration(
 
 ---
 
-## 6. Architecture Rules
-
-- **One cubit per page/feature** — cubits live in `lib/cubit/<feature>/`
-- **No business logic in widgets** — all state changes go through cubit methods
-- **Service + source pattern** — cubits call services (`lib/service/*`), and services call Firestore sources (`lib/data/remote/*`)
-- **auto_route** — all navigation uses `context.router.push/replace/popAndPush`
-- **Localization** — all user-visible strings must use `AppLocalizations` (ARB files
-  at `lib/assets/localization/`)
-- **No hardcoded colors** — always use `Theme.of(context).colorScheme.*` or
-  `AppColors.*` constants
-- **No hardcoded text styles** — always use `Theme.of(context).textTheme.*`
-- **ThemeHelper / LocaleHelper usage scope**:
-  - Do **not** inject `ThemeHelper`/`LocaleHelper` into every page.
-  - Most pages should read visuals/localized text through inherited context
-    (`Theme.of(context)` and `AppLocalizations.of(context)`).
-  - Use `ThemeHelper`/`LocaleHelper` directly only where app-level preferences
-    are changed or observed (for example root app wiring and Settings page).
-
-**State management in widgets (BlocBuilder / BlocConsumer):**
-
-- **Never use `setState` to store cubit state** (errors, loading flag, success
-  flag). Derive these directly inside `builder:` from the current bloc state:
-  ```dart
-  final isLoading = state is PendingState;
-  final isSuccess = state is SomeSuccessState;
-  String? errorMessage;
-  if (state is ErrorStateA) errorMessage = l10n.errorsKeyA;
-  else if (state is ErrorStateB) errorMessage = l10n.errorsKeyB;
-  ```
-- Use `buildWhen` to restrict rebuilds to states that affect UI:
-  ```dart
-  buildWhen: (previous, current) =>
-      current is PendingState ||
-      current is SomeSuccessState ||
-      current is SomeErrorState,
-  ```
-- Use `listenWhen` + `listener` only for side effects (navigation, snackbars)
-  not reflected in the widget tree.
-- For local live-feedback widgets (password strength, match indicator) use
-  `ListenableBuilder` or `ValueListenableBuilder` on `TextEditingController`
-  — not `setState`.
-- For page initialization data (for example app version, profile bootstrap,
-  or first-load UI values), **do not use `setState`**. Create an `init()`
-  method in that page's cubit, call it from `initState()`, emit a dedicated
-  state (for example `SettingsReadyState(appVersion: ...)`), and read that
-  value from `BlocBuilder`/`BlocConsumer.builder`.
-- **Never use `late` or `late final` in app code.** Prefer one of:
-  - eagerly initialized `final` fields,
-  - nullable fields with explicit guards,
-  - cubit-emitted state values read in `BlocBuilder`.
-- Expose the **inner view widget as a public class** (e.g. `RegisterView`)
-  so tests can inject a mock cubit via `BlocProvider.value` without `getIt`.
-
-- If a widget is likely to be reused across the app (examples: all kinds of
-  buttons, form fields, cards, common list rows, chips, or scaled layout
-  primitives), place the widget in `lib/presentation/controls/` as a public
-  widget (one public widget per file). **Always add a matching widget test.**
-  Prefer extraction into `controls/` instead of duplicating similar widgets
-  across pages.
-
-## State Management Rules (Bloc Architecture)
-
-This project follows strict Bloc architecture.
-
-### Do NOT use ValueNotifier for:
-
-- Backend/domain data
-- Data coming from repositories
-- Data coming from Cubits/Blocs
-- Lists of models retrieved from Firebase or APIs
-- Application state shared across screens
-
-Examples of state that MUST stay inside Cubit state:
-
-- `List<SupplementLog>`
-- `List<SupplementProduct>`
-- user data
-- health logs
-- workout logs
-- settings loaded from backend
-
-Reason:
-Bloc/Cubit is the single source of truth for application state.
-Duplicating Bloc state inside ValueNotifier introduces unnecessary state layers
-and violates clean architecture.
-
-Incorrect pattern:
-
-```dart
-Cubit -> BlocConsumer listener -> ValueNotifier -> UI
-```
-
-Correct pattern:
-
-```dart
-Cubit -> BlocBuilder -> UI
-```
-
-The UI must read state directly from the Cubit state.
-
-### It IS OK to use ValueNotifier for:
-
-Local ephemeral UI state only, meaning state that:
-
-- exists only inside a widget
-- does not come from the backend
-- does not belong to business logic
-- does not need to persist
-
-Examples of acceptable usage:
-
-- selected tab index
-- search query text
-- form validation state
-- temporary form values
-- dropdown selections
-- toggles that only affect local UI
-
-Examples:
-
-```dart
-ValueNotifier<HealthTab> activeTab
-ValueNotifier<String> searchQuery
-ValueNotifier<List<ProductIngredient>> ingredientsDraft
-```
-
-These are UI concerns, not domain state.
-
-### Prefer these tools instead of ValueNotifier
-
-For application state:
-
-- `BlocBuilder`
-- `BlocSelector`
-- `buildWhen`
-
-Never duplicate Bloc state into ValueNotifier.
-
-**Current controls inventory:**
+## 6. Controls Inventory
 
 | File                               | What it is                                                                                                                                                                                                                                              |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -289,31 +154,7 @@ Never duplicate Bloc state into ValueNotifier.
 
 ---
 
-## 7. Code Quality Standards
-
-- Run `dart analyze lib/` mentally before submitting — zero warnings allowed
-- Use `const` constructors wherever possible
-- Prefer `final` fields in widgets
-- Widget files: one public widget per file, named after the file
-- Keep `build()` methods under ~80 lines — extract sub-widgets or helper methods
-  when longer
-
----
-
-## 8. Testing
-
-- Unit tests for all cubit state transitions
-- **Widget test required for every file added to `lib/presentation/controls/`** — mirror path under `test/presentation/controls/`
-- Widget tests for pages go under `test/presentation/pages/<feature>/`
-- Test files mirror the `lib/` structure under `test/`
-- Never break existing tests — `flutter test` must stay green
-- Use `mocktail` (already in `dev_dependencies`) for mocking; no code generation needed
-- For page tests that use a cubit, inject via `BlocProvider<MyCubit>.value(value: mockCubit, child: const MyView())` — expose `MyView` as a public class so tests bypass `getIt`
-- Minimum coverage per widget test: renders label/content, loading/spinner state, disabled/null-tap state, reactive updates if the widget uses `ListenableBuilder`
-
----
-
-## 9. Key File Locations
+## 7. Key File Locations
 
 | What                     | Where                                                        |
 | ------------------------ | ------------------------------------------------------------ |
@@ -334,12 +175,12 @@ Never duplicate Bloc state into ValueNotifier.
 
 ---
 
-## 10. Angular Codebase Architecture Map
+## 8. Angular Codebase Architecture Map
 
 > Full inventory of every Angular component, service, guard, and Firestore
 > collection. Use this to ensure **zero features are missed** during migration.
 
-### 10.1 Route Tree (Angular → Flutter mapping)
+### 8.1 Route Tree (Angular → Flutter mapping)
 
 ```
 /                         → SplashPage (initial)
@@ -363,7 +204,7 @@ Never duplicate Bloc state into ValueNotifier.
 - `SplashPage` redirects to `MainShellRoute` or `LoginRoute` based on `FirebaseAuth.currentUser`.
 - Feature pages also self-check auth and redirect to `LoginRoute` when user is missing.
 
-### 10.2 Feature Inventory
+### 8.2 Feature Inventory
 
 #### AUTH FEATURE — `src/app/features/auth/`
 
@@ -458,7 +299,7 @@ All stats tabs share:
 | **App version**        | Loaded dynamically via `package_info_plus` in `SettingsCubit.init()`                                                                             |
 | **Navigation**         | Back arrow → previous page                                                                                                                       |
 
-### 10.3 Firestore Data Model
+### 8.3 Firestore Data Model
 
 ```
 firestore/
@@ -479,7 +320,7 @@ firestore/
     └── { name, aliases?, category, defaultUnit, safeUpperLimit?, rda? }
 ```
 
-### 10.4 Angular Services → Flutter Service/Source Mapping
+### 8.4 Angular Services → Flutter Service/Source Mapping
 
 | Angular Service                             | Flutter equivalent                                                                                         |
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
@@ -493,7 +334,7 @@ firestore/
 
 ---
 
-## 11. App Navigation Flowchart
+## 9. App Navigation Flowchart
 
 ```
 App Start
@@ -559,7 +400,7 @@ Firebase email links (out-of-app):
             └── mode=unknown / missing oobCode → ErrorStateWidget
 ```
 
-### 11.1 Authentication State Machine
+### 9.1 Authentication State Machine
 
 ```
 State: UNAUTHENTICATED
@@ -573,7 +414,7 @@ State: AUTHENTICATED
     └── signOut() → UNAUTHENTICATED
 ```
 
-### 11.2 Calendar Day Cell State Machine
+### 9.2 Calendar Day Cell State Machine
 
 ```
 Day cell in initial state (no attendance, no supplement)
@@ -602,7 +443,7 @@ Day cell in initial state (no attendance, no supplement)
                     └── Add more supplement logs same as above
 ```
 
-### 11.3 Stats Data Flow
+### 9.3 Stats Data Flow
 
 ```
 StatsPage (shell)
@@ -627,7 +468,7 @@ StatsPage (shell)
         └── derives: totalServings, mostTakenProduct, topNutrients (from ingredient stdIds)
 ```
 
-### 11.4 Health Page View Modes
+### 9.4 Health Page View Modes
 
 ```
 HealthPage

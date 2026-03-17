@@ -425,49 +425,11 @@ dev_dependencies:
 
 ---
 
-## 10. Important Rules (ALWAYS Follow)
+## 10. Rules
 
-1. **Firestore paths are sacred.** Never flatten `users/{uid}/attendances/{yearMonth}/days/{date}`. Never flatten `users/{uid}/healthLogs/{yearMonth}/entries/{logId}`. Keep exactly as designed.
-2. **No SQLite/Drift.** gym_tracker uses Firestore + SharedPreferences + FlutterSecureStorage only.
-3. **No dev environment.** Only `prod` Firestore config. No environment switching logic.
-4. **No copyWith on states/models.** Always replace entirely.
-5. **Always `safeEmit(PendingState())` before async ops in cubits.**
-6. **BaseCubit default state is `const InitialState()`**, not a parameterized substate.
-7. **Every page implements `AutoRouteWrapper`** with `wrappedRoute` creating its `BlocProvider`.
-8. **`@RoutePage()` annotation required** on every page widget.
-9. **DTOs use `@JsonSerializable()` + `json_annotation`**, with `@JsonKey(name: '...', defaultValue: ...)`.
-10. **All model IDs excluded from `toJson()**: `@JsonKey(includeFromJson: false, includeToJson: false)` for IDs that come from Firestore doc ID (not stored in fields).
-11. **Mobile-only:** The project was created with `--platforms=android,ios`. Do not add web support.
-12. **`yearMonth` key format = "YYYY-MM"** (zero-padded month). `date` format = "YYYY-MM-DD".
-13. **`AppColors` is only used inside `CustomTheme`** — never reference `AppColors.*` directly in widget `build()` methods. All widgets must read colors from `Theme.of(context)` so that light/dark switching works automatically. The correct M3 mappings are:
-    - `Theme.of(context).colorScheme.primary` → accent / brand color
-    - `Theme.of(context).colorScheme.error` → danger / destructive actions
-    - `Theme.of(context).colorScheme.onSurface` → primary text on surfaces
-    - `Theme.of(context).colorScheme.onSurfaceVariant` → secondary / helper text
-    - `Theme.of(context).colorScheme.outline` → muted text, borders, disabled icons
-    - `Theme.of(context).colorScheme.surface` → card / panel backgrounds
-    - `Theme.of(context).scaffoldBackgroundColor` → page background
-    - `Theme.of(context).textTheme.*` → text styles (see Rule 14)
-      Never hardcode hex `Color(0xFF…)` values inside widgets either.
-14. **Never hardcode `TextStyle(fontSize:…, fontWeight:…)` in widget `build()` methods** — always use `Theme.of(context).textTheme.*`, with `.copyWith()` only for single-property overrides (e.g. color). The full 15-role mapping is:
-
-    | Role             | Size | Weight | Default color    | Semantic use                                  |
-    | ---------------- | ---- | ------ | ---------------- | --------------------------------------------- |
-    | `displayLarge`   | 32   | w700   | onSurface        | Hero / splash giant text                      |
-    | `displayMedium`  | 28   | w700   | onSurface        | App title, avatar initial                     |
-    | `displaySmall`   | 24   | w600   | onSurface        | Page title heading                            |
-    | `headlineLarge`  | 22   | w600   | onSurface        | Screen/section headline                       |
-    | `headlineMedium` | 20   | w600   | onSurface        | Sub-headline                                  |
-    | `headlineSmall`  | 18   | w600   | onSurface        | Card heading                                  |
-    | `titleLarge`     | 16   | w600   | onSurface        | AppBar title, list item title                 |
-    | `titleMedium`    | 15   | w500   | onSurface        | List tile title                               |
-    | `titleSmall`     | 14   | w500   | onSurface        | Dense list title                              |
-    | `bodyLarge`      | 16   | w400   | onSurface        | Body copy                                     |
-    | `bodyMedium`     | 14   | w400   | onSurface        | Default body / helper text                    |
-    | `bodySmall`      | 12   | w400   | onSurfaceVariant | Captions, subtitles                           |
-    | `labelLarge`     | 14   | w600   | primary          | Button label                                  |
-    | `labelMedium`    | 12   | w500   | onSurfaceVariant | Chips, badges                                 |
-    | `labelSmall`     | 11   | w600   | outline          | All-caps section headers (letterSpacing: 1.2) |
+All coding rules and conventions are in **`.github/rules.md`** — the single source of truth.
+Do not duplicate rules here. Refer to that file for architecture, cubit, state management,
+Firestore, testing, code quality, and design rules.
 
 # gym_tracker — Project Context after Phase 1
 
@@ -1019,20 +981,9 @@ Calendar, Stats, Health, Profile.
 
 ---
 
-## 10. Architecture rules (critical summary — full list in `project_context.md`)
+## 10. Rules
 
-1. **Every page**: `@RoutePage()` + implements `AutoRouteWrapper` (creates its own `BlocProvider` via `wrappedRoute`)
-2. **Every cubit**: `@injectable`, extends `BaseCubit`, always calls `safeEmit(PendingState())` before async ops
-3. **Every service**: `@injectable`, `part` + `part of` for its exceptions file
-4. **Every source**: `@injectable`, uses `FirebaseFirestore.instance` directly (not injected)
-5. **Every mapper**: `@injectable`, maps DTO↔Model, handles `Timestamp.toDate()` and `Timestamp.fromDate()`
-6. **No copyWith** anywhere on states or models
-7. **Firestore paths are sacred** — never flatten:
-   - Attendance: `users/{uid}/attendances/{YYYY-MM}/days/{YYYY-MM-DD}`
-   - Health logs: `users/{uid}/healthLogs/{YYYY-MM}/entries/{logId}`
-8. **`yearMonth` format = `"YYYY-MM"`**, `date` format = `"YYYY-MM-DD"`
-9. **No SQLite / Drift** — only Firestore + SharedPreferences + FlutterSecureStorage
-10. **No dev/staging environment** — one Firebase config, prod only
+> All rules are in **`.github/rules.md`**. Refer to that file instead.
 
 ---
 
