@@ -871,4 +871,34 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get globalTryAgain => 'Încearcă din nou';
+
+  @override
+  String get onboardingTitle1 => 'Urmărește-ți Antrenamentele';
+
+  @override
+  String get onboardingSubtitle1 =>
+      'Înregistrează fiecare sesiune la sală și vizualizează prezența dintr-o privire.';
+
+  @override
+  String get onboardingTitle2 => 'Monitorizează-ți Sănătatea';
+
+  @override
+  String get onboardingSubtitle2 =>
+      'Ține evidența suplimentelor și nutriției zilnice.';
+
+  @override
+  String get onboardingTitle3 => 'Analizează-ți Progresul';
+
+  @override
+  String get onboardingSubtitle3 =>
+      'Vezi statistici detaliate, serii și defalcări lunare.';
+
+  @override
+  String get onboardingNext => 'Următorul';
+
+  @override
+  String get onboardingGetStarted => 'Să Începem';
+
+  @override
+  String get onboardingSkip => 'Sari peste';
 }

@@ -10,6 +10,7 @@ import 'package:gym_tracker/assets/theme/theme_helper.dart';
 import 'package:gym_tracker/core/app_router.dart';
 import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/presentation/helpers/locale_helper.dart';
+import 'package:gym_tracker/presentation/helpers/onboarding_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'firebase_options.dart';
@@ -29,11 +30,14 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   getIt.registerSingleton<LocaleHelper>(LocaleHelper(prefs));
   getIt.registerSingleton<ThemeHelper>(ThemeHelper(prefs));
+  getIt.registerSingleton<OnboardingHelper>(OnboardingHelper(prefs));
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   if (kDebugMode) {
-    await FirebaseAuth.instance.setSettings(appVerificationDisabledForTesting: true);
+    await FirebaseAuth.instance.setSettings(
+      appVerificationDisabledForTesting: true,
+    );
   }
 
   runApp(const MyApp());
@@ -94,7 +98,9 @@ class _MyAppState extends State<MyApp> {
         );
       },
 
-      routerConfig: _appRouter.config(navigatorObservers: () => [AutoRouteObserver()]),
+      routerConfig: _appRouter.config(
+        navigatorObservers: () => [AutoRouteObserver()],
+      ),
     );
   }
 }

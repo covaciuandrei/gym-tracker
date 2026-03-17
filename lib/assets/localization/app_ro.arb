@@ -317,5 +317,14 @@
     }
   },
   "profileDefaultUserName": "Utilizator Gym Tracker",
-  "globalTryAgain": "Încearcă din nou"
+  "globalTryAgain": "Încearcă din nou",
+  "onboardingTitle1": "Urmărește-ți Antrenamentele",
+  "onboardingSubtitle1": "Înregistrează fiecare sesiune la sală și vizualizează prezența dintr-o privire.",
+  "onboardingTitle2": "Monitorizează-ți Sănătatea",
+  "onboardingSubtitle2": "Ține evidența suplimentelor și nutriției zilnice.",
+  "onboardingTitle3": "Analizează-ți Progresul",
+  "onboardingSubtitle3": "Vezi statistici detaliate, serii și defalcări lunare.",
+  "onboardingNext": "Următorul",
+  "onboardingGetStarted": "Să Începem",
+  "onboardingSkip": "Sari peste"
 }

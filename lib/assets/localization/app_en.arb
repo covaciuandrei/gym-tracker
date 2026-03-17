@@ -317,5 +317,14 @@
     }
   },
   "profileDefaultUserName": "Gym Tracker User",
-  "globalTryAgain": "Try Again"
+  "globalTryAgain": "Try Again",
+  "onboardingTitle1": "Track Your Workouts",
+  "onboardingSubtitle1": "Log every gym session and see your attendance at a glance.",
+  "onboardingTitle2": "Monitor Your Health",
+  "onboardingSubtitle2": "Keep track of your supplements and daily nutrition.",
+  "onboardingTitle3": "Analyze Your Progress",
+  "onboardingSubtitle3": "View detailed stats, streaks, and monthly breakdowns.",
+  "onboardingNext": "Next",
+  "onboardingGetStarted": "Get Started",
+  "onboardingSkip": "Skip"
 }

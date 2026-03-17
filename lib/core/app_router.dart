@@ -12,6 +12,7 @@ class AppRouter extends RootStackRouter {
   @override
   final List<AutoRoute> routes = <AutoRoute>[
     AutoRoute(path: '/', page: SplashRoute.page, initial: true),
+    AutoRoute(path: '/onboarding', page: OnboardingRoute.page),
     AutoRoute(path: '/login', page: LoginRoute.page),
     AutoRoute(path: '/register', page: RegisterRoute.page),
     AutoRoute(path: '/forgot-password', page: ForgotPasswordRoute.page),
@@ -28,7 +29,11 @@ class AppRouter extends RootStackRouter {
       ],
     ),
     AutoRoute(path: '/workout-types', page: WorkoutTypesRoute.page),
-    AutoRoute(path: '/settings', page: SettingsRoute.page, maintainState: false),
+    AutoRoute(
+      path: '/settings',
+      page: SettingsRoute.page,
+      maintainState: false,
+    ),
     AutoRoute(path: '/change-password', page: ChangePasswordRoute.page),
   ];
 }

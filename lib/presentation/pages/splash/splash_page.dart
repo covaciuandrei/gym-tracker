@@ -4,6 +4,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
+import 'package:gym_tracker/core/injection.dart';
+import 'package:gym_tracker/presentation/helpers/onboarding_helper.dart';
 import 'package:gym_tracker/presentation/controls/emoji_text.dart';
 import 'package:gym_tracker/presentation/resources/app_colors.dart';
 import 'package:gym_tracker/presentation/resources/emojis.dart';
@@ -40,10 +42,16 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
 
-    final entryCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))..forward();
+    final entryCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..forward();
     _entryCtrl = entryCtrl;
 
-    final dotsCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..repeat();
+    final dotsCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat();
     _dotsCtrl = dotsCtrl;
 
     // Logo: 0.0 → 0.6 elastic scale, 0.0 → 0.3 fade
@@ -102,6 +110,11 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   Future<void> _navigate() async {
     await Future<void>.delayed(const Duration(milliseconds: 2800));
     if (!mounted) return;
+    final onboardingHelper = getIt<OnboardingHelper>();
+    if (onboardingHelper.isFirstLaunch) {
+      context.router.replace(const OnboardingRoute());
+      return;
+    }
     final isLoggedIn = FirebaseAuth.instance.currentUser != null;
     if (isLoggedIn) {
       context.router.replace(const MainShellRoute());
@@ -148,7 +161,10 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                 children: [
                   Opacity(
                     opacity: _logoFade!.value,
-                    child: Transform.scale(scale: _logoScale!.value, child: const _LogoCard()),
+                    child: Transform.scale(
+                      scale: _logoScale!.value,
+                      child: const _LogoCard(),
+                    ),
                   ),
                   const SizedBox(height: 36),
 
@@ -158,7 +174,10 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                       offset: Offset(0, _titleY!.value),
                       child: Text(
                         'Gym Tracker',
-                        style: tt.displaySmall?.copyWith(fontWeight: FontWeight.w700, letterSpacing: -0.5),
+                        style: tt.displaySmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.5,
+                        ),
                       ),
                     ),
                   ),
@@ -170,7 +189,9 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                       offset: Offset(0, _subtitleY!.value),
                       child: Text(
                         'Track your gym journey',
-                        style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
+                        style: tt.bodyLarge?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -218,7 +239,9 @@ class _LogoCard extends StatelessWidget {
           ),
         ],
       ),
-      child: const Center(child: EmojiText(Emojis.biceps, style: TextStyle(fontSize: 56))),
+      child: const Center(
+        child: EmojiText(Emojis.biceps, style: TextStyle(fontSize: 56)),
+      ),
     );
   }
 }
@@ -241,7 +264,8 @@ class _DotsLoader extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: List.generate(3, (i) {
             // Stagger each dot by 120° around the unit circle
-            final phase = controller.value * 2 * math.pi + i * (2 * math.pi / 3);
+            final phase =
+                controller.value * 2 * math.pi + i * (2 * math.pi / 3);
             final sinVal = math.sin(phase);
             // Only lift upward (negative y) on the positive half of the wave
             final yOffset = sinVal > 0 ? -10.0 * sinVal : 0.0;

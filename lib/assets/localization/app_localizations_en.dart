@@ -859,4 +859,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get globalTryAgain => 'Try Again';
+
+  @override
+  String get onboardingTitle1 => 'Track Your Workouts';
+
+  @override
+  String get onboardingSubtitle1 =>
+      'Log every gym session and see your attendance at a glance.';
+
+  @override
+  String get onboardingTitle2 => 'Monitor Your Health';
+
+  @override
+  String get onboardingSubtitle2 =>
+      'Keep track of your supplements and daily nutrition.';
+
+  @override
+  String get onboardingTitle3 => 'Analyze Your Progress';
+
+  @override
+  String get onboardingSubtitle3 =>
+      'View detailed stats, streaks, and monthly breakdowns.';
+
+  @override
+  String get onboardingNext => 'Next';
+
+  @override
+  String get onboardingGetStarted => 'Get Started';
+
+  @override
+  String get onboardingSkip => 'Skip';
 }
