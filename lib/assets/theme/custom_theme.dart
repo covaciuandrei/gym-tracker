@@ -28,27 +28,84 @@ abstract final class CustomTheme {
     required Color primary,
   }) {
     return TextTheme(
-      displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.w700, color: onSurface),
-      displayMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.w700, color: onSurface),
-      displaySmall: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: onSurface),
+      displayLarge: TextStyle(
+        fontSize: 32,
+        fontWeight: FontWeight.w700,
+        color: onSurface,
+      ),
+      displayMedium: TextStyle(
+        fontSize: 28,
+        fontWeight: FontWeight.w700,
+        color: onSurface,
+      ),
+      displaySmall: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.w600,
+        color: onSurface,
+      ),
 
-      headlineLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: onSurface),
-      headlineMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: onSurface),
-      headlineSmall: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: onSurface),
+      headlineLarge: TextStyle(
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+        color: onSurface,
+      ),
+      headlineMedium: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+        color: onSurface,
+      ),
+      headlineSmall: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: onSurface,
+      ),
 
-      titleLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: onSurface),
-      titleMedium: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: onSurface),
-      titleSmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: onSurface),
+      titleLarge: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: onSurface,
+      ),
+      titleMedium: TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+        color: onSurface,
+      ),
+      titleSmall: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: onSurface,
+      ),
 
-      bodyLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, color: onSurface),
-      bodyMedium: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: onSurface),
-      bodySmall: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: onSurfaceVariant),
+      bodyLarge: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+        color: onSurface,
+      ),
+      bodyMedium: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        color: onSurface,
+      ),
+      bodySmall: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        color: onSurfaceVariant,
+      ),
 
       // labelLarge: no color set — inherits from parent (e.g. button foreground)
       labelLarge: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-      labelMedium: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: onSurfaceVariant),
+      labelMedium: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: onSurfaceVariant,
+      ),
       // labelSmall: used for section headers (ABOUT, SECURITY, etc.)
-      labelSmall: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: onSurfaceVariant, letterSpacing: 1.2),
+      labelSmall: TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        color: onSurfaceVariant,
+        letterSpacing: 1.2,
+      ),
     );
   }
 
@@ -113,14 +170,20 @@ abstract final class CustomTheme {
         indicatorColor: AppColors.primaryContainerDark,
         iconTheme: WidgetStateProperty.resolveWith((states) {
           return IconThemeData(
-            color: states.contains(WidgetState.selected) ? AppColors.primary : AppColors.textSecondary,
+            color: states.contains(WidgetState.selected)
+                ? AppColors.primary
+                : AppColors.textSecondary,
           );
         }),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           return TextStyle(
             fontSize: 11,
-            fontWeight: states.contains(WidgetState.selected) ? FontWeight.w600 : FontWeight.w500,
-            color: states.contains(WidgetState.selected) ? AppColors.primary : AppColors.textSecondary,
+            fontWeight: states.contains(WidgetState.selected)
+                ? FontWeight.w600
+                : FontWeight.w500,
+            color: states.contains(WidgetState.selected)
+                ? AppColors.primary
+                : AppColors.textSecondary,
           );
         }),
       ),
@@ -137,6 +200,8 @@ abstract final class CustomTheme {
       // fill = backgroundDark so inputs look recessed inside cards
       inputDecorationTheme: const InputDecorationTheme(
         filled: true,
+        isDense: true,
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         fillColor: AppColors.backgroundDark,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -159,7 +224,9 @@ abstract final class CustomTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
         ),
       ),
@@ -168,11 +235,15 @@ abstract final class CustomTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textSecondary,
           side: const BorderSide(color: AppColors.borderDark),
-          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
         ),
       ),
-      textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: AppColors.primary)),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+      ),
     );
   }
 
@@ -226,14 +297,20 @@ abstract final class CustomTheme {
         indicatorColor: AppColors.primaryContainerLight,
         iconTheme: WidgetStateProperty.resolveWith((states) {
           return IconThemeData(
-            color: states.contains(WidgetState.selected) ? AppColors.primary : AppColors.textSecondaryLight,
+            color: states.contains(WidgetState.selected)
+                ? AppColors.primary
+                : AppColors.textSecondaryLight,
           );
         }),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           return TextStyle(
             fontSize: 11,
-            fontWeight: states.contains(WidgetState.selected) ? FontWeight.w600 : FontWeight.w500,
-            color: states.contains(WidgetState.selected) ? AppColors.primary : AppColors.textSecondaryLight,
+            fontWeight: states.contains(WidgetState.selected)
+                ? FontWeight.w600
+                : FontWeight.w500,
+            color: states.contains(WidgetState.selected)
+                ? AppColors.primary
+                : AppColors.textSecondaryLight,
           );
         }),
       ),
@@ -254,6 +331,8 @@ abstract final class CustomTheme {
       ),
       inputDecorationTheme: const InputDecorationTheme(
         filled: true,
+        isDense: true,
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         fillColor: AppColors.backgroundLight,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -274,7 +353,9 @@ abstract final class CustomTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
-          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
         ),
       ),
@@ -282,11 +363,15 @@ abstract final class CustomTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textSecondaryLight,
           side: const BorderSide(color: AppColors.borderLight),
-          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+          ),
           padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
         ),
       ),
-      textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: AppColors.primary)),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+      ),
     );
   }
 }
