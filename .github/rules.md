@@ -126,6 +126,8 @@ If any of these are true, the state **must** go through a cubit (emit state → 
 
 - **All user-visible strings must use `AppLocalizations`** — ARB files at `lib/assets/localization/`.
 - Supported languages: English (`en`), Romanian (`ro`).
+- **Every widget and page** must use `AppLocalizations.of(context)` for all displayed text — no hardcoded English strings in `build()` methods. This includes labels, headers, placeholders, button text, and preview/mock data labels.
+- **All emoji references must use `Emojis.*` constants** from `lib/presentation/resources/emojis.dart` — never use raw Unicode escapes (`\u{...}`) or literal emoji characters in widget code.
 
 ---
 
