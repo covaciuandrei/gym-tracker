@@ -1,7 +1,9 @@
 # Copilot Instructions — gym_tracker
 
-> **Rules:** All coding rules and conventions are in `.github/rules.md`.
-> This file contains the AI role, reference data, and the Angular architecture map.
+For now these copilot-instructions are not really up to date, but almost up to date. dont really follow exactly everything. everything you read heare must be treated more like a suggestion. if you have any question or are not sure about something, ask me. also, if you have any suggestion on how to improve the instructions, please let me know.
+
+> **Single source of truth** for AI role, reference data, architecture map,
+> and all coding rules/conventions.
 
 ## 1. Role
 
@@ -31,51 +33,17 @@ APIs that require a newer Flutter version.
 
 ## 3. Project Purpose
 
-`gym_tracker` is a **pixel-perfect Flutter migration** of the Angular web app
-`gym-presence-tracker` located at `../src/` (relative to this Flutter project).
-
-- Replicate every feature AND the exact visual design of the Angular app.
-- The Angular project is the single source of truth for UI layout, colors, and
-  interactions.
+`gym_tracker` is a gym attendance and health tracking app for Android and iOS.
+It tracks workouts, supplement intake, and provides statistics — all backed by
+Firebase Auth + Firestore.
 
 ---
 
-## 4. Mandatory Workflow — Building a Page UI
-
-Whenever you are asked to build or update a page's UI, you **must** follow this
-two-source approach before writing any code:
-
-### Step 1 — Read the prep doc
-
-Open `docs/screens/<page_name>.md` (e.g. `docs/screens/login_page.md`).
-This file contains:
-
-- Exact widget tree layout (Flutter pseudo-code)
-- Color-scheme and text-theme token mappings
-- Interaction notes and edge cases
-
-### Step 2 — Cross-reference the Angular source
-
-Open the corresponding Angular feature folder listed in the prep doc's
-`## Angular Source` section (e.g. `../src/app/features/auth/login/`).
-Read the `.html` and `.css` files to verify:
-
-- Exact spacing values (padding, gaps, margins)
-- Border radii, border widths, colors used
-- Any details not yet captured in the prep doc
-
-### Step 3 — Make both sources agree before coding
-
-If the prep doc and Angular source conflict, the **Angular source wins**. Note the
-discrepancy in your reasoning but do not update the `.md` file unless asked.
-
----
-
-## 5. Design Token Reference
+## 4. Design Token Reference
 
 All design tokens are centralized — never hardcode colors or radius values:
 
-| Flutter constant                | Angular variable           | Value     |
+| Flutter constant                | CSS variable               | Value     |
 | ------------------------------- | -------------------------- | --------- |
 | `AppColors.primary`             | `--primary-color`          | `#6366f1` |
 | `AppColors.primaryDark`         | `--primary-dark`           | `#4f46e5` |
@@ -108,7 +76,7 @@ All design tokens are centralized — never hardcode colors or radius values:
 **Input fields:** Always `border-width: 2`, `fillColor: AppColors.backgroundDark/Light`
 (inputs look recessed inside cards — darker than the card surface).
 
-**Primary button gradient** (Angular `.btn-primary`):
+**Primary button gradient:**
 
 ```dart
 decoration: BoxDecoration(
@@ -123,11 +91,11 @@ decoration: BoxDecoration(
 
 ---
 
-## 6. Controls Inventory
+## 5. Controls Inventory
 
 | File                               | What it is                                                                                                                                                                                                                                              |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `gradient_button.dart`             | Full-width indigo-gradient button (Angular `.btn-primary`); shows spinner when `isLoading: true`. **Use for every primary submit action.**                                                                                                              |
+| `gradient_button.dart`             | Full-width indigo-gradient button; shows spinner when `isLoading: true`. **Use for every primary submit action.**                                                                                                              |
 | `primary_button.dart`              | Material `ElevatedButton` wrapper; use only for secondary/outline actions that don't need gradient.                                                                                                                                                     |
 | `primary_fab.dart`                 | Standard reusable FloatingActionButton wrapper for add/create actions across tabs/pages.                                                                                                                                                                |
 | `custom_text_field.dart`           | Styled `TextFormField`; handles password-visibility toggle internally. Use for all form inputs.                                                                                                                                                         |
@@ -154,7 +122,7 @@ decoration: BoxDecoration(
 
 ---
 
-## 7. Key File Locations
+## 6. Key File Locations
 
 | What                     | Where                                                        |
 | ------------------------ | ------------------------------------------------------------ |
@@ -170,17 +138,14 @@ decoration: BoxDecoration(
 | Firestore sources + DTOs | `lib/data/remote/<feature>/`                                 |
 | Mappers                  | `lib/data/mappers/`                                          |
 | Screen prep docs         | `docs/screens/<page_name>.md`                                |
-| Angular source           | `../src/app/features/<feature>/`                             |
-| Angular styles           | `../src/styles.css`                                          |
 
 ---
 
-## 8. Angular Codebase Architecture Map
+## 7. Feature & Route Map
 
-> Full inventory of every Angular component, service, guard, and Firestore
-> collection. Use this to ensure **zero features are missed** during migration.
+> Full inventory of every feature, route, and Firestore collection.
 
-### 8.1 Route Tree (Angular → Flutter mapping)
+### 7.1 Route Tree
 
 ```
 /                         → SplashPage (initial)
@@ -204,23 +169,18 @@ decoration: BoxDecoration(
 - `SplashPage` redirects to `MainShellRoute` or `LoginRoute` based on `FirebaseAuth.currentUser`.
 - Feature pages also self-check auth and redirect to `LoginRoute` when user is missing.
 
-### 8.2 Feature Inventory
+### 7.2 Feature Inventory
 
-#### AUTH FEATURE — `src/app/features/auth/`
+#### AUTH FEATURE
 
 | Component                   | Actions / State                                                                                                                                                                                                                                                                                                                                                                                                       |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **LoginComponent**          | `email`, `password` fields; `isLoading`, `errorMessage`; `onSubmit()` → `authService.signIn()` → navigate `MainShell` (`/app/calendar` tab); link to `/register`, `/forgot-password`                                                                                                                                                                                                                                  |
 | **RegisterComponent**       | `email`, `password`, `confirmPassword`; validates: email format, password ≥8 chars + uppercase + lowercase + number, passwords match; `onSubmit()` → `authService.signUp()` → shows "verify email" success state; link to `/login`                                                                                                                                                                                    |
 | **ForgotPasswordComponent** | `email` field; `isLoading`, `errorMessage`, `successMessage`; `onSubmit()` → `authService.resetPassword(email)` → success message; email validation; link back to `/login`                                                                                                                                                                                                                                            |
-| **AuthActionComponent**     | Reads `?mode=` & `?oobCode=` query params from Firebase email links. **Three modes:** `verifyEmail` → `authService.verifyEmail(oobCode)` → success state with "Sign In" button; `resetPassword` → verifies code first (shows email), then password form (new + confirm, strength meter, min 8 chars + uppercase + lowercase + digit, passwords match) → `authService.confirmPasswordReset()`; `unknown` → error state |
 
-**AuthService methods used by auth pages:**
-`signIn`, `signUp` (sends verification email), `signOut`, `resetPassword`,
-`verifyEmail`, `verifyPasswordResetCode`, `confirmPasswordReset`,
-`changePassword`
 
-#### CALENDAR FEATURE — `src/app/features/calendar/`
+#### CALENDAR FEATURE
 
 | Aspect                     | Detail                                                                                                                                      |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -239,16 +199,16 @@ decoration: BoxDecoration(
 | **Products dropdown**      | Custom dropdown for supplement selection                                                                                                    |
 | **Skeleton loading**       | Array(42) skeleton cells during load                                                                                                        |
 
-#### STATS FEATURE — `src/app/features/workouts/stats/`
+#### STATS FEATURE
 
 Stats is a **shell with 4 sub-tabs**. The year is shared via query param `?year=`.
 
-| Tab             | Angular Component           | What it shows                                                                                                           |
-| --------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| **Attendances** | `AttendancesStatsComponent` | Total workouts (year), current month count, monthly bar chart (12 bars), streak (current + best), days-per-week heatmap |
-| **Workouts**    | `WorkoutsStatsComponent`    | Workout type breakdown (year): pie/list of types × count; monthly breakdown: selected month type distribution           |
-| **Duration**    | `DurationStatsComponent`    | Total hours (year), avg duration/session, monthly duration bar chart, per-type avg duration list                        |
-| **Health**      | `HealthStatsComponent`      | Total supplement servings (year), most-taken product, monthly supplement bar chart, top nutrients breakdown             |
+| Tab             | What it shows                                                                                                           |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **Attendances** | Total workouts (year), current month count, monthly bar chart (12 bars), streak (current + best), days-per-week heatmap |
+| **Workouts**    | Workout type breakdown (year): pie/list of types × count; monthly breakdown: selected month type distribution           |
+| **Duration**    | Total hours (year), avg duration/session, monthly duration bar chart, per-type avg duration list                        |
+| **Health**      | Total supplement servings (year), most-taken product, monthly supplement bar chart, top nutrients breakdown             |
 
 All stats tabs share:
 
@@ -256,7 +216,7 @@ All stats tabs share:
 - Loading skeleton cards
 - "No data" empty state when no records
 
-#### HEALTH FEATURE — `src/app/features/health/`
+#### HEALTH FEATURE
 
 | Aspect                      | Detail                                                                                                                                                                                                       |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -267,7 +227,7 @@ All stats tabs share:
 | **SupplementFormComponent** | Create/edit supplement product: `name`, `brand`, ingredient list (autocomplete from Firestore `ingredients` collection with stdId, amount, unit); save → `firebaseService.addProduct()` or `updateProduct()` |
 | **Auto-seed**               | On first load, if `ingredients` collection is empty, seeds it from `core/constants/ingredients.ts`                                                                                                           |
 
-#### WORKOUT TYPES FEATURE — `src/app/features/workouts/workout-types/`
+#### WORKOUT TYPES FEATURE
 
 | Aspect                 | Detail                                                                                  |
 | ---------------------- | --------------------------------------------------------------------------------------- |
@@ -280,7 +240,7 @@ All stats tabs share:
 | **Predefined icons**   | 🏋️ 🏃 🚴 🧘 🥊 🏊 ⚽ 🎾 🏀 💪 🤸 🚣 ⛹️ 🤾 🌏 🧗 🎯 🔥 ⭐ 🌟                             |
 | **Navigation**         | Accessed from profile/manage area; back button returns to previous route                |
 
-#### PROFILE FEATURE — `src/app/features/user/profile/`
+#### PROFILE FEATURE
 
 | Aspect         | Detail                                                          |
 | -------------- | --------------------------------------------------------------- |
@@ -289,22 +249,31 @@ All stats tabs share:
 | **Actions**    | Logout button → `authService.signOut()` → navigate `/login`     |
 | **Links**      | → `/settings`, → `/workout-types`                               |
 
-#### SETTINGS FEATURE — `src/app/features/user/settings/`
+#### SETTINGS FEATURE
 
 | Aspect                 | Detail                                                                                                                                           |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Appearance section** | Dark/light theme toggle → `themeService.toggleTheme()`                                                                                           |
 | **Language section**   | Language picker (EN / RO) → `languageService.setLanguage(lang)`                                                                                  |
-| **Security section**   | "Change password" navigates to dedicated `ChangePasswordPage`; form uses reusable `SetPasswordCard`; submit calls `authService.changePassword()` |
+| **Account section**    | "Change password" navigates to dedicated `ChangePasswordPage`; form uses reusable `SetPasswordCard` |
 | **App version**        | Loaded dynamically via `package_info_plus` in `SettingsCubit.init()`                                                                             |
 | **Navigation**         | Back arrow → previous page                                                                                                                       |
 
-### 8.3 Firestore Data Model
+### 7.3 Firestore Data Model
 
 ```
 firestore/
 ├── users/{userId}/
-│   ├── (doc fields)  totalWorkouts, currentYearWorkouts, currentMonthWorkouts
+│   ├── (profile fields)
+│   │   ├── email                        String   ← always mirrors Firebase Auth (source of truth)
+│   │   ├── displayName                  String   ← set on first-login bootstrap (nickname)
+│   │   ├── lastVerificationEmailSentAt  Timestamp? ← cooldown tracking for resend buttons; cleared on login
+│   │   ├── theme                        String   ← 'dark' | 'light'
+│   │   ├── language                     String   ← 'en' | 'ro'
+│   │   ├── lastLoginAt                  Timestamp
+│   │   ├── createdAt                    Timestamp
+│   │   └── stats.totalAttendances       Number
+│   │
 │   ├── trainingTypes/{typeId}
 │   │   └── { name, color, icon, createdAt }
 │   ├── attendances/{YYYY-MM}/days/{YYYY-MM-DD}
@@ -320,21 +289,28 @@ firestore/
     └── { name, aliases?, category, defaultUnit, safeUpperLimit?, rda? }
 ```
 
-### 8.4 Angular Services → Flutter Service/Source Mapping
+**Key Firestore patterns:**
+- All `UserSource` writes use `SetOptions(merge: true)` — safe for concurrent updates, preserves subcollections and existing fields.
+- `lastVerificationEmailSentAt` uses `Timestamp.now()` (device time) — avoids server/device clock skew in cooldown computation.
+- `lastVerificationEmailSentAt` is cleared on successful login via `_syncUserProfile()`.
 
-| Angular Service                             | Flutter equivalent                                                                                         |
-| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `AuthService`                               | `lib/service/auth/auth_service.dart` + `AuthCubit`                                                         |
-| `FirebaseService` (attendance)              | `lib/service/attendance/attendance_service.dart` + `lib/data/remote/attendance/attendance_day_source.dart` |
-| `FirebaseService` (training types)          | `lib/service/workout/workout_service.dart` + `lib/data/remote/training_type/training_type_source.dart`     |
-| `FirebaseService` (supplements/health logs) | `lib/service/health/health_service.dart` + `lib/data/remote/supplement/health_source.dart`                 |
-| `FirebaseService` (stats queries)           | `StatsCubit` composes attendance/workout/health services (no dedicated stats repository)                   |
-| `ThemeService`                              | `lib/assets/theme/theme_helper.dart`                                                                       |
-| `LanguageService`                           | `lib/presentation/helpers/locale_helper.dart`                                                              |
+### 7.4 Service / Source Map
+
+| Domain                | Service                                          | Source                                                  |
+| --------------------- | ------------------------------------------------ | ------------------------------------------------------- |
+| Auth                  | `lib/service/auth/auth_service.dart`             | — (Firebase Auth SDK directly)                          |
+| Auth (cubit)          | `lib/cubit/auth/auth_cubit.dart`                 |                               |
+| User profile          | `lib/service/user/user_service.dart`             | `lib/data/remote/user/user_source.dart`                 |
+| Attendance            | `lib/service/attendance/attendance_service.dart`  | `lib/data/remote/attendance/attendance_day_source.dart`  |
+| Workout types         | `lib/service/workout/workout_service.dart`        | `lib/data/remote/training_type/training_type_source.dart`|
+| Health / Supplements  | `lib/service/health/health_service.dart`          | `lib/data/remote/supplement/health_source.dart`         |
+| Stats                 | `StatsCubit` composes attendance/workout/health services | —                                                |
+| Theme                 | `lib/assets/theme/theme_helper.dart`              | —                                                       |
+| Language              | `lib/presentation/helpers/locale_helper.dart`     | —                                                       |
 
 ---
 
-## 9. App Navigation Flowchart
+## 8. App Navigation Flowchart
 
 ```
 App Start
@@ -400,21 +376,54 @@ Firebase email links (out-of-app):
             └── mode=unknown / missing oobCode → ErrorStateWidget
 ```
 
-### 9.1 Authentication State Machine
+### 8.1 Authentication State Machine
 
 ```
 State: UNAUTHENTICATED
     ├── signIn(email, pwd)
-    │       ├── OK + verified   → AUTHENTICATED
+    │       ├── OK + verified   → AUTHENTICATED  (bootstrapOnSignIn writes profile)
     │       └── OK + unverified → UNAUTHENTICATED (auto sign-out)
     ├── signUp(email, pwd) → sends verification email → UNAUTHENTICATED (must verify)
     └── verifyEmail(oobCode) → AWAITING_LOGIN  (user goes to LoginPage)
 
 State: AUTHENTICATED
-    └── signOut() → UNAUTHENTICATED
+    ├── signOut()
+    │       → authService.signOut()
+    │       → UNAUTHENTICATED
+    │
+    ├── changePassword(currentPassword, newPassword)
+    │       → reauthenticate + updatePassword()
+    │       → stays AUTHENTICATED
+    │
+    └── deleteAccount(currentPassword)
+            → reauthenticate
+            → AccountCleanupService.deleteAllUserData()  [Firestore first]
+            → authService.deleteAccount()                [Auth second]
+            → UNAUTHENTICATED
 ```
 
-### 9.2 Calendar Day Cell State Machine
+### 8.1.4 First-Login Bootstrap
+
+```
+signIn() / signUp() success
+    │
+    └── _syncUserProfile() [best-effort]
+            │
+            └── UserSource.bootstrapOnSignIn(userId, email, displayName?)
+                    │
+                    └── Firestore merge write:
+                            {
+                              email: authEmail,         ← always synced from Auth
+                              displayName: nickname,    ← from signUp, or preserved on signIn
+                              theme: 'dark',            ← default (only on first create)
+                              language: 'en',           ← default (only on first create)
+                              lastLoginAt: serverTime,
+                              createdAt: serverTime,    ← only on first create
+                            }
+                            SetOptions(merge: true) — safe for existing docs
+```
+
+### 8.2 Calendar Day Cell State Machine
 
 ```
 Day cell in initial state (no attendance, no supplement)
@@ -443,7 +452,7 @@ Day cell in initial state (no attendance, no supplement)
                     └── Add more supplement logs same as above
 ```
 
-### 9.3 Stats Data Flow
+### 8.3 Stats Data Flow
 
 ```
 StatsPage (shell)
@@ -468,7 +477,7 @@ StatsPage (shell)
         └── derives: totalServings, mostTakenProduct, topNutrients (from ingredient stdIds)
 ```
 
-### 9.4 Health Page View Modes
+### 8.4 Health Page View Modes
 
 ```
 HealthPage
@@ -497,3 +506,258 @@ HealthPage
         ├── verified badge on products where verified==true
         └── [Log today] → logSupplement(userId, today, productId, servingsTaken)
 ```
+
+---
+
+## 9. Architecture Rules
+
+- **Layering:** `Page/Control → Cubit → Service → Source → Firestore`. Never skip a layer.
+- **One cubit per page/feature** — cubits live in `lib/cubit/<feature>/`.
+- **No business logic in widgets** — all state changes go through cubit methods.
+- **Service + source pattern** — cubits call services (`lib/service/*`), services call Firestore sources (`lib/data/remote/*`). Cubits never touch Firestore directly.
+- **Services are thin orchestration layers** — they delegate to sources and add only business-rule checks (existence guards). No Firestore logic in services.
+- **auto_route** — all navigation uses `context.router.push/replace/popAndPush`.
+- **Every page implements `AutoRouteWrapper`** with `wrappedRoute` creating its `BlocProvider`.
+- **`@RoutePage()` annotation required** on every page widget.
+- **ThemeHelper / LocaleHelper usage scope**: do NOT inject into every page. Most pages read through inherited context (`Theme.of(context)`, `AppLocalizations.of(context)`). Use helpers directly only in Settings page and root app wiring.
+- **Widgets must be as stateless as possible.** If a widget only renders state and has no local UI state, it must be a `StatelessWidget`. Use `StatefulWidget` only when local UI state is truly required (e.g. `TextEditingController`, animations, focus nodes).
+
+---
+
+## 10. Cubit Rules
+
+- Every cubit: `@injectable`, extends `BaseCubit`.
+- **Before creating a new cubit**, check whether an existing cubit already manages that domain. Reuse the existing cubit if it covers the same data/feature — do not duplicate cubit responsibilities.
+- **`BaseCubit` default state is `const InitialState()`**, not a parameterized substate.
+- **Mutation methods** (Firestore writes, auth actions) **must use `guardedAction()`** from `BaseCubit`.
+  - `guardedAction()` checks `state is PendingState` → returns immediately if true (no-op), otherwise emits `PendingState` and runs the callback.
+  - This guarantees that rapid duplicate taps, UI lag, or overlapping requests cannot produce duplicate Firestore documents or conflicting backend calls.
+  - The callback handles its own try/catch and emits the final state (success or error).
+- **Load / stream / subscription methods do NOT use `guardedAction()`** — they manage their own subscriptions.
+- **`StatsCubit` exception:** uses its own token-based guard system with `_activeYearToken` and `StatsLoadStatus` checks. Do not refactor to `guardedAction()`.
+- **`SomethingWentWrongState` is the uniform catch-all** — all `catch (_)` blocks emit it. Specific typed exceptions are mapped to specific states before the catch-all.
+- **Never use `late` or `late final` in app code.** Prefer eagerly initialized `final` fields, nullable fields with explicit guards, or cubit-emitted state values read in `BlocBuilder`.
+- **`@factory` (not `@singleton`)** — each page gets its own fresh cubit instance.
+
+---
+
+## 11. State Management Rules
+
+- **Bloc/Cubit is the single source of truth** for application state.
+- **Correct pattern:** `Cubit → BlocBuilder → UI`.
+- **Incorrect pattern:** `Cubit → BlocConsumer listener → ValueNotifier → UI`.
+
+### When to use `setState`
+
+`setState` is acceptable **only** for trivial, self-contained visual state that:
+
+- Has **no data / backend involvement** — purely cosmetic.
+- Lives and dies inside a single widget — nothing else needs to know about it.
+- Does not result from a user action that triggers a side effect (API call, Firestore write, navigation).
+
+**Acceptable examples:** toggling an expand/collapse arrow, running a local animation, showing/hiding a tooltip.
+
+### When NOT to use `setState`
+
+If any of these are true, the state **must** go through a cubit (emit state → `BlocBuilder`/`BlocConsumer`):
+
+- The action calls a service or writes to Firestore.
+- The action changes data that another widget, page, or test might need.
+- The user taps a button that has a meaningful outcome (submit, delete, toggle attendance, log supplement, etc.).
+- You need loading / success / error feedback in the UI.
+- The state should survive widget rebuilds or be testable.
+
+**Rule of thumb:** if you hesitate, use a cubit. It's always safer and more testable.
+
+### ValueNotifier scope
+
+- **Do NOT use `ValueNotifier` for backend/domain data** — no `List<SupplementLog>`, no user data, no health logs in ValueNotifier.
+- **ValueNotifier IS OK for local ephemeral UI state only**: selected tab index, search query, form drafts, dropdown selections — things that exist only inside a widget, don't come from backend, don't persist.
+
+### Other state rules
+
+- **Never use `setState` to store cubit state** (errors, loading, success). Derive directly in `builder:` from the current bloc state.
+- **Use `buildWhen`** to restrict rebuilds to states that affect UI.
+- **Use `listenWhen` + `listener`** only for side effects (navigation, snackbars) not reflected in the widget tree.
+- **For local live-feedback widgets** (password strength, match indicator): use `ListenableBuilder` or `ValueListenableBuilder` on `TextEditingController` — not `setState`.
+- **For page initialization data** (app version, profile bootstrap): create an `init()` method in the cubit, call from `initState()`, emit a dedicated state, read in `BlocBuilder`.
+- **No `copyWith` on `BaseState` subclasses** — always replace entirely. Exception: `StatsLoadedState` uses `copyWith` for its multi-tab independent loading pattern.
+
+---
+
+## 12. Design & Theming Rules
+
+- **No hardcoded colors** — always use `Theme.of(context).colorScheme.*`.
+- **No hardcoded text styles** — always use `Theme.of(context).textTheme.*`, with `.copyWith()` only for single-property overrides.
+- **No hex `Color(0xFF…)` values inside widgets.**
+- **`AppColors` is only used inside `CustomTheme`** — never reference `AppColors.*` directly in widget `build()` methods.
+- **M3 color scheme mappings:**
+  - `colorScheme.primary` → accent / brand
+  - `colorScheme.error` → danger / destructive
+  - `colorScheme.onSurface` → primary text
+  - `colorScheme.onSurfaceVariant` → secondary / helper text
+  - `colorScheme.outline` → muted text, borders, disabled icons
+  - `colorScheme.surface` → card / panel backgrounds
+  - `scaffoldBackgroundColor` → page background
+
+---
+
+## 13. Firestore Rules
+
+- **Paths are sacred** — never flatten nested collections:
+  - Attendance: `users/{uid}/attendances/{YYYY-MM}/days/{YYYY-MM-DD}`
+  - Health logs: `users/{uid}/healthLogs/{YYYY-MM}/entries/{logId}`
+- **`yearMonth` format = `"YYYY-MM"`** (zero-padded month). **`date` format = `"YYYY-MM-DD"`**.
+- **yearMonth derivation:** services always derive from the date string via `date.substring(0, 7)`. Callers never pass yearMonth separately.
+- **No SQLite / Drift** — Firestore + SharedPreferences + FlutterSecureStorage only.
+
+---
+
+## 14. Localization Rules
+
+- **All user-visible strings must use `AppLocalizations`** — ARB files at `lib/assets/localization/`.
+- Supported languages: English (`en`), Romanian (`ro`).
+- **Every widget and page** must use `AppLocalizations.of(context)` for all displayed text — no hardcoded English strings in `build()` methods. This includes labels, headers, placeholders, button text, and preview/mock data labels.
+- **All emoji references must use `Emojis.*` constants** from `lib/presentation/resources/emojis.dart` — never use raw Unicode escapes (`\u{...}`) or literal emoji characters in widget code.
+
+---
+
+## 15. Code Quality Rules
+
+- **`dart analyze lib/` must produce zero warnings** before submitting.
+- Use `const` constructors wherever possible.
+- Prefer `final` fields in widgets.
+- **One public widget per file**, named after the file.
+- Keep `build()` methods under **~80 lines** — extract sub-widgets or helper methods when longer.
+- **Mobile-only** — project was created with `--platforms=android,ios`. Do not add web support.
+
+### Dart / Flutter Parameter Convention
+
+- Prefer **named parameters** (`{}`) for functions and methods.
+- Use `required` for all mandatory inputs.
+- Use nullable types (`Type?`) only for truly optional values.
+
+**Recommended pattern:**
+
+```dart
+Future<void> initializeProfileOnFirstLogin({
+  required String userId,
+  required String email,
+  String? displayName,
+})
+```
+
+---
+
+## 16. Reusable Controls Rules
+
+- If a widget is likely reused across the app, place it in `lib/presentation/controls/` as a public widget (one per file).
+- **Always add a matching widget test** under `test/presentation/controls/`.
+- Prefer extraction into `controls/` over duplicating similar widgets across pages.
+- Expose the **inner view widget as a public class** (e.g. `RegisterView`) so tests can inject a mock cubit via `BlocProvider.value` without `getIt`.
+
+---
+
+## 17. Testing Rules
+
+- **Unit tests required** for all cubit state transitions.
+- **Widget test required** for every file in `lib/presentation/controls/`.
+- Widget tests for pages go under `test/presentation/pages/<feature>/`.
+- **Test files mirror the `lib/` structure** under `test/`.
+- **Never break existing tests** — `flutter test` must stay green.
+- **Use `mocktail`** for mocking — no code generation needed.
+- **For page tests**: `BlocProvider<MyCubit>.value(value: mockCubit, child: const MyView())`.
+- **Minimum widget test coverage**: renders content, loading/spinner state, disabled/null-tap state, reactive updates if using `ListenableBuilder`.
+- **No `bloc_test`** — incompatible with `auto_route_generator ^9.x`. Use plain `mocktail` + `flutter_test` with `expectLater(sut.stream, emitsInOrder([...]))`.
+- **Run only relevant tests per task** — when working on a feature, run only the tests for that feature slice (e.g. `flutter test test/cubit/calendar/ test/presentation/pages/calendar/`). Do **not** run the full test suite unless explicitly asked.
+
+---
+
+## 18. DTOs & Serialization Rules
+
+- DTOs use `@JsonSerializable()` + `json_annotation`.
+- **ID fields excluded from JSON**: `@JsonKey(includeFromJson: false, includeToJson: false)` for IDs from Firestore doc ID (not stored as field).
+- **`explicitToJson: true`** when DTO has nested lists (e.g. `SupplementProductDto`).
+- **Timestamp fields typed as `Object` or `Object?`** — allows unit tests to pass plain `String`; production uses actual `Timestamp`.
+
+---
+
+## 19. Sources & Mappers Rules
+
+- **Every source:** `@injectable`, `const` constructor, receives mapper via injection, accesses `FirebaseFirestore.instance` directly (not injected).
+- **Every mapper:** `@injectable`, no state, pure mapping functions. Handles `Timestamp.toDate()` and `Timestamp.fromDate()`.
+- All sources use `.withConverter<Dto>()` on collection references. The `id` field is populated from `snap.id` inside the `fromFirestore` closure.
+
+---
+
+## 20. Existence Guard Pattern
+
+Used in `WorkoutService.update` and `HealthService.updateProduct`:
+
+```dart
+final existing = await _source.getById(userId, model.id);
+if (existing == null) throw const TrainingTypeNotFoundException();
+return _source.update(userId, model);
+```
+
+---
+
+## 21. Page UI Workflow
+
+When building or updating a page's UI, **always** follow this sequence:
+
+1. **Read the prep doc** → `docs/screens/<page_name>.md` (widget tree, token mappings, interaction notes).
+2. **Implement** using the prep doc as the single source of truth for layout, spacing, colours, and interactions.
+3. **Do NOT copy from external projects.** Follow only the architecture, patterns, and conventions defined in this file.
+
+---
+
+
+Every AI session must start with these files loaded, regardless of feature:
+
+- `.github/copilot-instructions.md` — architecture map, design tokens, controls inventory, rules
+- `lib/presentation/resources/app_colors.dart` + `lib/assets/theme/custom_theme.dart` — design tokens
+- `lib/model/` — all shared domain models
+- `lib/cubit/base_cubit.dart` + `lib/cubit/base_state.dart` — base classes
+- The relevant `docs/screens/<page>.md` prep doc
+- The relevant reusable controls from `lib/presentation/controls/`
+
+### Feature-slice approach (default)
+
+For any task, load **only** the relevant vertical slice on top of the foundations:
+
+| Feature | Slice to load | ~Tokens |
+|---|---|---|
+| Auth | auth pages + auth cubit/states + auth service | ~25k |
+| Calendar | calendar page + calendar cubit + attendance service/data + mappers | ~50k |
+| Stats | stats page + stats cubit + relevant services | ~40k |
+| Health | health page + health cubit + health service/data + supplement models | ~35k |
+| Workout Types | workout_types page + workout cubit + workout service/data | ~20k |
+| Profile/Settings | profile + settings pages + settings cubit | ~15k |
+
+This approach works within any 200k context window, leaving room for conversation and output.
+
+### Full-project load (complex cross-cutting tasks only)
+
+The entire Flutter project (lib + test + docs + config, no generated files) fits in ~186k tokens. Loading everything is acceptable **only** for:
+
+- Cross-cutting refactors that touch 3+ features
+- Architecture changes (DI, routing, base classes)
+- Full audit / review tasks
+
+
+### Never load
+
+- Generated files (`.g.dart`, `.gr.dart`, `.config.dart`, generated localizations, `firebase_options.dart`) — ~29k tokens of noise
+- Binary assets (fonts, images)
+
+---
+
+## 23. Git Conventions
+
+- Default branch: `main`.
+- Feature branches: `feature/<phase>-<description>`.
+- Commit message style: `feat: <description>` / `chore: <description>` / `fix: <description>`.
+
+
+At every prompt, if there is something needed to be updated in copilot-instructions.md tell me to update it and wait for my confirmation before proceeding. Always ask if you are unsure about any aspect of the instructions or the project structure.

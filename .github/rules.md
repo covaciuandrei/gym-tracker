@@ -140,6 +140,22 @@ If any of these are true, the state **must** go through a cubit (emit state → 
 - Keep `build()` methods under **~80 lines** — extract sub-widgets or helper methods when longer.
 - **Mobile-only** — project was created with `--platforms=android,ios`. Do not add web support.
 
+### Dart / Flutter Parameter Convention
+
+- Prefer **named parameters** (`{}`) for functions and methods.
+- Use `required` for all mandatory inputs.
+- Use nullable types (`Type?`) only for truly optional values.
+
+**Recommended pattern:**
+
+```dart
+Future<void> initializeProfileOnFirstLogin({
+  required String userId,
+  required String email,
+  String? displayName,
+})
+```
+
 ---
 
 ## Reusable Controls
