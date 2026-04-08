@@ -721,6 +721,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsGeneral => 'General';
 
   @override
+  String get settingsActions => 'Actions';
+
+  @override
   String get settingsTheme => 'Theme';
 
   @override

@@ -5,7 +5,6 @@ import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/assets/theme/theme_helper.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/core/injection.dart';
-import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/cubit/settings/settings_cubit.dart';
 import 'package:gym_tracker/presentation/controls/gym_app_bar.dart';
@@ -23,11 +22,8 @@ class SettingsPage extends StatefulWidget implements AutoRouteWrapper {
 
   @override
   Widget wrappedRoute(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<AuthCubit>(create: (_) => getIt<AuthCubit>()),
-        BlocProvider<SettingsCubit>(create: (_) => getIt<SettingsCubit>()),
-      ],
+    return BlocProvider<SettingsCubit>(
+      create: (_) => getIt<SettingsCubit>(),
       child: this,
     );
   }
@@ -49,154 +45,141 @@ class _SettingsPageState extends State<SettingsPage> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return BlocConsumer<AuthCubit, BaseState>(
-      listenWhen: (_, curr) =>
-          curr is AuthSignOutSuccessState || curr is AuthUnauthenticatedState || curr is SomethingWentWrongState,
-      listener: (ctx, state) {
-        if (state is AuthSignOutSuccessState || state is AuthUnauthenticatedState) {
-          ctx.router.replace(const LoginRoute());
-          return;
-        }
-        if (state is SomethingWentWrongState) {
-          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
-        }
-      },
-      builder: (ctx, state) {
-        final isSigningOut = state is PendingState;
+    return BlocBuilder<SettingsCubit, BaseState>(
+      buildWhen: (_, curr) =>
+          curr is PendingState || curr is SettingsReadyState,
+      builder: (ctx, settingsState) {
+        final version = settingsState is SettingsReadyState
+            ? settingsState.appVersion
+            : '-';
 
-        return BlocBuilder<SettingsCubit, BaseState>(
-          buildWhen: (_, curr) => curr is PendingState || curr is SettingsReadyState,
-          builder: (ctx, settingsState) {
-            final version = settingsState is SettingsReadyState ? settingsState.appVersion : '-';
-
-            return ListenableBuilder(
-              listenable: Listenable.merge([_themeHelper, _localeHelper]),
-              builder: (_, _) {
-                return Scaffold(
-                  backgroundColor: cs.surfaceContainerLow,
-                  appBar: GymAppBar(title: l10n.settingsTitle),
-                  body: SafeArea(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                      child: Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 600),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+        return ListenableBuilder(
+          listenable: Listenable.merge([_themeHelper, _localeHelper]),
+          builder: (_, _) {
+            return Scaffold(
+              backgroundColor: cs.surfaceContainerLow,
+              appBar: GymAppBar(title: l10n.settingsTitle),
+              body: SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 600),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _SectionHeader(
+                            title: l10n.settingsAbout.toUpperCase(),
+                          ),
+                          SurfaceSectionCard(
                             children: [
-                              _SectionHeader(title: l10n.settingsAbout.toUpperCase()),
-                              SurfaceSectionCard(
-                                children: [
-                                  LabeledValueTile(
-                                    icon: Icons.info_outline,
-                                    label: l10n.settingsAppVersion,
-                                    value: version,
-                                  ),
-                                  Divider(indent: 16, endIndent: 16, color: cs.outline, height: 1),
-                                  LabeledValueTile(
-                                    icon: Icons.code,
-                                    label: l10n.settingsBuiltWith,
-                                    value: l10n.settingsBuiltWithValue,
-                                  ),
-                                ],
+                              LabeledValueTile(
+                                icon: Icons.info_outline,
+                                label: l10n.settingsAppVersion,
+                                value: version,
                               ),
-                              const SizedBox(height: 24),
-                              _SectionHeader(title: l10n.settingsSecurity.toUpperCase()),
-                              SurfaceSectionCard(
-                                children: [
-                                  ListTile(
-                                    leading: Icon(Icons.lock_outline, color: cs.primary),
-                                    title: Text(l10n.settingsChangePassword),
-                                    subtitle: Text(
-                                      '••••••••',
-                                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                                    ),
-                                    trailing: TextButton(
-                                      onPressed: () => ctx.router.push(const ChangePasswordRoute()),
-                                      child: Text(l10n.settingsChangePassword),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 24),
-                              _SectionHeader(title: l10n.settingsGeneral.toUpperCase()),
-                              SurfaceSectionCard(
-                                children: [
-                                  ListTile(
-                                    leading: Icon(
-                                      _themeHelper.isDark ? Icons.dark_mode : Icons.light_mode,
-                                      color: cs.primary,
-                                    ),
-                                    title: Text(l10n.settingsTheme),
-                                    subtitle: Text(
-                                      _themeHelper.isDark ? l10n.settingsThemeDark : l10n.settingsThemeLight,
-                                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                                    ),
-                                    trailing: Switch(
-                                      value: _themeHelper.isDark,
-                                      onChanged: (v) => _themeHelper.setDark(v),
-                                      activeThumbColor: cs.primary,
-                                    ),
-                                  ),
-                                  Divider(indent: 16, endIndent: 16, color: cs.outline, height: 1),
-                                  ListTile(
-                                    leading: Icon(Icons.language, color: cs.primary),
-                                    title: Text(l10n.settingsLanguage),
-                                    subtitle: Text(
-                                      _localeHelper.locale.languageCode == 'ro'
-                                          ? l10n.settingsLanguageRo
-                                          : l10n.settingsLanguageEn,
-                                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                                    ),
-                                    trailing: OptionToggle(
-                                      selectedValue: _localeHelper.locale.languageCode,
-                                      items: [
-                                        OptionToggleItem(value: 'en', label: l10n.settingsLanguageEn),
-                                        OptionToggleItem(value: 'ro', label: l10n.settingsLanguageRo),
-                                      ],
-                                      onSelect: (code) {
-                                        _localeHelper.setLocale(Locale(code));
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 24),
-                              _SectionHeader(title: l10n.profileAccount.toUpperCase()),
-                              Card(
-                                margin: EdgeInsets.zero,
-                                elevation: 0,
-                                color: cs.surfaceContainerHigh,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                child: Column(
-                                  children: [
-                                    ListTile(
-                                      leading: Icon(Icons.logout, color: cs.error),
-                                      title: Text(
-                                        l10n.profileSignOut,
-                                        style: tt.titleMedium?.copyWith(color: cs.error),
-                                      ),
-                                      trailing: isSigningOut
-                                          ? SizedBox(
-                                              width: 16,
-                                              height: 16,
-                                              child: CircularProgressIndicator(strokeWidth: 2, color: cs.primary),
-                                            )
-                                          : Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
-                                      onTap: isSigningOut ? null : () => ctx.read<AuthCubit>().signOut(),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 16),
                             ],
                           ),
-                        ),
+                          const SizedBox(height: 24),
+                          _SectionHeader(
+                            title: l10n.profileAccount.toUpperCase(),
+                          ),
+                          SurfaceSectionCard(
+                            children: [
+                              ListTile(
+                                leading: Icon(
+                                  Icons.lock_outline,
+                                  color: cs.primary,
+                                ),
+                                title: Text(l10n.settingsChangePassword),
+                                trailing: Icon(
+                                  Icons.chevron_right,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                                onTap: () => ctx.router.push(
+                                  const ChangePasswordRoute(),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
+                          _SectionHeader(
+                            title: l10n.settingsGeneral.toUpperCase(),
+                          ),
+                          SurfaceSectionCard(
+                            children: [
+                              ListTile(
+                                leading: Icon(
+                                  _themeHelper.isDark
+                                      ? Icons.dark_mode
+                                      : Icons.light_mode,
+                                  color: cs.primary,
+                                ),
+                                title: Text(l10n.settingsTheme),
+                                subtitle: Text(
+                                  _themeHelper.isDark
+                                      ? l10n.settingsThemeDark
+                                      : l10n.settingsThemeLight,
+                                  style: tt.bodySmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                                trailing: Switch(
+                                  value: _themeHelper.isDark,
+                                  onChanged: (v) => _themeHelper.setDark(v),
+                                  activeThumbColor: cs.primary,
+                                ),
+                              ),
+                              Divider(
+                                indent: 16,
+                                endIndent: 16,
+                                color: cs.outline,
+                                height: 1,
+                              ),
+                              ListTile(
+                                leading: Icon(
+                                  Icons.language,
+                                  color: cs.primary,
+                                ),
+                                title: Text(l10n.settingsLanguage),
+                                subtitle: Text(
+                                  _localeHelper.locale.languageCode == 'ro'
+                                      ? l10n.settingsLanguageRo
+                                      : l10n.settingsLanguageEn,
+                                  style: tt.bodySmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                                trailing: OptionToggle(
+                                  selectedValue:
+                                      _localeHelper.locale.languageCode,
+                                  items: [
+                                    OptionToggleItem(
+                                      value: 'en',
+                                      label: l10n.settingsLanguageEn,
+                                    ),
+                                    OptionToggleItem(
+                                      value: 'ro',
+                                      label: l10n.settingsLanguageRo,
+                                    ),
+                                  ],
+                                  onSelect: (code) {
+                                    _localeHelper.setLocale(Locale(code));
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                        ],
                       ),
                     ),
                   ),
-                );
-              },
+                ),
+              ),
             );
           },
         );
@@ -217,7 +200,13 @@ class _SectionHeader extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(title, style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant, letterSpacing: 1.2)),
+      child: Text(
+        title,
+        style: tt.labelSmall?.copyWith(
+          color: cs.onSurfaceVariant,
+          letterSpacing: 1.2,
+        ),
+      ),
     );
   }
 }

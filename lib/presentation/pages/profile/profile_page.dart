@@ -99,13 +99,6 @@ class _ProfilePageState extends State<ProfilePage> {
                         child: Column(
                           children: [
                             ListTile(
-                              leading: Icon(Icons.lock_outline, color: cs.primary),
-                              title: Text(l10n.settingsChangePassword),
-                              trailing: Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
-                              onTap: () => ctx.router.push(const ChangePasswordRoute()),
-                            ),
-                            Divider(indent: 16, endIndent: 16, color: cs.outline, height: 1),
-                            ListTile(
                               leading: Icon(Icons.logout, color: cs.error),
                               title: Text(l10n.profileSignOut, style: tt.titleMedium?.copyWith(color: cs.error)),
                               trailing: isSigningOut

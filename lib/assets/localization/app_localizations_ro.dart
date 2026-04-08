@@ -733,6 +733,9 @@ class AppLocalizationsRo extends AppLocalizations {
   String get settingsGeneral => 'General';
 
   @override
+  String get settingsActions => 'Acțiuni';
+
+  @override
   String get settingsTheme => 'Temă';
 
   @override

@@ -1406,6 +1406,12 @@ abstract class AppLocalizations {
   /// **'General'**
   String get settingsGeneral;
 
+  /// No description provided for @settingsActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get settingsActions;
+
   /// No description provided for @settingsTheme.
   ///
   /// In en, this message translates to:

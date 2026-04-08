@@ -47,12 +47,12 @@ void main() {
     registerFallbackValue(const LoginRoute());
     registerFallbackValue(const WorkoutTypesRoute());
     registerFallbackValue(const SettingsRoute());
-    registerFallbackValue(const ChangePasswordRoute());
   });
 
   group('ProfilePage', () {
     testWidgets('renders user card and section rows', (tester) async {
       final router = MockStackRouter();
+      when(() => router.canPop()).thenReturn(false);
       when(
         () => router.push(
           any<PageRouteInfo>(),
@@ -85,7 +85,6 @@ void main() {
       expect(find.text('ACCOUNT'), findsOneWidget);
       expect(find.text('Workout Types'), findsOneWidget);
       expect(find.text('Settings'), findsOneWidget);
-      expect(find.text('Change Password'), findsOneWidget);
       expect(find.text('Sign Out'), findsOneWidget);
       expect(find.text('alex@example.com'), findsOneWidget);
 
@@ -94,6 +93,7 @@ void main() {
 
     testWidgets('navigates to feature routes from row taps', (tester) async {
       final router = MockStackRouter();
+      when(() => router.canPop()).thenReturn(false);
       when(
         () => router.push(
           any<PageRouteInfo>(),
@@ -138,19 +138,11 @@ void main() {
           onFailure: any(named: 'onFailure'),
         ),
       ).called(1);
-
-      await tester.tap(find.text('Change Password'));
-      await tester.pump();
-      verify(
-        () => router.push(
-          const ChangePasswordRoute(),
-          onFailure: any(named: 'onFailure'),
-        ),
-      ).called(1);
     });
 
     testWidgets('calls signOut when sign-out row is tapped', (tester) async {
       final router = MockStackRouter();
+      when(() => router.canPop()).thenReturn(false);
       when(
         () => router.push(
           any<PageRouteInfo>(),
@@ -185,6 +177,7 @@ void main() {
 
     testWidgets('redirects to login on unauthenticated state', (tester) async {
       final router = MockStackRouter();
+      when(() => router.canPop()).thenReturn(false);
       when(
         () => router.push(
           any<PageRouteInfo>(),
