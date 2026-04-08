@@ -42,18 +42,6 @@
   "authVerificationEmailSent": "Verification email sent.",
   "authSignOut": "Sign Out",
   "authEmailVerificationHandled": "Email verified successfully.",
-  "authActionVerifyingEmail": "Verifying your email...",
-  "authActionValidatingLink": "Validating reset link...",
-  "authActionEmailVerifiedTitle": "Email Verified!",
-  "authActionEmailVerifiedMessage": "Your email has been verified. You can now sign in.",
-  "authActionSetNewPasswordTitle": "Set New Password",
-  "authActionNewPassword": "New Password",
-  "authActionResetPasswordButton": "Reset Password",
-  "authActionPasswordResetTitle": "Password Reset!",
-  "authActionPasswordResetMessage": "Your password has been reset. You can now sign in with your new password.",
-  "authActionRequestNewLink": "Request New Link",
-  "authActionBackToSignIn": "Back to Sign In",
-  "errorsInvalidActionCode": "This link has expired or has already been used. Please request a new one.",
   "navCalendar": "Calendar",
   "navStats": "Stats",
   "navHealth": "Health",
@@ -308,14 +296,6 @@
   "errorsPasswordMismatch": "Passwords do not match.",
   "errorsPasswordTooShort": "Password must be at least 6 characters.",
   "settingsPasswordChangedSuccess": "Password changed successfully.",
-  "authActionCreateNewPasswordFor": "Create a new password for {email}",
-  "@authActionCreateNewPasswordFor": {
-    "placeholders": {
-      "email": {
-        "type": "String"
-      }
-    }
-  },
   "profileDefaultUserName": "Gym Tracker User",
   "globalTryAgain": "Try Again",
   "onboardingTitle1": "Track Your Workouts",

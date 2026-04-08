@@ -138,45 +138,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authEmailVerificationHandled => 'Email verified successfully.';
 
   @override
-  String get authActionVerifyingEmail => 'Verifying your email...';
-
-  @override
-  String get authActionValidatingLink => 'Validating reset link...';
-
-  @override
-  String get authActionEmailVerifiedTitle => 'Email Verified!';
-
-  @override
-  String get authActionEmailVerifiedMessage =>
-      'Your email has been verified. You can now sign in.';
-
-  @override
-  String get authActionSetNewPasswordTitle => 'Set New Password';
-
-  @override
-  String get authActionNewPassword => 'New Password';
-
-  @override
-  String get authActionResetPasswordButton => 'Reset Password';
-
-  @override
-  String get authActionPasswordResetTitle => 'Password Reset!';
-
-  @override
-  String get authActionPasswordResetMessage =>
-      'Your password has been reset. You can now sign in with your new password.';
-
-  @override
-  String get authActionRequestNewLink => 'Request New Link';
-
-  @override
-  String get authActionBackToSignIn => 'Back to Sign In';
-
-  @override
-  String get errorsInvalidActionCode =>
-      'This link has expired or has already been used. Please request a new one.';
-
-  @override
   String get navCalendar => 'Calendar';
 
   @override
@@ -848,11 +809,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsPasswordChangedSuccess => 'Password changed successfully.';
-
-  @override
-  String authActionCreateNewPasswordFor(String email) {
-    return 'Create a new password for $email';
-  }
 
   @override
   String get profileDefaultUserName => 'Gym Tracker User';

@@ -77,16 +77,18 @@ void main() {
 
   group('currentUser\$', () {
     test('emits null when Firebase user is null', () {
-      when(() => mockAuth.authStateChanges())
-          .thenAnswer((_) => Stream.value(null));
+      when(
+        () => mockAuth.authStateChanges(),
+      ).thenAnswer((_) => Stream.value(null));
 
       expect(sut.currentUser$, emits(null));
     });
 
     test('emits mapped AuthUser when Firebase user is present', () {
       final user = _mockUser(uid: 'u1', email: 'a@b.com', emailVerified: true);
-      when(() => mockAuth.authStateChanges())
-          .thenAnswer((_) => Stream.value(user));
+      when(
+        () => mockAuth.authStateChanges(),
+      ).thenAnswer((_) => Stream.value(user));
 
       expect(
         sut.currentUser$,
@@ -103,30 +105,37 @@ void main() {
   // ─── signUp ────────────────────────────────────────────────────────────
 
   group('signUp', () {
-    test('creates account, sends verification email, returns AuthUser', () async {
-      final user = _mockUser(emailVerified: false);
-      final cred = _mockCredential(user);
+    test(
+      'creates account, sends verification email, returns AuthUser',
+      () async {
+        final user = _mockUser(emailVerified: false);
+        final cred = _mockCredential(user);
 
-      when(() => mockAuth.createUserWithEmailAndPassword(
+        when(
+          () => mockAuth.createUserWithEmailAndPassword(
             email: any(named: 'email'),
             password: any(named: 'password'),
-          )).thenAnswer((_) async => cred);
-      when(() => user.sendEmailVerification()).thenAnswer((_) async {});
+          ),
+        ).thenAnswer((_) async => cred);
+        when(() => user.sendEmailVerification()).thenAnswer((_) async {});
 
-      final result =
-          await sut.signUp(email: 'new@test.com', password: 'Pass1234');
+        final result = await sut.signUp(
+          email: 'new@test.com',
+          password: 'Pass1234',
+        );
 
-      expect(result.uid, user.uid);
-      verify(() => user.sendEmailVerification()).called(1);
-    });
+        expect(result.uid, user.uid);
+        verify(() => user.sendEmailVerification()).called(1);
+      },
+    );
 
     test('throws EmailAlreadyInUseException on email-already-in-use', () async {
-      when(() => mockAuth.createUserWithEmailAndPassword(
-            email: any(named: 'email'),
-            password: any(named: 'password'),
-          )).thenThrow(
-        FirebaseAuthException(code: 'email-already-in-use'),
-      );
+      when(
+        () => mockAuth.createUserWithEmailAndPassword(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenThrow(FirebaseAuthException(code: 'email-already-in-use'));
 
       expect(
         () => sut.signUp(email: 'dup@test.com', password: 'Pass1234'),
@@ -135,10 +144,12 @@ void main() {
     });
 
     test('throws WeakPasswordException on weak-password', () async {
-      when(() => mockAuth.createUserWithEmailAndPassword(
-            email: any(named: 'email'),
-            password: any(named: 'password'),
-          )).thenThrow(FirebaseAuthException(code: 'weak-password'));
+      when(
+        () => mockAuth.createUserWithEmailAndPassword(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenThrow(FirebaseAuthException(code: 'weak-password'));
 
       expect(
         () => sut.signUp(email: 'x@test.com', password: '123'),
@@ -150,45 +161,58 @@ void main() {
   // ─── signIn ────────────────────────────────────────────────────────────
 
   group('signIn', () {
-    test('returns AuthUser when credentials valid and email verified', () async {
-      final user = _mockUser(emailVerified: true);
-      final cred = _mockCredential(user);
+    test(
+      'returns AuthUser when credentials valid and email verified',
+      () async {
+        final user = _mockUser(emailVerified: true);
+        final cred = _mockCredential(user);
 
-      when(() => mockAuth.signInWithEmailAndPassword(
+        when(
+          () => mockAuth.signInWithEmailAndPassword(
             email: any(named: 'email'),
             password: any(named: 'password'),
-          )).thenAnswer((_) async => cred);
+          ),
+        ).thenAnswer((_) async => cred);
 
-      final result =
-          await sut.signIn(email: 'user@test.com', password: 'Pass1234');
+        final result = await sut.signIn(
+          email: 'user@test.com',
+          password: 'Pass1234',
+        );
 
-      expect(result.uid, user.uid);
-      expect(result.emailVerified, isTrue);
-    });
+        expect(result.uid, user.uid);
+        expect(result.emailVerified, isTrue);
+      },
+    );
 
-    test('throws EmailNotVerifiedException and signs out when not verified',
-        () async {
-      final user = _mockUser(emailVerified: false);
-      final cred = _mockCredential(user);
+    test(
+      'throws EmailNotVerifiedException and signs out when not verified',
+      () async {
+        final user = _mockUser(emailVerified: false);
+        final cred = _mockCredential(user);
 
-      when(() => mockAuth.signInWithEmailAndPassword(
+        when(
+          () => mockAuth.signInWithEmailAndPassword(
             email: any(named: 'email'),
             password: any(named: 'password'),
-          )).thenAnswer((_) async => cred);
-      when(() => mockAuth.signOut()).thenAnswer((_) async {});
+          ),
+        ).thenAnswer((_) async => cred);
+        when(() => mockAuth.signOut()).thenAnswer((_) async {});
 
-      await expectLater(
-        sut.signIn(email: 'user@test.com', password: 'Pass1234'),
-        throwsA(isA<EmailNotVerifiedException>()),
-      );
-      verify(() => mockAuth.signOut()).called(1);
-    });
+        await expectLater(
+          sut.signIn(email: 'user@test.com', password: 'Pass1234'),
+          throwsA(isA<EmailNotVerifiedException>()),
+        );
+        verify(() => mockAuth.signOut()).called(1);
+      },
+    );
 
     test('throws InvalidCredentialsException on wrong-password', () async {
-      when(() => mockAuth.signInWithEmailAndPassword(
-            email: any(named: 'email'),
-            password: any(named: 'password'),
-          )).thenThrow(FirebaseAuthException(code: 'wrong-password'));
+      when(
+        () => mockAuth.signInWithEmailAndPassword(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenThrow(FirebaseAuthException(code: 'wrong-password'));
 
       expect(
         () => sut.signIn(email: 'user@test.com', password: 'wrong'),
@@ -197,10 +221,12 @@ void main() {
     });
 
     test('throws InvalidCredentialsException on invalid-credential', () async {
-      when(() => mockAuth.signInWithEmailAndPassword(
-            email: any(named: 'email'),
-            password: any(named: 'password'),
-          )).thenThrow(FirebaseAuthException(code: 'invalid-credential'));
+      when(
+        () => mockAuth.signInWithEmailAndPassword(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenThrow(FirebaseAuthException(code: 'invalid-credential'));
 
       expect(
         () => sut.signIn(email: 'user@test.com', password: 'bad'),
@@ -225,74 +251,15 @@ void main() {
 
   group('resetPassword', () {
     test('calls sendPasswordResetEmail with given email', () async {
-      when(() => mockAuth.sendPasswordResetEmail(
-            email: any(named: 'email'),
-          )).thenAnswer((_) async {});
+      when(
+        () => mockAuth.sendPasswordResetEmail(email: any(named: 'email')),
+      ).thenAnswer((_) async {});
 
       await sut.resetPassword('user@test.com');
 
-      verify(() =>
-              mockAuth.sendPasswordResetEmail(email: 'user@test.com'))
-          .called(1);
-    });
-  });
-
-  // ─── verifyEmail ───────────────────────────────────────────────────────
-
-  group('verifyEmail', () {
-    test('applies action code and reloads user', () async {
-      final user = _mockUser();
-      when(() => mockAuth.currentUser).thenReturn(user);
-      when(() => mockAuth.applyActionCode(any()))
-          .thenAnswer((_) async {});
-      when(() => user.reload()).thenAnswer((_) async {});
-
-      await sut.verifyEmail('valid_code');
-
-      verify(() => mockAuth.applyActionCode('valid_code')).called(1);
-      verify(() => user.reload()).called(1);
-    });
-
-    test('throws InvalidActionCodeException on expired-action-code', () async {
-      when(() => mockAuth.applyActionCode(any()))
-          .thenThrow(FirebaseAuthException(code: 'expired-action-code'));
-
-      expect(
-        () => sut.verifyEmail('expired'),
-        throwsA(isA<InvalidActionCodeException>()),
-      );
-    });
-  });
-
-  // ─── confirmPasswordReset ──────────────────────────────────────────────
-
-  group('confirmPasswordReset', () {
-    test('calls confirmPasswordReset on FirebaseAuth', () async {
-      when(() => mockAuth.confirmPasswordReset(
-            code: any(named: 'code'),
-            newPassword: any(named: 'newPassword'),
-          )).thenAnswer((_) async {});
-
-      await sut.confirmPasswordReset(
-          oobCode: 'code123', newPassword: 'NewPass!1');
-
-      verify(() => mockAuth.confirmPasswordReset(
-            code: 'code123',
-            newPassword: 'NewPass!1',
-          )).called(1);
-    });
-
-    test('throws InvalidActionCodeException on invalid-action-code', () {
-      when(() => mockAuth.confirmPasswordReset(
-            code: any(named: 'code'),
-            newPassword: any(named: 'newPassword'),
-          )).thenThrow(FirebaseAuthException(code: 'invalid-action-code'));
-
-      expect(
-        () => sut.confirmPasswordReset(
-            oobCode: 'bad', newPassword: 'NewPass!1'),
-        throwsA(isA<InvalidActionCodeException>()),
-      );
+      verify(
+        () => mockAuth.sendPasswordResetEmail(email: 'user@test.com'),
+      ).called(1);
     });
   });
 
@@ -302,40 +269,49 @@ void main() {
     test('reauthenticates then updates password', () async {
       final user = _mockUser(email: 'user@test.com');
       when(() => mockAuth.currentUser).thenReturn(user);
-      when(() => user.reauthenticateWithCredential(any()))
-          .thenAnswer((_) async => _mockCredential(user));
+      when(
+        () => user.reauthenticateWithCredential(any()),
+      ).thenAnswer((_) async => _mockCredential(user));
       when(() => user.updatePassword(any())).thenAnswer((_) async {});
 
       await sut.changePassword(
-          currentPassword: 'OldPass!1', newPassword: 'NewPass!1');
+        currentPassword: 'OldPass!1',
+        newPassword: 'NewPass!1',
+      );
 
       verify(() => user.reauthenticateWithCredential(any())).called(1);
       verify(() => user.updatePassword('NewPass!1')).called(1);
     });
 
-    test('throws AuthUserNotFoundException when there is no current user',
-        () async {
-      when(() => mockAuth.currentUser).thenReturn(null);
+    test(
+      'throws AuthUserNotFoundException when there is no current user',
+      () async {
+        when(() => mockAuth.currentUser).thenReturn(null);
 
-      expect(
-        () => sut.changePassword(
-            currentPassword: 'Old', newPassword: 'New'),
-        throwsA(isA<AuthUserNotFoundException>()),
-      );
-    });
+        expect(
+          () => sut.changePassword(currentPassword: 'Old', newPassword: 'New'),
+          throwsA(isA<AuthUserNotFoundException>()),
+        );
+      },
+    );
 
-    test('throws InvalidCredentialsException on wrong current password',
-        () async {
-      final user = _mockUser(email: 'user@test.com');
-      when(() => mockAuth.currentUser).thenReturn(user);
-      when(() => user.reauthenticateWithCredential(any()))
-          .thenThrow(FirebaseAuthException(code: 'wrong-password'));
+    test(
+      'throws InvalidCredentialsException on wrong current password',
+      () async {
+        final user = _mockUser(email: 'user@test.com');
+        when(() => mockAuth.currentUser).thenReturn(user);
+        when(
+          () => user.reauthenticateWithCredential(any()),
+        ).thenThrow(FirebaseAuthException(code: 'wrong-password'));
 
-      expect(
-        () => sut.changePassword(
-            currentPassword: 'wrong', newPassword: 'NewPass!1'),
-        throwsA(isA<InvalidCredentialsException>()),
-      );
-    });
+        expect(
+          () => sut.changePassword(
+            currentPassword: 'wrong',
+            newPassword: 'NewPass!1',
+          ),
+          throwsA(isA<InvalidCredentialsException>()),
+        );
+      },
+    );
   });
 }

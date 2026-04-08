@@ -4,15 +4,17 @@ import 'package:gym_tracker/cubit/base_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/model/auth_user.dart';
 import 'package:gym_tracker/service/auth/auth_service.dart';
+import 'package:gym_tracker/service/user/user_service.dart';
 import 'package:injectable/injectable.dart';
 
 part 'auth_states.dart';
 
 @injectable
 class AuthCubit extends BaseCubit {
-  AuthCubit(this._authService);
+  AuthCubit(this._authService, this._userService);
 
   final AuthService _authService;
+  final UserService _userService;
 
   StreamSubscription<AuthUser?>? _authSubscription;
 
@@ -21,7 +23,11 @@ class AuthCubit extends BaseCubit {
   void watchAuthState() {
     _authSubscription?.cancel();
     _authSubscription = _authService.currentUser$.listen(
-      (user) => safeEmit(user == null ? const AuthUnauthenticatedState() : AuthAuthenticatedState(user: user)),
+      (user) => safeEmit(
+        user == null
+            ? const AuthUnauthenticatedState()
+            : AuthAuthenticatedState(user: user),
+      ),
       onError: (_) => safeEmit(const SomethingWentWrongState()),
     );
   }
@@ -30,6 +36,7 @@ class AuthCubit extends BaseCubit {
     safeEmit(const PendingState());
     try {
       final user = await _authService.signIn(email: email, password: password);
+      await _recordLogin(user: user);
       safeEmit(AuthSignInSuccessState(user: user));
     } on InvalidCredentialsException {
       safeEmit(const AuthInvalidCredentialsState());
@@ -40,10 +47,15 @@ class AuthCubit extends BaseCubit {
     }
   }
 
-  Future<void> signUp({required String email, required String password}) async {
+  Future<void> signUp({
+    required String email,
+    required String password,
+    required String displayName,
+  }) async {
     safeEmit(const PendingState());
     try {
-      await _authService.signUp(email: email, password: password);
+      final user = await _authService.signUp(email: email, password: password);
+      await _createUser(user: user, displayName: displayName);
       safeEmit(const AuthSignUpSuccessState());
     } on EmailAlreadyInUseException {
       safeEmit(const AuthEmailAlreadyInUseState());
@@ -64,7 +76,7 @@ class AuthCubit extends BaseCubit {
     }
   }
 
-  Future<void> resetPassword(String email) async {
+  Future<void> resetPassword({required String email}) async {
     safeEmit(const PendingState());
     try {
       await _authService.resetPassword(email);
@@ -74,22 +86,16 @@ class AuthCubit extends BaseCubit {
     }
   }
 
-  Future<void> verifyPasswordResetCode(String oobCode) async {
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
     safeEmit(const PendingState());
     try {
-      final email = await _authService.verifyPasswordResetCode(oobCode);
-      safeEmit(AuthPasswordResetCodeVerifiedState(email: email));
-    } on InvalidActionCodeException {
-      safeEmit(const AuthInvalidActionCodeState());
-    } catch (_) {
-      safeEmit(const SomethingWentWrongState());
-    }
-  }
-
-  Future<void> changePassword({required String currentPassword, required String newPassword}) async {
-    safeEmit(const PendingState());
-    try {
-      await _authService.changePassword(currentPassword: currentPassword, newPassword: newPassword);
+      await _authService.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
       safeEmit(const AuthPasswordChangedState());
     } on InvalidCredentialsException {
       safeEmit(const AuthInvalidCredentialsState());
@@ -98,27 +104,28 @@ class AuthCubit extends BaseCubit {
     }
   }
 
-  Future<void> verifyEmail(String oobCode) async {
-    safeEmit(const PendingState());
+  /// Best-effort profile creation after sign-up.
+  Future<void> _createUser({
+    required AuthUser user,
+    required String displayName,
+  }) async {
     try {
-      await _authService.verifyEmail(oobCode);
-      safeEmit(const AuthEmailVerifiedState());
-    } on InvalidActionCodeException {
-      safeEmit(const AuthInvalidActionCodeState());
+      await _userService.createUser(
+        userId: user.uid,
+        email: user.email ?? '',
+        displayName: displayName,
+      );
     } catch (_) {
-      safeEmit(const SomethingWentWrongState());
+      // Best-effort — do not block auth flow on profile sync failure.
     }
   }
 
-  Future<void> confirmPasswordReset({required String oobCode, required String newPassword}) async {
-    safeEmit(const PendingState());
+  /// Best-effort login timestamp update after sign-in.
+  Future<void> _recordLogin({required AuthUser user}) async {
     try {
-      await _authService.confirmPasswordReset(oobCode: oobCode, newPassword: newPassword);
-      safeEmit(const AuthPasswordResetConfirmedState());
-    } on InvalidActionCodeException {
-      safeEmit(const AuthInvalidActionCodeState());
+      await _userService.recordLogin(userId: user.uid);
     } catch (_) {
-      safeEmit(const SomethingWentWrongState());
+      // Best-effort — do not block auth flow on profile sync failure.
     }
   }
 

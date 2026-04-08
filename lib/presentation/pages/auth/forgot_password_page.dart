@@ -40,7 +40,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   void _onSubmit(BuildContext ctx) {
     if (_formKey.currentState?.validate() != true) return;
-    ctx.read<AuthCubit>().resetPassword(_emailCtrl.text.trim());
+    ctx.read<AuthCubit>().resetPassword(email:_emailCtrl.text.trim());
   }
 
   @override

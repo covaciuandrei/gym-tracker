@@ -350,78 +350,6 @@ abstract class AppLocalizations {
   /// **'Email verified successfully.'**
   String get authEmailVerificationHandled;
 
-  /// No description provided for @authActionVerifyingEmail.
-  ///
-  /// In en, this message translates to:
-  /// **'Verifying your email...'**
-  String get authActionVerifyingEmail;
-
-  /// No description provided for @authActionValidatingLink.
-  ///
-  /// In en, this message translates to:
-  /// **'Validating reset link...'**
-  String get authActionValidatingLink;
-
-  /// No description provided for @authActionEmailVerifiedTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Email Verified!'**
-  String get authActionEmailVerifiedTitle;
-
-  /// No description provided for @authActionEmailVerifiedMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Your email has been verified. You can now sign in.'**
-  String get authActionEmailVerifiedMessage;
-
-  /// No description provided for @authActionSetNewPasswordTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Set New Password'**
-  String get authActionSetNewPasswordTitle;
-
-  /// No description provided for @authActionNewPassword.
-  ///
-  /// In en, this message translates to:
-  /// **'New Password'**
-  String get authActionNewPassword;
-
-  /// No description provided for @authActionResetPasswordButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Reset Password'**
-  String get authActionResetPasswordButton;
-
-  /// No description provided for @authActionPasswordResetTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Password Reset!'**
-  String get authActionPasswordResetTitle;
-
-  /// No description provided for @authActionPasswordResetMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Your password has been reset. You can now sign in with your new password.'**
-  String get authActionPasswordResetMessage;
-
-  /// No description provided for @authActionRequestNewLink.
-  ///
-  /// In en, this message translates to:
-  /// **'Request New Link'**
-  String get authActionRequestNewLink;
-
-  /// No description provided for @authActionBackToSignIn.
-  ///
-  /// In en, this message translates to:
-  /// **'Back to Sign In'**
-  String get authActionBackToSignIn;
-
-  /// No description provided for @errorsInvalidActionCode.
-  ///
-  /// In en, this message translates to:
-  /// **'This link has expired or has already been used. Please request a new one.'**
-  String get errorsInvalidActionCode;
-
   /// No description provided for @navCalendar.
   ///
   /// In en, this message translates to:
@@ -1651,12 +1579,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Password changed successfully.'**
   String get settingsPasswordChangedSuccess;
-
-  /// No description provided for @authActionCreateNewPasswordFor.
-  ///
-  /// In en, this message translates to:
-  /// **'Create a new password for {email}'**
-  String authActionCreateNewPasswordFor(String email);
 
   /// No description provided for @profileDefaultUserName.
   ///

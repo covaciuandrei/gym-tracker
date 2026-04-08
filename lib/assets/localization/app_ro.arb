@@ -42,18 +42,6 @@
   "authVerificationEmailSent": "Email de verificare trimis.",
   "authSignOut": "Delogare",
   "authEmailVerificationHandled": "Email verificat cu succes.",
-  "authActionVerifyingEmail": "Se verifică emailul...",
-  "authActionValidatingLink": "Se validează link-ul de resetare...",
-  "authActionEmailVerifiedTitle": "Email Verificat!",
-  "authActionEmailVerifiedMessage": "Emailul tău a fost verificat. Te poți autentifica acum.",
-  "authActionSetNewPasswordTitle": "Setează Parola Nouă",
-  "authActionNewPassword": "Parolă Nouă",
-  "authActionResetPasswordButton": "Resetează Parola",
-  "authActionPasswordResetTitle": "Parolă Resetată!",
-  "authActionPasswordResetMessage": "Parola ta a fost resetată. Te poți autentifica cu noua parolă.",
-  "authActionRequestNewLink": "Solicită Link Nou",
-  "authActionBackToSignIn": "Înapoi la Autentificare",
-  "errorsInvalidActionCode": "Acest link a expirat sau a fost deja folosit. Te rugăm să soliciți unul nou.",
   "navCalendar": "Calendar",
   "navStats": "Statistici",
   "navHealth": "Sănătate",
@@ -308,14 +296,6 @@
   "errorsNumbersOnly": "Te rugăm să introduci doar cifre",
   "errorsInvalidNumber": "Te rugăm să introduci un număr valid",
   "errorsPositiveNumber": "Te rugăm să introduci un număr pozitiv",
-  "authActionCreateNewPasswordFor": "Creează o parolă nouă pentru {email}",
-  "@authActionCreateNewPasswordFor": {
-    "placeholders": {
-      "email": {
-        "type": "String"
-      }
-    }
-  },
   "profileDefaultUserName": "Utilizator Gym Tracker",
   "globalTryAgain": "Încearcă din nou",
   "onboardingTitle1": "Urmărește-ți Antrenamentele",

@@ -20,11 +20,6 @@ class WeakPasswordException implements Exception {
   const WeakPasswordException();
 }
 
-/// Thrown when an OOB action code (from a deep-link) is expired or invalid.
-class InvalidActionCodeException implements Exception {
-  const InvalidActionCodeException();
-}
-
 /// Thrown when there is no authenticated user where one is expected, or when
 /// the Firebase account has been disabled.
 class AuthUserNotFoundException implements Exception {

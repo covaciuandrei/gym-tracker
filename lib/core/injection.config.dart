@@ -22,12 +22,15 @@ import '../cubit/workout/workout_cubit.dart' as _i800;
 import '../data/mappers/attendance_day_mapper.dart' as _i604;
 import '../data/mappers/supplement_mapper.dart' as _i472;
 import '../data/mappers/training_type_mapper.dart' as _i660;
+import '../data/mappers/user_mapper.dart' as _i455;
 import '../data/remote/attendance/attendance_day_source.dart' as _i497;
 import '../data/remote/supplement/health_source.dart' as _i531;
 import '../data/remote/training_type/training_type_source.dart' as _i96;
+import '../data/remote/user/user_source.dart' as _i905;
 import '../service/attendance/attendance_service.dart' as _i483;
 import '../service/auth/auth_service.dart' as _i637;
 import '../service/health/health_service.dart' as _i17;
+import '../service/user/user_service.dart' as _i729;
 import '../service/workout/workout_service.dart' as _i425;
 import 'app_router.dart' as _i313;
 import 'firebase_module.dart' as _i616;
@@ -44,6 +47,7 @@ _i174.GetIt $initGetIt(
   gh.factory<_i604.AttendanceDayMapper>(() => _i604.AttendanceDayMapper());
   gh.factory<_i472.SupplementMapper>(() => _i472.SupplementMapper());
   gh.factory<_i660.TrainingTypeMapper>(() => _i660.TrainingTypeMapper());
+  gh.factory<_i455.UserMapper>(() => _i455.UserMapper());
   gh.lazySingleton<_i313.AppRouter>(() => _i313.AppRouter());
   gh.lazySingleton<_i59.FirebaseAuth>(() => firebaseModule.firebaseAuth);
   gh.factory<_i637.AuthService>(
@@ -55,13 +59,16 @@ _i174.GetIt $initGetIt(
   gh.factory<_i531.HealthSource>(
     () => _i531.HealthSource(gh<_i472.SupplementMapper>()),
   );
+  gh.factory<_i905.UserSource>(() => _i905.UserSource(gh<_i455.UserMapper>()));
   gh.factory<_i483.AttendanceService>(
     () => _i483.AttendanceService(gh<_i497.AttendanceDaySource>()),
   );
   gh.factory<_i96.TrainingTypeSource>(
     () => _i96.TrainingTypeSource(gh<_i660.TrainingTypeMapper>()),
   );
-  gh.factory<_i548.AuthCubit>(() => _i548.AuthCubit(gh<_i637.AuthService>()));
+  gh.factory<_i729.UserService>(
+    () => _i729.UserService(gh<_i905.UserSource>()),
+  );
   gh.factory<_i425.WorkoutService>(
     () => _i425.WorkoutService(gh<_i96.TrainingTypeSource>()),
   );
@@ -80,6 +87,9 @@ _i174.GetIt $initGetIt(
   );
   gh.factory<_i829.HealthCubit>(
     () => _i829.HealthCubit(gh<_i17.HealthService>()),
+  );
+  gh.factory<_i548.AuthCubit>(
+    () => _i548.AuthCubit(gh<_i637.AuthService>(), gh<_i729.UserService>()),
   );
   gh.factory<_i730.StatsCubit>(
     () => _i730.StatsCubit(

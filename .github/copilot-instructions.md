@@ -152,7 +152,6 @@ decoration: BoxDecoration(
 /login          [guest]   → LoginPage          (lib/presentation/pages/auth/login_page.dart)
 /register       [guest]   → RegisterPage       (lib/presentation/pages/auth/register_page.dart)
 /forgot-password[guest]   → ForgotPasswordPage (lib/presentation/pages/auth/forgot_password_page.dart)
-/auth/action    [public]  → AuthActionPage     (lib/presentation/pages/auth/auth_action_page.dart)
 /app                      → MainShellPage      (lib/presentation/pages/main_shell/main_shell_page.dart)
   /app/calendar           → CalendarPage       (tab child)
   /app/stats              → StatsPage          (tab child)
@@ -292,7 +291,7 @@ firestore/
 **Key Firestore patterns:**
 - All `UserSource` writes use `SetOptions(merge: true)` — safe for concurrent updates, preserves subcollections and existing fields.
 - `lastVerificationEmailSentAt` uses `Timestamp.now()` (device time) — avoids server/device clock skew in cooldown computation.
-- `lastVerificationEmailSentAt` is cleared on successful login via `_syncUserProfile()`.
+- `lastVerificationEmailSentAt` is cleared on successful login via `_initializeProfileOnFirstLogin()`.
 
 ### 7.4 Service / Source Map
 
@@ -368,12 +367,10 @@ SplashPage (2s delay)
 
 Firebase email links (out-of-app):
     │
-    └── /auth/action?mode=verifyEmail&oobCode=...  ──────────────────────────────► AuthActionPage
-            ├── mode=verifyEmail  → applyActionCode() → success → "Go to Sign In" → LoginPage
-            ├── mode=resetPassword
-            │       ├── verifyPasswordResetCode() → shows target email
-            │       └── [submit new password] → confirmPasswordReset() → success → LoginPage
-            └── mode=unknown / missing oobCode → ErrorStateWidget
+    └── Email verification & password reset are handled by Firebase's default
+        hosted action page (https://<project>.firebaseapp.com/__/auth/action).
+        No in-app deep-link handling — users complete the action in the browser
+        and then return to the app to sign in.
 ```
 
 ### 8.1 Authentication State Machine
@@ -384,7 +381,7 @@ State: UNAUTHENTICATED
     │       ├── OK + verified   → AUTHENTICATED  (bootstrapOnSignIn writes profile)
     │       └── OK + unverified → UNAUTHENTICATED (auto sign-out)
     ├── signUp(email, pwd) → sends verification email → UNAUTHENTICATED (must verify)
-    └── verifyEmail(oobCode) → AWAITING_LOGIN  (user goes to LoginPage)
+    └── (email verification & password reset handled by Firebase hosted page)
 
 State: AUTHENTICATED
     ├── signOut()
@@ -407,7 +404,7 @@ State: AUTHENTICATED
 ```
 signIn() / signUp() success
     │
-    └── _syncUserProfile() [best-effort]
+    └── _initializeProfileOnFirstLogin() [best-effort]
             │
             └── UserSource.bootstrapOnSignIn(userId, email, displayName?)
                     │

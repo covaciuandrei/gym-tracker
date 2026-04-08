@@ -22,13 +22,13 @@ class MockAuthCubit extends Mock implements AuthCubit {}
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 Widget _buildApp(AuthCubit cubit) => MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: BlocProvider<AuthCubit>.value(
-        value: cubit,
-        child: const ForgotPasswordPage(),
-      ),
-    );
+  localizationsDelegates: AppLocalizations.localizationsDelegates,
+  supportedLocales: AppLocalizations.supportedLocales,
+  home: BlocProvider<AuthCubit>.value(
+    value: cubit,
+    child: const ForgotPasswordPage(),
+  ),
+);
 
 MockAuthCubit _idleCubit() {
   final cubit = MockAuthCubit();
@@ -96,8 +96,9 @@ void main() {
   });
 
   group('ForgotPasswordPage — loading state', () {
-    testWidgets('GradientButton shows spinner when PendingState',
-        (tester) async {
+    testWidgets('GradientButton shows spinner when PendingState', (
+      tester,
+    ) async {
       final cubit = MockAuthCubit();
       when(() => cubit.state).thenReturn(const PendingState());
       when(() => cubit.stream).thenAnswer((_) => const Stream.empty());
@@ -128,8 +129,9 @@ void main() {
   });
 
   group('ForgotPasswordPage — error state', () {
-    testWidgets('shows error banner for SomethingWentWrongState',
-        (tester) async {
+    testWidgets('shows error banner for SomethingWentWrongState', (
+      tester,
+    ) async {
       final cubit = MockAuthCubit();
       when(() => cubit.state).thenReturn(const SomethingWentWrongState());
       when(() => cubit.stream).thenAnswer((_) => const Stream.empty());
@@ -156,8 +158,9 @@ void main() {
   });
 
   group('ForgotPasswordPage — success state', () {
-    testWidgets('shows success card for AuthPasswordResetSentState',
-        (tester) async {
+    testWidgets('shows success card for AuthPasswordResetSentState', (
+      tester,
+    ) async {
       final cubit = MockAuthCubit();
       when(() => cubit.state).thenReturn(const AuthPasswordResetSentState());
       when(() => cubit.stream).thenAnswer((_) => const Stream.empty());
@@ -176,10 +179,7 @@ void main() {
       await tester.pumpWidget(_buildApp(cubit));
       await tester.pumpAndSettle();
 
-      expect(
-        find.text('Reset email sent. Check your inbox.'),
-        findsOneWidget,
-      );
+      expect(find.text('Reset email sent. Check your inbox.'), findsOneWidget);
     });
 
     testWidgets('hides form field on success', (tester) async {
@@ -208,45 +208,52 @@ void main() {
   });
 
   group('ForgotPasswordPage — form submit', () {
-    testWidgets('calls cubit.resetPassword with trimmed email on valid submit',
-        (tester) async {
+    testWidgets(
+      'calls cubit.resetPassword with trimmed email on valid submit',
+      (tester) async {
+        final cubit = _idleCubit();
+        when(
+          () => cubit.resetPassword(email: any(named: 'email')),
+        ).thenAnswer((_) async {});
+
+        await tester.pumpWidget(_buildApp(cubit));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(find.byType(TextFormField), 'user@test.com');
+
+        await tester.ensureVisible(find.byType(GradientButton));
+        await tester.tap(find.byType(GradientButton));
+        await tester.pump();
+
+        verify(() => cubit.resetPassword(email: 'user@test.com')).called(1);
+      },
+    );
+
+    testWidgets('does not call cubit when email field is empty', (
+      tester,
+    ) async {
       final cubit = _idleCubit();
-      when(() => cubit.resetPassword(any())).thenAnswer((_) async {});
+      when(
+        () => cubit.resetPassword(email: any(named: 'email')),
+      ).thenAnswer((_) async {});
 
       await tester.pumpWidget(_buildApp(cubit));
       await tester.pumpAndSettle();
-
-      await tester.enterText(
-        find.byType(TextFormField),
-        'user@test.com',
-      );
 
       await tester.ensureVisible(find.byType(GradientButton));
       await tester.tap(find.byType(GradientButton));
       await tester.pump();
 
-      verify(() => cubit.resetPassword('user@test.com')).called(1);
+      verifyNever(() => cubit.resetPassword(email: any(named: 'email')));
     });
 
-    testWidgets('does not call cubit when email field is empty',
-        (tester) async {
+    testWidgets('does not call cubit when email format is invalid', (
+      tester,
+    ) async {
       final cubit = _idleCubit();
-      when(() => cubit.resetPassword(any())).thenAnswer((_) async {});
-
-      await tester.pumpWidget(_buildApp(cubit));
-      await tester.pumpAndSettle();
-
-      await tester.ensureVisible(find.byType(GradientButton));
-      await tester.tap(find.byType(GradientButton));
-      await tester.pump();
-
-      verifyNever(() => cubit.resetPassword(any()));
-    });
-
-    testWidgets('does not call cubit when email format is invalid',
-        (tester) async {
-      final cubit = _idleCubit();
-      when(() => cubit.resetPassword(any())).thenAnswer((_) async {});
+      when(
+        () => cubit.resetPassword(email: any(named: 'email')),
+      ).thenAnswer((_) async {});
 
       await tester.pumpWidget(_buildApp(cubit));
       await tester.pumpAndSettle();
@@ -257,7 +264,7 @@ void main() {
       await tester.tap(find.byType(GradientButton));
       await tester.pump();
 
-      verifyNever(() => cubit.resetPassword(any()));
+      verifyNever(() => cubit.resetPassword(email: any(named: 'email')));
     });
   });
 }
