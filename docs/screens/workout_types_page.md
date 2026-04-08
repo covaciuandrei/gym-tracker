@@ -1,4 +1,6 @@
-# Workout Types Page — Prep Notes
+# Workout Types Page — Screen Doc
+
+> Last updated: 2026-04-08
 
 ## Route
 `/workout-types` (pushed from ProfilePage, full-screen, NOT inside MainShell)
@@ -234,3 +236,7 @@ workoutCubit.deleteType(id);
 ## Navigation In/Out
 - IN: from `ProfilePage` (push)
 - OUT: back to Profile (pop / AppBar back button)
+
+## Status
+
+✅ **IMPLEMENTED**

@@ -1,4 +1,6 @@
-# Register Page — Prep Notes
+# Register Page — Screen Doc
+
+> Last updated: 2026-04-08
 
 ## Route
 `/register`
@@ -107,3 +109,7 @@ String _strengthLabel(String pw) {
 ```dart
 context.read<AuthCubit>().signUp(email: email, password: password);
 ```
+
+## Status
+
+✅ **IMPLEMENTED**

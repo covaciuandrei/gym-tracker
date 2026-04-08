@@ -1,4 +1,6 @@
-# Splash Page — Prep Notes
+# Splash Page — Screen Doc
+
+> Last updated: 2026-04-08
 
 ## Route
 `/splash` — initial route (auto_route `initial: true`)

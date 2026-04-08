@@ -1,4 +1,6 @@
-# Login Page — Prep Notes
+# Login Page — Screen Doc
+
+> Last updated: 2026-04-08
 
 ## Route
 `/login`
@@ -95,3 +97,7 @@ BlocListener<AuthCubit, BaseState>(
   },
 )
 ```
+
+## Status
+
+✅ **IMPLEMENTED**

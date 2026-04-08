@@ -1,4 +1,6 @@
-# Health Page — Prep Notes
+# Health Page — Screen Doc
+
+> Last updated: 2026-04-08
 
 ## Route
 `/health` (child of MainShell, tab index 2)
@@ -225,3 +227,7 @@ healthCubit.logSupplement(productId);            // Tab 2 quick log
 ## Navigation In/Out
 - IN: MainShell tab 2
 - OUT: no navigation; supplement form is in-page modal bottom sheet
+
+## Status
+
+✅ **IMPLEMENTED**

@@ -1,3 +1,96 @@
+# Profile Page — Screen Doc
+
+> Last updated: 2026-04-08
+
+## Route
+
+`/profile` (child of MainShell, tab index 3)
+
+## Source
+
+`lib/presentation/pages/profile/profile_page.dart`
+
+## Page Setup
+
+- `@RoutePage()` annotation
+- `implements AutoRouteWrapper` → `BlocProvider<AuthCubit>`
+- `StatefulWidget`
+- `initState` → `authCubit.watchAuthState()`
+
+## Visual Layout
+
+```
+Scaffold(backgroundColor: cs.surfaceContainerLow)
+  appBar: GymAppBar(title: l10n.profileTitle, showBackButton: false)
+  SafeArea
+    SingleChildScrollView(padding: h16+v16)
+      Center → ConstrainedBox(maxWidth: 600)
+        Column(crossAxisAlignment: start)
+
+          ── User Card ──
+          _UserCard(user)
+            Card(surfaceContainerHigh, borderRadius: 16)
+              Padding(16)
+                Row
+                  CircleAvatar(radius: 32, bg: cs.primaryContainer)
+                    Text(initial, headlineSmall, w700)
+                  SizedBox(width: 16)
+                  Expanded Column
+                    Text(displayName, titleLarge, w600)
+                    Text(email, bodyMedium, cs.onSurfaceVariant)
+                    if (emailVerified):
+                      verified icon + "Verified" (cs.primary)
+
+          SizedBox(height: 24)
+
+          ── MANAGE section ──
+          _SectionHeader("MANAGE")
+          Card(surfaceContainerHigh, borderRadius: 16) [
+            ListTile(fitness_center, "Workout Types", chevron) → WorkoutTypesRoute
+            Divider
+            ListTile(settings, "Settings", chevron) → SettingsRoute
+          ]
+
+          SizedBox(height: 24)
+
+          ── ACCOUNT section ──
+          _SectionHeader("ACCOUNT")
+          Card(surfaceContainerHigh, borderRadius: 16) [
+            ListTile(logout, "Sign Out", color: cs.error, spinner when signing out)
+              → authCubit.signOut()
+          ]
+```
+
+## State → UI Mapping
+
+### AuthCubit (BlocConsumer)
+
+**listenWhen:**
+
+| State | Side Effect |
+|---|---|
+| `AuthSignOutSuccessState` / `AuthUnauthenticatedState` | `ctx.router.replace(LoginRoute())` |
+| `SomethingWentWrongState` | SnackBar |
+
+**builder:**
+
+| State | UI |
+|---|---|
+| `AuthAuthenticatedState(user)` | Render user card with user data |
+| `PendingState` | Show sign-out spinner |
+
+## Controls Used
+
+- `GymAppBar`
+
+## Navigation In/Out
+
+- IN: MainShell tab 3
+- OUT: → `WorkoutTypesRoute` (push), → `SettingsRoute` (push), → `LoginRoute` (replace on sign out)
+
+## Status
+
+✅ **IMPLEMENTED**
 # Profile Page — Prep Notes
 
 ## Route

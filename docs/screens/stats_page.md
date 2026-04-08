@@ -1,4 +1,6 @@
-# Stats Page — Prep Notes
+# Stats Page — Screen Doc
+
+> Last updated: 2026-04-08
 
 ## Route
 `/stats` (child of MainShell, tab index 1)
@@ -183,3 +185,7 @@ statsCubit.loadYear(year);
 ## Navigation In/Out
 - IN: MainShell tab 1
 - OUT: no navigation
+
+## Status
+
+✅ **IMPLEMENTED**

@@ -1,4 +1,6 @@
-# Main Shell Page — Prep Notes
+# Main Shell Page — Screen Doc
+
+> Last updated: 2026-04-08
 
 ## Route
 `/` (shell route — hosts bottom navigation with 4 tabs)
@@ -60,3 +62,7 @@ Active tab uses filled icon, inactive tab uses outlined variant.
 - `AutoTabsScaffold` handles lazy loading of tab content
 - Back button on Android does not exit the app from this shell; it navigates back through tabs
 - Each tab maintains its own navigation stack
+
+## Status
+
+✅ **IMPLEMENTED**

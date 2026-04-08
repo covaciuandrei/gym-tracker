@@ -1,4 +1,6 @@
-# Calendar Page — Prep Notes
+# Calendar Page — Screen Doc
+
+> Last updated: 2026-04-08
 
 ## Route
 `/calendar` (child of MainShell, tab index 0)
@@ -168,3 +170,7 @@ Each day cell in `CalendarLoadedState` includes:
 ## Navigation In/Out
 - IN: MainShell tab 0 (initial tab)
 - OUT: no navigation; popup is in-page modal
+
+## Status
+
+✅ **IMPLEMENTED**
