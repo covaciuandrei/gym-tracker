@@ -10,6 +10,9 @@ class AuthService {
 
   final FirebaseAuth _auth;
 
+  /// Returns the UID of the currently signed-in user, or `null`.
+  String? get currentUserId => _auth.currentUser?.uid;
+
   /// Emits the current [AuthUser] whenever auth state changes, or `null` when
   /// signed out.
   Stream<AuthUser?> get currentUser$ => _auth.authStateChanges().map(
@@ -89,6 +92,39 @@ class AuthService {
       );
       await user.reauthenticateWithCredential(credential);
       await user.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw _mapFirebaseException(e);
+    }
+  }
+
+  /// Re-authenticates the current user with [currentPassword].
+  /// Throws [InvalidCredentialsException] if the password is wrong.
+  /// Throws [AuthUserNotFoundException] if there is no signed-in user.
+  Future<void> reauthenticate({required String currentPassword}) async {
+    final user = _auth.currentUser;
+    if (user == null || user.email == null) {
+      throw const AuthUserNotFoundException();
+    }
+    try {
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(credential);
+    } on FirebaseAuthException catch (e) {
+      throw _mapFirebaseException(e);
+    }
+  }
+
+  /// Deletes the currently signed-in Firebase Auth account.
+  ///
+  /// Must be called **after** [reauthenticate] and after all Firestore data
+  /// has been cleaned up.
+  Future<void> deleteAccount() async {
+    final user = _auth.currentUser;
+    if (user == null) throw const AuthUserNotFoundException();
+    try {
+      await user.delete();
     } on FirebaseAuthException catch (e) {
       throw _mapFirebaseException(e);
     }

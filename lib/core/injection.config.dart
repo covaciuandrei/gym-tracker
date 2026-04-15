@@ -9,6 +9,7 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+import 'package:cloud_firestore/cloud_firestore.dart' as _i974;
 import 'package:firebase_auth/firebase_auth.dart' as _i59;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
@@ -23,10 +24,12 @@ import '../data/mappers/attendance_day_mapper.dart' as _i604;
 import '../data/mappers/supplement_mapper.dart' as _i472;
 import '../data/mappers/training_type_mapper.dart' as _i660;
 import '../data/mappers/user_mapper.dart' as _i455;
+import '../data/remote/account/account_cleanup_source.dart' as _i243;
 import '../data/remote/attendance/attendance_day_source.dart' as _i497;
 import '../data/remote/supplement/health_source.dart' as _i531;
 import '../data/remote/training_type/training_type_source.dart' as _i96;
 import '../data/remote/user/user_source.dart' as _i905;
+import '../service/account/account_cleanup_service.dart' as _i502;
 import '../service/attendance/attendance_service.dart' as _i483;
 import '../service/auth/auth_service.dart' as _i637;
 import '../service/health/health_service.dart' as _i17;
@@ -50,6 +53,9 @@ _i174.GetIt $initGetIt(
   gh.factory<_i455.UserMapper>(() => _i455.UserMapper());
   gh.lazySingleton<_i313.AppRouter>(() => _i313.AppRouter());
   gh.lazySingleton<_i59.FirebaseAuth>(() => firebaseModule.firebaseAuth);
+  gh.lazySingleton<_i974.FirebaseFirestore>(
+    () => firebaseModule.firebaseFirestore,
+  );
   gh.factory<_i637.AuthService>(
     () => _i637.AuthService(gh<_i59.FirebaseAuth>()),
   );
@@ -62,6 +68,9 @@ _i174.GetIt $initGetIt(
   gh.factory<_i905.UserSource>(() => _i905.UserSource(gh<_i455.UserMapper>()));
   gh.factory<_i483.AttendanceService>(
     () => _i483.AttendanceService(gh<_i497.AttendanceDaySource>()),
+  );
+  gh.factory<_i243.AccountCleanupSource>(
+    () => _i243.AccountCleanupSource(gh<_i974.FirebaseFirestore>()),
   );
   gh.factory<_i96.TrainingTypeSource>(
     () => _i96.TrainingTypeSource(gh<_i660.TrainingTypeMapper>()),
@@ -82,6 +91,9 @@ _i174.GetIt $initGetIt(
       gh<_i425.WorkoutService>(),
     ),
   );
+  gh.factory<_i502.AccountCleanupService>(
+    () => _i502.AccountCleanupService(gh<_i243.AccountCleanupSource>()),
+  );
   gh.factory<_i800.WorkoutCubit>(
     () => _i800.WorkoutCubit(gh<_i425.WorkoutService>()),
   );
@@ -89,7 +101,11 @@ _i174.GetIt $initGetIt(
     () => _i829.HealthCubit(gh<_i17.HealthService>()),
   );
   gh.factory<_i548.AuthCubit>(
-    () => _i548.AuthCubit(gh<_i637.AuthService>(), gh<_i729.UserService>()),
+    () => _i548.AuthCubit(
+      gh<_i637.AuthService>(),
+      gh<_i729.UserService>(),
+      gh<_i502.AccountCleanupService>(),
+    ),
   );
   gh.factory<_i730.StatsCubit>(
     () => _i730.StatsCubit(

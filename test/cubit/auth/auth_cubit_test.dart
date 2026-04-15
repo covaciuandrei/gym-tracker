@@ -25,6 +25,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/model/auth_user.dart';
+import 'package:gym_tracker/service/account/account_cleanup_service.dart';
 import 'package:gym_tracker/service/auth/auth_service.dart';
 import 'package:gym_tracker/service/user/user_service.dart';
 
@@ -33,6 +34,8 @@ import 'package:gym_tracker/service/user/user_service.dart';
 class MockAuthService extends Mock implements AuthService {}
 
 class MockUserService extends Mock implements UserService {}
+
+class MockAccountCleanupService extends Mock implements AccountCleanupService {}
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────
 
@@ -47,12 +50,14 @@ const _fakeUser = AuthUser(uid: 'uid_001', email: _email, emailVerified: true);
 void main() {
   late MockAuthService mockService;
   late MockUserService mockUserService;
+  late MockAccountCleanupService mockCleanupService;
   late AuthCubit sut;
 
   setUp(() {
     mockService = MockAuthService();
     mockUserService = MockUserService();
-    sut = AuthCubit(mockService, mockUserService);
+    mockCleanupService = MockAccountCleanupService();
+    sut = AuthCubit(mockService, mockUserService, mockCleanupService);
 
     // Default stubs for profile sync — best-effort, always succeed.
     when(
@@ -308,6 +313,107 @@ void main() {
         ]),
       );
       await sut.changePassword(currentPassword: 'wrong', newPassword: newPass);
+      await future;
+    });
+  });
+
+  // ─── deleteAccount ────────────────────────────────────────────────────
+
+  group('deleteAccount', () {
+    test('emits pending then accountDeleted on success', () async {
+      when(
+        () => mockService.reauthenticate(currentPassword: _password),
+      ).thenAnswer((_) async {});
+      when(() => mockService.currentUserId).thenReturn('uid_001');
+      when(
+        () => mockCleanupService.deleteAllUserData(userId: 'uid_001'),
+      ).thenAnswer((_) async {});
+      when(() => mockService.deleteAccount()).thenAnswer((_) async {});
+
+      final future = expectLater(
+        sut.stream,
+        emitsInOrder([const PendingState(), const AuthAccountDeletedState()]),
+      );
+      await sut.deleteAccount(currentPassword: _password);
+      await future;
+
+      verify(
+        () => mockCleanupService.deleteAllUserData(userId: 'uid_001'),
+      ).called(1);
+      verify(() => mockService.deleteAccount()).called(1);
+    });
+
+    test('calls reauthenticate → cleanup → deleteAccount in order', () async {
+      when(
+        () => mockService.reauthenticate(currentPassword: _password),
+      ).thenAnswer((_) async {});
+      when(() => mockService.currentUserId).thenReturn('uid_001');
+      when(
+        () => mockCleanupService.deleteAllUserData(userId: 'uid_001'),
+      ).thenAnswer((_) async {});
+      when(() => mockService.deleteAccount()).thenAnswer((_) async {});
+
+      await sut.deleteAccount(currentPassword: _password);
+
+      verifyInOrder([
+        () => mockService.reauthenticate(currentPassword: _password),
+        () => mockCleanupService.deleteAllUserData(userId: 'uid_001'),
+        () => mockService.deleteAccount(),
+      ]);
+    });
+
+    test('emits invalidCredentials when password is wrong', () async {
+      when(
+        () => mockService.reauthenticate(currentPassword: 'wrong'),
+      ).thenThrow(const InvalidCredentialsException());
+
+      final future = expectLater(
+        sut.stream,
+        emitsInOrder([
+          const PendingState(),
+          const AuthInvalidCredentialsState(),
+        ]),
+      );
+      await sut.deleteAccount(currentPassword: 'wrong');
+      await future;
+
+      verifyNever(
+        () =>
+            mockCleanupService.deleteAllUserData(userId: any(named: 'userId')),
+      );
+      verifyNever(() => mockService.deleteAccount());
+    });
+
+    test('emits somethingWentWrong when cleanup fails', () async {
+      when(
+        () => mockService.reauthenticate(currentPassword: _password),
+      ).thenAnswer((_) async {});
+      when(() => mockService.currentUserId).thenReturn('uid_001');
+      when(
+        () => mockCleanupService.deleteAllUserData(userId: 'uid_001'),
+      ).thenThrow(Exception('firestore error'));
+
+      final future = expectLater(
+        sut.stream,
+        emitsInOrder([const PendingState(), const SomethingWentWrongState()]),
+      );
+      await sut.deleteAccount(currentPassword: _password);
+      await future;
+
+      verifyNever(() => mockService.deleteAccount());
+    });
+
+    test('emits somethingWentWrong when currentUserId is null', () async {
+      when(
+        () => mockService.reauthenticate(currentPassword: _password),
+      ).thenAnswer((_) async {});
+      when(() => mockService.currentUserId).thenReturn(null);
+
+      final future = expectLater(
+        sut.stream,
+        emitsInOrder([const PendingState(), const SomethingWentWrongState()]),
+      );
+      await sut.deleteAccount(currentPassword: _password);
       await future;
     });
   });

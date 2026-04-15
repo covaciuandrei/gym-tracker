@@ -64,3 +64,8 @@ class AuthPasswordResetSentState extends BaseState {
 class AuthPasswordChangedState extends BaseState {
   const AuthPasswordChangedState();
 }
+
+/// The user's account and all associated data have been deleted.
+class AuthAccountDeletedState extends BaseState {
+  const AuthAccountDeletedState();
+}

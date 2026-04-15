@@ -826,6 +826,26 @@ class AppLocalizationsRo extends AppLocalizations {
       'Parola a fost schimbată cu succes.';
 
   @override
+  String get settingsDeleteAccount => 'Șterge Contul';
+
+  @override
+  String get settingsDeleteAccountTitle => 'Șterge Contul';
+
+  @override
+  String get settingsDeleteAccountMessage =>
+      'Aceasta va șterge permanent contul tău și toate datele asociate (antrenamente, înregistrări suplimente, tipuri de antrenament). Această acțiune nu poate fi anulată.';
+
+  @override
+  String get settingsDeleteAccountConfirm => 'Șterge Contul Meu';
+
+  @override
+  String get settingsDeleteAccountPasswordHint =>
+      'Introdu parola pentru confirmare';
+
+  @override
+  String get settingsSignOut => 'Delogare';
+
+  @override
   String get profileDefaultUserName => 'Utilizator Gym Tracker';
 
   @override

@@ -1586,6 +1586,42 @@ abstract class AppLocalizations {
   /// **'Password changed successfully.'**
   String get settingsPasswordChangedSuccess;
 
+  /// No description provided for @settingsDeleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get settingsDeleteAccount;
+
+  /// No description provided for @settingsDeleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get settingsDeleteAccountTitle;
+
+  /// No description provided for @settingsDeleteAccountMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete your account and all your data (workouts, supplements logs, training types). This action cannot be undone.'**
+  String get settingsDeleteAccountMessage;
+
+  /// No description provided for @settingsDeleteAccountConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete My Account'**
+  String get settingsDeleteAccountConfirm;
+
+  /// No description provided for @settingsDeleteAccountPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password to confirm'**
+  String get settingsDeleteAccountPasswordHint;
+
+  /// No description provided for @settingsSignOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out'**
+  String get settingsSignOut;
+
   /// No description provided for @profileDefaultUserName.
   ///
   /// In en, this message translates to:

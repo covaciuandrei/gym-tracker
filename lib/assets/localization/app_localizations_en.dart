@@ -814,6 +814,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsPasswordChangedSuccess => 'Password changed successfully.';
 
   @override
+  String get settingsDeleteAccount => 'Delete Account';
+
+  @override
+  String get settingsDeleteAccountTitle => 'Delete Account';
+
+  @override
+  String get settingsDeleteAccountMessage =>
+      'This will permanently delete your account and all your data (workouts, supplements logs, training types). This action cannot be undone.';
+
+  @override
+  String get settingsDeleteAccountConfirm => 'Delete My Account';
+
+  @override
+  String get settingsDeleteAccountPasswordHint =>
+      'Enter your password to confirm';
+
+  @override
+  String get settingsSignOut => 'Sign Out';
+
+  @override
   String get profileDefaultUserName => 'Gym Tracker User';
 
   @override

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:gym_tracker/cubit/base_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/model/auth_user.dart';
+import 'package:gym_tracker/service/account/account_cleanup_service.dart';
 import 'package:gym_tracker/service/auth/auth_service.dart';
 import 'package:gym_tracker/service/user/user_service.dart';
 import 'package:injectable/injectable.dart';
@@ -11,10 +12,11 @@ part 'auth_states.dart';
 
 @injectable
 class AuthCubit extends BaseCubit {
-  AuthCubit(this._authService, this._userService);
+  AuthCubit(this._authService, this._userService, this._cleanupService);
 
   final AuthService _authService;
   final UserService _userService;
+  final AccountCleanupService _cleanupService;
 
   StreamSubscription<AuthUser?>? _authSubscription;
 
@@ -97,6 +99,30 @@ class AuthCubit extends BaseCubit {
         newPassword: newPassword,
       );
       safeEmit(const AuthPasswordChangedState());
+    } on InvalidCredentialsException {
+      safeEmit(const AuthInvalidCredentialsState());
+    } catch (_) {
+      safeEmit(const SomethingWentWrongState());
+    }
+  }
+
+  /// Deletes all user data from Firestore, then deletes the Firebase Auth
+  /// account.
+  ///
+  /// Flow: reauthenticate → cleanup Firestore → delete Auth account.
+  Future<void> deleteAccount({required String currentPassword}) async {
+    if (state is PendingState) return;
+    safeEmit(const PendingState());
+    try {
+      await _authService.reauthenticate(currentPassword: currentPassword);
+
+      final uid = _authService.currentUserId;
+      if (uid == null) throw const AuthUserNotFoundException();
+
+      await _cleanupService.deleteAllUserData(userId: uid);
+      await _authService.deleteAccount();
+
+      safeEmit(const AuthAccountDeletedState());
     } on InvalidCredentialsException {
       safeEmit(const AuthInvalidCredentialsState());
     } catch (_) {
