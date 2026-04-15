@@ -35,7 +35,7 @@ class WorkoutTypesPage extends StatelessWidget implements AutoRouteWrapper {
 
   @override
   Widget build(BuildContext context) {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
+    final userId = getIt<FirebaseAuth>().currentUser?.uid;
     if (userId == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) {

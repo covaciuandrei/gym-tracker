@@ -7,11 +7,10 @@ import 'user_dto.dart';
 
 @injectable
 class UserSource {
-  const UserSource(this._mapper);
+  const UserSource(this._db, this._mapper);
 
+  final FirebaseFirestore _db;
   final UserMapper _mapper;
-
-  FirebaseFirestore get _db => FirebaseFirestore.instance;
 
   DocumentReference<UserDto> _userDocRef({required String userId}) => _db
       .collection('users')

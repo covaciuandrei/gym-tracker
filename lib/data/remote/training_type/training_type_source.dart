@@ -7,11 +7,10 @@ import 'training_type_dto.dart';
 
 @injectable
 class TrainingTypeSource {
-  const TrainingTypeSource(this._mapper);
+  const TrainingTypeSource(this._db, this._mapper);
 
+  final FirebaseFirestore _db;
   final TrainingTypeMapper _mapper;
-
-  FirebaseFirestore get _db => FirebaseFirestore.instance;
 
   CollectionReference<TrainingTypeDto> _typesRef(String userId) => _db
       .collection('users')
@@ -47,10 +46,7 @@ class TrainingTypeSource {
 
   /// Creates a new training type and returns its generated document id.
   Future<String> create(String userId, TrainingType model) async {
-    final dto = _mapper.mapModel(
-      model,
-      createdAt: Timestamp.now(),
-    );
+    final dto = _mapper.mapModel(model, createdAt: Timestamp.now());
     final ref = await _typesRef(userId).add(dto);
     return ref.id;
   }

@@ -7,11 +7,10 @@ import 'attendance_day_dto.dart';
 
 @injectable
 class AttendanceDaySource {
-  const AttendanceDaySource(this._mapper);
+  const AttendanceDaySource(this._db, this._mapper);
 
+  final FirebaseFirestore _db;
   final AttendanceDayMapper _mapper;
-
-  FirebaseFirestore get _db => FirebaseFirestore.instance;
 
   /// Path:  users/{userId}/attendances/{yearMonth}/days
   ///   yearMonth = "YYYY-MM"  (e.g. "2025-03")
@@ -62,11 +61,27 @@ class AttendanceDaySource {
 
   /// Writes (creates or overwrites) the attendance record for [model.date].
   /// The document id IS the date string ("YYYY-MM-DD").
+  ///
+  /// Also touches the month document so it exists as a real Firestore document
+  /// and can be enumerated during account cleanup.
   Future<void> upsertDay(
     String userId,
     String yearMonth,
     AttendanceDay model,
-  ) => _daysRef(userId, yearMonth).doc(model.date).set(_mapper.mapModel(model));
+  ) async {
+    final monthRef = _db
+        .collection('users')
+        .doc(userId)
+        .collection('attendances')
+        .doc(yearMonth);
+    final batch = _db.batch();
+    batch.set(monthRef, <String, dynamic>{}, SetOptions(merge: true));
+    batch.set(
+      _daysRef(userId, yearMonth).doc(model.date),
+      _mapper.mapModel(model),
+    );
+    await batch.commit();
+  }
 
   /// Removes the attendance record for [date] from a given [yearMonth].
   Future<void> deleteDay(String userId, String yearMonth, String date) =>

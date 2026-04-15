@@ -115,7 +115,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
       context.router.replace(const OnboardingRoute());
       return;
     }
-    final isLoggedIn = FirebaseAuth.instance.currentUser != null;
+    final isLoggedIn = getIt<FirebaseAuth>().currentUser != null;
     if (isLoggedIn) {
       context.router.replace(const MainShellRoute());
     } else {

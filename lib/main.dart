@@ -35,7 +35,7 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   if (kDebugMode) {
-    await FirebaseAuth.instance.setSettings(
+    await getIt<FirebaseAuth>().setSettings(
       appVerificationDisabledForTesting: true,
     );
   }

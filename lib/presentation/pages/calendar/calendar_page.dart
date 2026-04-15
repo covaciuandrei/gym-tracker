@@ -30,11 +30,15 @@ class CalendarPage extends StatefulWidget implements AutoRouteWrapper {
 
   @override
   Widget wrappedRoute(BuildContext context) {
-    return BlocProvider<CalendarCubit>(create: (_) => getIt<CalendarCubit>(), child: this);
+    return BlocProvider<CalendarCubit>(
+      create: (_) => getIt<CalendarCubit>(),
+      child: this,
+    );
   }
 }
 
-class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderStateMixin {
+class _CalendarPageState extends State<CalendarPage>
+    with SingleTickerProviderStateMixin {
   static const Duration _minimumSkeletonDuration = Duration(milliseconds: 300);
 
   late final TabController _tabController;
@@ -50,7 +54,7 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
   Timer? _monthSkeletonTimer;
   Timer? _yearSkeletonTimer;
 
-  String? get _userId => FirebaseAuth.instance.currentUser?.uid;
+  String? get _userId => getIt<FirebaseAuth>().currentUser?.uid;
 
   @override
   void initState() {
@@ -85,7 +89,11 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
 
   void _loadMonth(String userId) {
     _startMonthSkeletonWindow();
-    context.read<CalendarCubit>().loadMonth(userId: userId, year: _year.value, month: _month.value);
+    context.read<CalendarCubit>().loadMonth(
+      userId: userId,
+      year: _year.value,
+      month: _month.value,
+    );
   }
 
   void _loadYear(String userId) {
@@ -219,7 +227,11 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
     _loadMonth(userId);
   }
 
-  Future<void> _showDaySheet(BuildContext context, DateTime date, BaseState state) async {
+  Future<void> _showDaySheet(
+    BuildContext context,
+    DateTime date,
+    BaseState state,
+  ) async {
     final userId = _userId;
     if (userId == null) return;
 
@@ -280,7 +292,10 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
           await context.read<CalendarCubit>().markDay(userId: userId, day: day);
         },
         onClearAttendance: () async {
-          await context.read<CalendarCubit>().clearDay(userId: userId, date: dateKey);
+          await context.read<CalendarCubit>().clearDay(
+            userId: userId,
+            date: dateKey,
+          );
         },
         onAddSupplement: (product) async {
           final log = SupplementLog(
@@ -291,10 +306,17 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
             productName: product.name,
             servingsTaken: 1,
           );
-          await context.read<CalendarCubit>().logSupplement(userId: userId, model: log);
+          await context.read<CalendarCubit>().logSupplement(
+            userId: userId,
+            model: log,
+          );
         },
         onDeleteSupplement: (log) async {
-          await context.read<CalendarCubit>().deleteSupplementEntry(userId: userId, date: dateKey, entryId: log.id);
+          await context.read<CalendarCubit>().deleteSupplementEntry(
+            userId: userId,
+            date: dateKey,
+            entryId: log.id,
+          );
         },
       ),
     );
@@ -346,7 +368,9 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
         if (state is SomethingWentWrongState) {
           _releaseMonthSkeletonWindow();
           _releaseYearSkeletonWindow();
-          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
+          ScaffoldMessenger.of(
+            ctx,
+          ).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
         }
       },
       builder: (ctx, state) {
@@ -363,25 +387,37 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
                   final selectedYear = _year.value;
                   final selectedMonth = _month.value;
 
-                  final monthState = state is CalendarMonthLoadedState ? state : null;
-                  final yearState = state is CalendarYearLoadedState ? state : null;
+                  final monthState = state is CalendarMonthLoadedState
+                      ? state
+                      : null;
+                  final yearState = state is CalendarYearLoadedState
+                      ? state
+                      : null;
 
-                  final title = yearly ? '$selectedYear' : '${_monthName(context, selectedMonth)} $selectedYear';
+                  final title = yearly
+                      ? '$selectedYear'
+                      : '${_monthName(context, selectedMonth)} $selectedYear';
 
-                  final monthContent = ((state is PendingState && !yearly) || _forceMonthSkeleton)
+                  final monthContent =
+                      ((state is PendingState && !yearly) ||
+                          _forceMonthSkeleton)
                       ? const _CalendarMonthSkeleton()
                       : monthState != null
                       ? _CalendarMonthView(
                           year: selectedYear,
                           month: selectedMonth,
                           days: monthState.days,
-                          supplementDates: monthState.healthLogs.map((log) => log.date).toSet(),
+                          supplementDates: monthState.healthLogs
+                              .map((log) => log.date)
+                              .toSet(),
                           workoutTypes: monthState.workoutTypes,
-                          onDayTap: (date) => _showDaySheet(context, date, monthState),
+                          onDayTap: (date) =>
+                              _showDaySheet(context, date, monthState),
                         )
                       : const _CalendarMonthSkeleton();
 
-                  final yearContent = ((state is PendingState && yearly) || _forceYearSkeleton)
+                  final yearContent =
+                      ((state is PendingState && yearly) || _forceYearSkeleton)
                       ? const _CalendarYearSkeleton()
                       : yearState != null
                       ? _CalendarYearView(
@@ -389,13 +425,18 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
                           attendanceByMonth: yearState.attendanceByMonth,
                           supplementsByMonth: yearState.supplementsByMonth,
                           workoutTypes: yearState.workoutTypes,
-                          onDayTap: (date) => _showDaySheet(context, date, yearState),
+                          onDayTap: (date) =>
+                              _showDaySheet(context, date, yearState),
                         )
                       : const _CalendarYearSkeleton();
 
                   return Column(
                     children: [
-                      _CalendarHeader(title: title, onPrevious: () => _navigate(-1), onNext: () => _navigate(1)),
+                      _CalendarHeader(
+                        title: title,
+                        onPrevious: () => _navigate(-1),
+                        onNext: () => _navigate(1),
+                      ),
                       const SizedBox(height: 12),
                       GymTabBar(
                         controller: _tabController,
@@ -404,7 +445,10 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
                       ),
                       const SizedBox(height: 12),
                       Expanded(
-                        child: TabBarView(controller: _tabController, children: [monthContent, yearContent]),
+                        child: TabBarView(
+                          controller: _tabController,
+                          children: [monthContent, yearContent],
+                        ),
                       ),
                     ],
                   );
@@ -431,7 +475,9 @@ class _CalendarMonthSkeleton extends StatelessWidget {
             (_) => const Expanded(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 8),
-                child: Center(child: _CalendarSkeletonBox(height: 10, width: 26)),
+                child: Center(
+                  child: _CalendarSkeletonBox(height: 10, width: 26),
+                ),
               ),
             ),
           ),
@@ -451,7 +497,9 @@ class _CalendarMonthSkeleton extends StatelessWidget {
                 color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Center(child: _CalendarSkeletonBox(height: 14, width: 14)),
+              child: const Center(
+                child: _CalendarSkeletonBox(height: 14, width: 14),
+              ),
             ),
           ),
         ),
@@ -474,7 +522,9 @@ class _CalendarYearSkeleton extends StatelessWidget {
           decoration: BoxDecoration(
             color: _calendarPanelBackground(context),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.35)),
+            border: Border.all(
+              color: cs.outlineVariant.withValues(alpha: 0.35),
+            ),
           ),
           child: const Padding(
             padding: EdgeInsets.fromLTRB(12, 14, 12, 12),
@@ -505,7 +555,9 @@ class _CalendarYearMiniGridSkeleton extends StatelessWidget {
             (_) => const Expanded(
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 4),
-                child: Center(child: _CalendarSkeletonBox(height: 8, width: 12)),
+                child: Center(
+                  child: _CalendarSkeletonBox(height: 8, width: 12),
+                ),
               ),
             ),
           ),
@@ -544,7 +596,9 @@ class _CalendarSkeletonBox extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5),
+        color: Theme.of(
+          context,
+        ).colorScheme.outlineVariant.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(8),
       ),
     );
@@ -588,9 +642,10 @@ class _CalendarMonthView extends StatelessWidget {
                 child: Text(
                   _weekdayShort(context, index + 1),
                   textAlign: TextAlign.center,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelSmall?.copyWith(color: _calendarMutedText(context), fontWeight: FontWeight.w600),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: _calendarMutedText(context),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             );
@@ -645,7 +700,8 @@ class _CalendarYearView extends StatelessWidget {
       itemBuilder: (_, index) {
         final month = index + 1;
         final monthDays = attendanceByMonth[month] ?? const <AttendanceDay>[];
-        final supplements = supplementsByMonth[month] ?? const <SupplementLog>[];
+        final supplements =
+            supplementsByMonth[month] ?? const <SupplementLog>[];
         final supplementDates = supplements.map((log) => log.date).toSet();
         final attendanceByDate = {for (final day in monthDays) day.date: day};
         final cells = _buildMonthCells(
@@ -656,7 +712,10 @@ class _CalendarYearView extends StatelessWidget {
         );
 
         return Container(
-          decoration: BoxDecoration(color: _calendarPanelBackground(context), borderRadius: BorderRadius.circular(14)),
+          decoration: BoxDecoration(
+            color: _calendarPanelBackground(context),
+            borderRadius: BorderRadius.circular(14),
+          ),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
             child: Column(
@@ -677,10 +736,11 @@ class _CalendarYearView extends StatelessWidget {
                         child: Text(
                           _weekdayShort(context, weekday + 1),
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: _calendarMutedText(context),
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: _calendarMutedText(context),
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ),
                     );
@@ -701,9 +761,16 @@ class _CalendarYearView extends StatelessWidget {
                     final cell = cells[i];
                     final workoutType = cell.attendance?.trainingTypeId == null
                         ? null
-                        : _typeById(workoutTypes, cell.attendance!.trainingTypeId!);
+                        : _typeById(
+                            workoutTypes,
+                            cell.attendance!.trainingTypeId!,
+                          );
 
-                    return _CalendarDayCell(cell: cell, workoutType: workoutType, onTap: () => onDayTap(cell.date));
+                    return _CalendarDayCell(
+                      cell: cell,
+                      workoutType: workoutType,
+                      onTap: () => onDayTap(cell.date),
+                    );
                   },
                 ),
               ],
@@ -716,7 +783,11 @@ class _CalendarYearView extends StatelessWidget {
 }
 
 class _CalendarDayCell extends StatelessWidget {
-  const _CalendarDayCell({required this.cell, required this.workoutType, required this.onTap});
+  const _CalendarDayCell({
+    required this.cell,
+    required this.workoutType,
+    required this.onTap,
+  });
 
   final _CalendarCell cell;
   final TrainingType? workoutType;
@@ -728,7 +799,9 @@ class _CalendarDayCell extends StatelessWidget {
     final hasWorkout = cell.attendance != null;
     final hasSupplement = cell.hasSupplement;
     final isActive = hasWorkout || hasSupplement;
-    final baseTextColor = cell.isCurrentMonth ? cs.onSurface : _calendarMutedText(context);
+    final baseTextColor = cell.isCurrentMonth
+        ? cs.onSurface
+        : _calendarMutedText(context);
     final textColor = isActive ? const Color(0xFFFFFFFF) : baseTextColor;
 
     Widget tile = InkWell(
@@ -748,13 +821,21 @@ class _CalendarDayCell extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('${cell.date.day}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: textColor)),
+            Text(
+              '${cell.date.day}',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: textColor),
+            ),
             const SizedBox(height: 4),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (workoutType != null)
-                  EmojiText(workoutType!.icon ?? '•', style: const TextStyle(fontSize: 12))
+                  EmojiText(
+                    workoutType!.icon ?? '•',
+                    style: const TextStyle(fontSize: 12),
+                  )
                 else if (hasWorkout)
                   Container(
                     width: 8,
@@ -784,7 +865,11 @@ class _CalendarDayCell extends StatelessWidget {
 }
 
 class _CalendarHeader extends StatelessWidget {
-  const _CalendarHeader({required this.title, required this.onPrevious, required this.onNext});
+  const _CalendarHeader({
+    required this.title,
+    required this.onPrevious,
+    required this.onNext,
+  });
 
   final String title;
   final VoidCallback onPrevious;
@@ -796,7 +881,11 @@ class _CalendarHeader extends StatelessWidget {
       children: [
         _CalendarNavButton(icon: Icons.chevron_left, onTap: onPrevious),
         Expanded(
-          child: Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge),
+          child: Text(
+            title,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
         ),
         _CalendarNavButton(icon: Icons.chevron_right, onTap: onNext),
       ],
@@ -851,8 +940,10 @@ class _CalendarDaySheet extends StatefulWidget {
   final List<SupplementProduct> products;
   final List<TrainingType> types;
 
-  final Future<void> Function(String? typeId, int? durationMinutes) onMarkAttended;
-  final Future<void> Function(String? typeId, int? durationMinutes) onUpdateAttendance;
+  final Future<void> Function(String? typeId, int? durationMinutes)
+  onMarkAttended;
+  final Future<void> Function(String? typeId, int? durationMinutes)
+  onUpdateAttendance;
   final Future<void> Function() onClearAttendance;
   final Future<void> Function(SupplementProduct product) onAddSupplement;
   final Future<void> Function(SupplementLog log) onDeleteSupplement;
@@ -882,9 +973,13 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
     super.initState();
     _currentAttendance = widget.initialAttendance;
     _currentLogs = List.from(widget.initialLogs);
-    _selectedTypeId = ValueNotifier<String?>(widget.initialAttendance?.trainingTypeId);
+    _selectedTypeId = ValueNotifier<String?>(
+      widget.initialAttendance?.trainingTypeId,
+    );
     _selectedProductId = ValueNotifier<String?>(null);
-    _durationController = TextEditingController(text: widget.initialAttendance?.durationMinutes?.toString() ?? '');
+    _durationController = TextEditingController(
+      text: widget.initialAttendance?.durationMinutes?.toString() ?? '',
+    );
     _supplementPageController = PageController();
   }
 
@@ -951,7 +1046,8 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
     if (_busy) return;
 
     // Validate the supplement form
-    final isSupplementValid = _supplementFormKey.currentState?.validate() ?? false;
+    final isSupplementValid =
+        _supplementFormKey.currentState?.validate() ?? false;
     if (!isSupplementValid) {
       setState(() {
         _hasValidationError = true;
@@ -989,7 +1085,8 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
 
         // If we now have 3+ supplements, reset page index to show the new supplement
         // Only animate if the PageController is attached (i.e., carousel is visible)
-        if (_currentLogs.length >= 3 && _supplementPageController?.hasClients == true) {
+        if (_currentLogs.length >= 3 &&
+            _supplementPageController?.hasClients == true) {
           _supplementPageIndex = (_currentLogs.length - 1) ~/ 2;
           _supplementPageController?.animateToPage(
             _supplementPageIndex,
@@ -1011,9 +1108,14 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
         _currentLogs.remove(log);
         _busy = false;
         // Adjust page index if necessary - only if carousel is still visible
-        if (_currentLogs.length >= 3 && _supplementPageController?.hasClients == true) {
-          if (_supplementPageIndex > 0 && _supplementPageIndex >= (_currentLogs.length / 2).ceil() - 1) {
-            _supplementPageIndex = math.max(0, (_currentLogs.length / 2).ceil() - 1);
+        if (_currentLogs.length >= 3 &&
+            _supplementPageController?.hasClients == true) {
+          if (_supplementPageIndex > 0 &&
+              _supplementPageIndex >= (_currentLogs.length / 2).ceil() - 1) {
+            _supplementPageIndex = math.max(
+              0,
+              (_currentLogs.length / 2).ceil() - 1,
+            );
             _supplementPageController?.animateToPage(
               _supplementPageIndex,
               duration: const Duration(milliseconds: 220),
@@ -1046,11 +1148,14 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
     final selectedTypeId = _selectedTypeId;
     final selectedProductId = _selectedProductId;
     final durationController = _durationController;
-    if (selectedTypeId == null || selectedProductId == null || durationController == null) {
+    if (selectedTypeId == null ||
+        selectedProductId == null ||
+        durationController == null) {
       return const SizedBox.shrink();
     }
 
-    final dateTitle = '${widget.date.day} ${_monthShort(context, widget.date.month)} ${widget.date.year}';
+    final dateTitle =
+        '${widget.date.day} ${_monthShort(context, widget.date.month)} ${widget.date.year}';
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 50),
@@ -1058,11 +1163,19 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: 420,
-          maxHeight: _dialogMaxHeightWithValidation(context, _currentAttendance, _currentLogs, _hasValidationError),
+          maxHeight: _dialogMaxHeightWithValidation(
+            context,
+            _currentAttendance,
+            _currentLogs,
+            _hasValidationError,
+          ),
         ),
         child: Container(
           margin: EdgeInsets.symmetric(horizontal: 30),
-          decoration: BoxDecoration(color: cs.surface, borderRadius: BorderRadius.circular(20)),
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: SafeArea(
             top: false,
             child: Padding(
@@ -1087,7 +1200,10 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                 textAlign: TextAlign.center,
                               ),
                             ),
-                            IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop()),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 8),
@@ -1097,19 +1213,32 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                             dividerHeight: 0,
                             padding: const EdgeInsets.symmetric(horizontal: 8),
                             controller: tabController,
-                            labelColor: Theme.of(context).colorScheme.onPrimaryContainer,
-
-                            unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
-                            indicatorColor: Theme.of(context).colorScheme.primary,
-                            indicatorWeight: 0,
-                            labelStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                            unselectedLabelStyle: Theme.of(
+                            labelColor: Theme.of(
                               context,
-                            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w400),
-                            labelPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 7),
+                            ).colorScheme.onPrimaryContainer,
+
+                            unselectedLabelColor: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                            indicatorColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
+                            indicatorWeight: 0,
+                            labelStyle: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                            unselectedLabelStyle: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w400),
+                            labelPadding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 7,
+                            ),
                             indicatorSize: TabBarIndicatorSize.tab,
                             indicator: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primaryContainer,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primaryContainer,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             tabs: [
@@ -1129,19 +1258,24 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (_currentAttendance != null && !_editingWorkout) ...[
+                                    if (_currentAttendance != null &&
+                                        !_editingWorkout) ...[
                                       Center(
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Text(
                                               l10n.calendarWentToGym,
-                                              style: tt.titleLarge?.copyWith(color: cs.onSurfaceVariant),
+                                              style: tt.titleLarge?.copyWith(
+                                                color: cs.onSurfaceVariant,
+                                              ),
                                             ),
                                             const SizedBox(width: 6),
                                             EmojiText(
                                               Emojis.biceps,
-                                              style: tt.titleLarge?.copyWith(color: cs.onSurfaceVariant),
+                                              style: tt.titleLarge?.copyWith(
+                                                color: cs.onSurfaceVariant,
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -1150,51 +1284,80 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                       ValueListenableBuilder<String?>(
                                         valueListenable: selectedTypeId,
                                         builder: (_, typeId, _) {
-                                          final type = typeId == null ? null : _typeById(widget.types, typeId);
+                                          final type = typeId == null
+                                              ? null
+                                              : _typeById(widget.types, typeId);
 
                                           return Container(
                                             width: double.infinity,
                                             padding: const EdgeInsets.all(14),
                                             decoration: BoxDecoration(
                                               color: cs.surfaceContainerHighest,
-                                              borderRadius: BorderRadius.circular(10),
-                                              border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.65)),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              border: Border.all(
+                                                color: cs.outlineVariant
+                                                    .withValues(alpha: 0.65),
+                                              ),
                                             ),
                                             child: Row(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
                                                 EmojiText(
-                                                  type?.icon ?? Emojis.weightLifting,
-                                                  style: const TextStyle(fontSize: 21),
+                                                  type?.icon ??
+                                                      Emojis.weightLifting,
+                                                  style: const TextStyle(
+                                                    fontSize: 21,
+                                                  ),
                                                 ),
                                                 const SizedBox(width: 10),
                                                 Expanded(
                                                   child: Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
                                                     children: [
                                                       Text(
-                                                        type?.name ?? l10n.calendarNoType,
-                                                        style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                                                        type?.name ??
+                                                            l10n.calendarNoType,
+                                                        style: tt.titleLarge
+                                                            ?.copyWith(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w700,
+                                                            ),
                                                       ),
                                                       const SizedBox(height: 4),
-                                                      if (_currentAttendance?.durationMinutes != null)
+                                                      if (_currentAttendance
+                                                              ?.durationMinutes !=
+                                                          null)
                                                         Row(
                                                           children: [
                                                             EmojiText(
                                                               Emojis.stopwatch,
-                                                              style: tt.bodyMedium?.copyWith(
-                                                                color: cs.onSurfaceVariant,
-                                                              ),
+                                                              style: tt
+                                                                  .bodyMedium
+                                                                  ?.copyWith(
+                                                                    color: cs
+                                                                        .onSurfaceVariant,
+                                                                  ),
                                                             ),
-                                                            const SizedBox(width: 4),
+                                                            const SizedBox(
+                                                              width: 4,
+                                                            ),
                                                             Text(
                                                               _formatDuration(
                                                                 context,
-                                                                _currentAttendance!.durationMinutes,
+                                                                _currentAttendance!
+                                                                    .durationMinutes,
                                                               ),
-                                                              style: tt.bodyMedium?.copyWith(
-                                                                color: cs.onSurfaceVariant,
-                                                              ),
+                                                              style: tt
+                                                                  .bodyMedium
+                                                                  ?.copyWith(
+                                                                    color: cs
+                                                                        .onSurfaceVariant,
+                                                                  ),
                                                             ),
                                                           ],
                                                         ),
@@ -1202,20 +1365,28 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                                   ),
                                                 ),
                                                 IconButton(
-                                                  visualDensity: VisualDensity.compact,
-                                                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                                                  visualDensity:
+                                                      VisualDensity.compact,
+                                                  constraints:
+                                                      const BoxConstraints(
+                                                        minWidth: 28,
+                                                        minHeight: 28,
+                                                      ),
                                                   padding: EdgeInsets.zero,
                                                   onPressed: _busy
                                                       ? null
                                                       : () {
                                                           setState(() {
-                                                            _editingWorkout = true;
+                                                            _editingWorkout =
+                                                                true;
                                                           });
                                                         },
                                                   icon: Icon(
                                                     Icons.edit_outlined,
                                                     size: 16,
-                                                    color: const Color(0xFFF2A07F),
+                                                    color: const Color(
+                                                      0xFFF2A07F,
+                                                    ),
                                                   ),
                                                 ),
                                               ],
@@ -1228,11 +1399,18 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                         width: double.infinity,
                                         child: FilledButton(
                                           style: FilledButton.styleFrom(
-                                            backgroundColor: const Color(0xFFEF4444),
+                                            backgroundColor: const Color(
+                                              0xFFEF4444,
+                                            ),
                                             foregroundColor: Colors.white,
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
                                           ),
-                                          onPressed: _busy ? null : _clearWorkout,
+                                          onPressed: _busy
+                                              ? null
+                                              : _clearWorkout,
                                           child: Text(l10n.calendarRemove),
                                         ),
                                       ),
@@ -1241,11 +1419,19 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                         width: double.infinity,
                                         child: OutlinedButton(
                                           style: OutlinedButton.styleFrom(
-                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                            side: BorderSide(color: cs.outlineVariant),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            side: BorderSide(
+                                              color: cs.outlineVariant,
+                                            ),
                                             foregroundColor: cs.onSurface,
                                           ),
-                                          onPressed: _busy ? null : () => Navigator.of(context).pop(),
+                                          onPressed: _busy
+                                              ? null
+                                              : () =>
+                                                    Navigator.of(context).pop(),
                                           child: Text(l10n.calendarCancel),
                                         ),
                                       ),
@@ -1253,7 +1439,8 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                       Form(
                                         key: _formKey,
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Center(
                                               child: Text(
@@ -1268,57 +1455,99 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                             ValueListenableBuilder<String?>(
                                               valueListenable: selectedTypeId,
                                               builder: (_, typeId, _) {
-                                                final uniqueTypes = <String, TrainingType>{
-                                                  for (final t in widget.types) t.id: t,
-                                                }.values.toList(growable: false);
-                                                final safeTypeId = uniqueTypes.any((t) => t.id == typeId)
+                                                final uniqueTypes =
+                                                    <String, TrainingType>{
+                                                      for (final t
+                                                          in widget.types)
+                                                        t.id: t,
+                                                    }.values.toList(
+                                                      growable: false,
+                                                    );
+                                                final safeTypeId =
+                                                    uniqueTypes.any(
+                                                      (t) => t.id == typeId,
+                                                    )
                                                     ? typeId
                                                     : null;
-                                                final pickerMaxHeight = math.min(
-                                                  400.0,
-                                                  MediaQuery.of(context).size.height * 0.4,
-                                                );
+                                                final pickerMaxHeight = math
+                                                    .min(
+                                                      400.0,
+                                                      MediaQuery.of(
+                                                            context,
+                                                          ).size.height *
+                                                          0.4,
+                                                    );
 
-                                                return DropdownButtonFormField<String>(
+                                                return DropdownButtonFormField<
+                                                  String
+                                                >(
                                                   initialValue: safeTypeId,
                                                   decoration: InputDecoration(
-                                                    hintText: l10n.calendarSelectTypePlaceholder,
-                                                    labelText: l10n.calendarSelectWorkoutTypeOptional,
+                                                    hintText: l10n
+                                                        .calendarSelectTypePlaceholder,
+                                                    labelText: l10n
+                                                        .calendarSelectWorkoutTypeOptional,
                                                     filled: true,
-                                                    fillColor: cs.surfaceContainerHighest,
-                                                    contentPadding: const EdgeInsets.symmetric(
-                                                      horizontal: 14,
-                                                      vertical: 12,
-                                                    ),
+                                                    fillColor: cs
+                                                        .surfaceContainerHighest,
+                                                    contentPadding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 14,
+                                                          vertical: 12,
+                                                        ),
                                                     border: OutlineInputBorder(
-                                                      borderRadius: BorderRadius.circular(10),
-                                                      borderSide: BorderSide(color: cs.outlineVariant),
-                                                    ),
-                                                    enabledBorder: OutlineInputBorder(
-                                                      borderRadius: BorderRadius.circular(10),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            10,
+                                                          ),
                                                       borderSide: BorderSide(
-                                                        color: cs.outlineVariant.withValues(alpha: 0.6),
+                                                        color:
+                                                            cs.outlineVariant,
                                                       ),
                                                     ),
+                                                    enabledBorder:
+                                                        OutlineInputBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                10,
+                                                              ),
+                                                          borderSide: BorderSide(
+                                                            color: cs
+                                                                .outlineVariant
+                                                                .withValues(
+                                                                  alpha: 0.6,
+                                                                ),
+                                                          ),
+                                                        ),
                                                   ),
-                                                  menuMaxHeight: pickerMaxHeight,
-                                                  borderRadius: BorderRadius.circular(16),
+                                                  menuMaxHeight:
+                                                      pickerMaxHeight,
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
                                                   items: [
                                                     DropdownMenuItem<String>(
                                                       value: null,
-                                                      child: Text(l10n.calendarSelectTypePlaceholder),
+                                                      child: Text(
+                                                        l10n.calendarSelectTypePlaceholder,
+                                                      ),
                                                     ),
                                                     ...uniqueTypes.map(
-                                                      (type) => DropdownMenuItem<String>(
+                                                      (
+                                                        type,
+                                                      ) => DropdownMenuItem<String>(
                                                         value: type.id,
-                                                        child: Text('${type.icon ?? ''} ${type.name}'.trim()),
+                                                        child: Text(
+                                                          '${type.icon ?? ''} ${type.name}'
+                                                              .trim(),
+                                                        ),
                                                       ),
                                                     ),
                                                   ],
                                                   onChanged: _busy
                                                       ? null
                                                       : (value) {
-                                                          selectedTypeId.value = value;
+                                                          selectedTypeId.value =
+                                                              value;
                                                         },
                                                 );
                                               },
@@ -1326,63 +1555,106 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                             const SizedBox(height: 16),
                                             Text(
                                               l10n.calendarDurationLabel,
-                                              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                                              style: tt.bodyMedium?.copyWith(
+                                                color: cs.onSurfaceVariant,
+                                              ),
                                             ),
                                             const SizedBox(height: 6),
                                             Row(
                                               children: [
                                                 Expanded(
                                                   child: TextFormField(
-                                                    controller: durationController,
+                                                    controller:
+                                                        durationController,
                                                     enabled: !_busy,
-                                                    keyboardType: TextInputType.number,
+                                                    keyboardType:
+                                                        TextInputType.number,
                                                     validator: (value) =>
-                                                        NumberValidator.validatePositiveNumber(value, l10n),
+                                                        NumberValidator.validatePositiveNumber(
+                                                          value,
+                                                          l10n,
+                                                        ),
                                                     onChanged: (value) {
                                                       // Trigger form validation on change to clear error when input becomes valid/empty
-                                                      final isValid = _formKey.currentState?.validate() ?? false;
+                                                      final isValid =
+                                                          _formKey.currentState
+                                                              ?.validate() ??
+                                                          false;
                                                       setState(() {
-                                                        _hasValidationError = !isValid;
+                                                        _hasValidationError =
+                                                            !isValid;
                                                       });
                                                     },
                                                     decoration: InputDecoration(
-                                                      hintText: l10n.calendarDurationHint,
-                                                      labelText: l10n.calendarDurationOptional,
+                                                      hintText: l10n
+                                                          .calendarDurationHint,
+                                                      labelText: l10n
+                                                          .calendarDurationOptional,
                                                       filled: true,
-                                                      fillColor: cs.surfaceContainerHighest,
-                                                      contentPadding: const EdgeInsets.symmetric(
-                                                        horizontal: 14,
-                                                        vertical: 12,
-                                                      ),
+                                                      fillColor: cs
+                                                          .surfaceContainerHighest,
+                                                      contentPadding:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 14,
+                                                            vertical: 12,
+                                                          ),
                                                       border: OutlineInputBorder(
-                                                        borderRadius: BorderRadius.circular(10),
-                                                        borderSide: BorderSide(color: cs.outlineVariant),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              10,
+                                                            ),
+                                                        borderSide: BorderSide(
+                                                          color:
+                                                              cs.outlineVariant,
+                                                        ),
                                                       ),
                                                       enabledBorder: OutlineInputBorder(
-                                                        borderRadius: BorderRadius.circular(10),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              10,
+                                                            ),
                                                         borderSide: BorderSide(
-                                                          color: cs.outlineVariant.withValues(alpha: 0.6),
+                                                          color: cs
+                                                              .outlineVariant
+                                                              .withValues(
+                                                                alpha: 0.6,
+                                                              ),
                                                         ),
                                                       ),
                                                       errorBorder: OutlineInputBorder(
-                                                        borderRadius: BorderRadius.circular(10),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              10,
+                                                            ),
                                                         borderSide: BorderSide(
-                                                          color: Theme.of(context).colorScheme.error,
+                                                          color: Theme.of(
+                                                            context,
+                                                          ).colorScheme.error,
                                                         ),
                                                       ),
-                                                      focusedErrorBorder: OutlineInputBorder(
-                                                        borderRadius: BorderRadius.circular(10),
-                                                        borderSide: BorderSide(
-                                                          color: Theme.of(context).colorScheme.error,
-                                                        ),
-                                                      ),
+                                                      focusedErrorBorder:
+                                                          OutlineInputBorder(
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  10,
+                                                                ),
+                                                            borderSide: BorderSide(
+                                                              color: Theme.of(
+                                                                context,
+                                                              ).colorScheme.error,
+                                                            ),
+                                                          ),
                                                     ),
                                                   ),
                                                 ),
                                                 const SizedBox(width: 8),
                                                 Text(
                                                   l10n.statsMinutes,
-                                                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                                                  style: tt.bodyMedium
+                                                      ?.copyWith(
+                                                        color:
+                                                            cs.onSurfaceVariant,
+                                                      ),
                                                 ),
                                               ],
                                             ),
@@ -1393,15 +1665,29 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                                   child: OutlinedButton(
                                                     style: OutlinedButton.styleFrom(
                                                       shape: RoundedRectangleBorder(
-                                                        borderRadius: BorderRadius.circular(10),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              10,
+                                                            ),
                                                       ),
-                                                      side: BorderSide(color: cs.outlineVariant),
-                                                      foregroundColor: cs.onSurface,
+                                                      side: BorderSide(
+                                                        color:
+                                                            cs.outlineVariant,
+                                                      ),
+                                                      foregroundColor:
+                                                          cs.onSurface,
                                                     ),
-                                                    onPressed: _busy ? null : () => Navigator.of(context).pop(),
+                                                    onPressed: _busy
+                                                        ? null
+                                                        : () => Navigator.of(
+                                                            context,
+                                                          ).pop(),
                                                     child: Text(
                                                       l10n.calendarCancel,
-                                                      style: TextStyle(fontWeight: FontWeight.bold),
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
@@ -1409,26 +1695,48 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                                 Expanded(
                                                   child: OutlinedButton(
                                                     style: OutlinedButton.styleFrom(
-                                                      backgroundColor: Theme.of(context).colorScheme.primary,
-                                                      foregroundColor: Colors.white,
-                                                      side: BorderSide(color: Theme.of(context).colorScheme.primary),
+                                                      backgroundColor: Theme.of(
+                                                        context,
+                                                      ).colorScheme.primary,
+                                                      foregroundColor:
+                                                          Colors.white,
+                                                      side: BorderSide(
+                                                        color: Theme.of(
+                                                          context,
+                                                        ).colorScheme.primary,
+                                                      ),
                                                       shape: RoundedRectangleBorder(
-                                                        borderRadius: BorderRadius.circular(10),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              10,
+                                                            ),
                                                       ),
                                                     ),
-                                                    onPressed: _busy ? null : _submitWorkout,
+                                                    onPressed: _busy
+                                                        ? null
+                                                        : _submitWorkout,
                                                     child: _busy
                                                         ? const SizedBox(
                                                             width: 22,
                                                             height: 22,
                                                             child: CircularProgressIndicator(
                                                               strokeWidth: 2.5,
-                                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                                              valueColor:
+                                                                  AlwaysStoppedAnimation<
+                                                                    Color
+                                                                  >(
+                                                                    Colors
+                                                                        .white,
+                                                                  ),
                                                             ),
                                                           )
                                                         : Text(
                                                             l10n.calendarAdd,
-                                                            style: TextStyle(fontWeight: FontWeight.bold),
+                                                            style: TextStyle(
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                            ),
                                                           ),
                                                   ),
                                                 ),
@@ -1444,7 +1752,8 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                               SingleChildScrollView(
                                 padding: const EdgeInsets.only(top: 12),
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
                                     if (_currentLogs.isNotEmpty) ...[
                                       Center(
@@ -1453,12 +1762,16 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                           children: [
                                             Text(
                                               l10n.calendarSupplementsTaken,
-                                              style: tt.titleMedium?.copyWith(color: cs.onSurfaceVariant),
+                                              style: tt.titleMedium?.copyWith(
+                                                color: cs.onSurfaceVariant,
+                                              ),
                                             ),
                                             const SizedBox(width: 6),
                                             EmojiText(
                                               Emojis.pill,
-                                              style: tt.titleMedium?.copyWith(color: cs.onSurfaceVariant),
+                                              style: tt.titleMedium?.copyWith(
+                                                color: cs.onSurfaceVariant,
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -1469,16 +1782,20 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                           (log) => _SupplementCard(
                                             log: log,
                                             busy: _busy,
-                                            onRemove: () => _deleteSupplement(log),
+                                            onRemove: () =>
+                                                _deleteSupplement(log),
                                           ),
                                         )
                                       else
                                         _SupplementCarousel(
                                           logs: _currentLogs,
                                           busy: _busy,
-                                          pageController: _supplementPageController!,
+                                          pageController:
+                                              _supplementPageController!,
                                           currentPage: _supplementPageIndex,
-                                          onPageChanged: (i) => setState(() => _supplementPageIndex = i),
+                                          onPageChanged: (i) => setState(
+                                            () => _supplementPageIndex = i,
+                                          ),
                                           onRemove: _deleteSupplement,
                                         ),
                                       const SizedBox(height: 4),
@@ -1486,109 +1803,169 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                     ValueListenableBuilder<String?>(
                                       valueListenable: selectedProductId,
                                       builder: (_, productId, _) {
-                                        final uniqueProducts = <String, SupplementProduct>{
-                                          for (final p in widget.products) p.id: p,
-                                        }.values.toList(growable: false);
-                                        final safeProductId = uniqueProducts.any((p) => p.id == productId)
+                                        final uniqueProducts =
+                                            <String, SupplementProduct>{
+                                              for (final p in widget.products)
+                                                p.id: p,
+                                            }.values.toList(growable: false);
+                                        final safeProductId =
+                                            uniqueProducts.any(
+                                              (p) => p.id == productId,
+                                            )
                                             ? productId
                                             : null;
 
-                                        if (productId != null && safeProductId == null) {
-                                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                                            if (selectedProductId.value != null) {
-                                              selectedProductId.value = null;
-                                            }
-                                          });
+                                        if (productId != null &&
+                                            safeProductId == null) {
+                                          WidgetsBinding.instance
+                                              .addPostFrameCallback((_) {
+                                                if (selectedProductId.value !=
+                                                    null) {
+                                                  selectedProductId.value =
+                                                      null;
+                                                }
+                                              });
                                         }
 
                                         if (uniqueProducts.isEmpty) {
                                           return Text(
                                             l10n.calendarNoSupplementProductsAvailable,
-                                            style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                                            style: tt.bodyMedium?.copyWith(
+                                              color: cs.onSurfaceVariant,
+                                            ),
                                           );
                                         }
 
                                         final pickerMaxHeight = math.min(
                                           400.0,
-                                          MediaQuery.of(context).size.height * 0.4,
+                                          MediaQuery.of(context).size.height *
+                                              0.4,
                                         );
 
                                         return Form(
                                           key: _supplementFormKey,
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
                                             children: [
                                               if (_currentLogs.isEmpty) ...[
                                                 Center(
                                                   child: Text(
                                                     l10n.calendarDidYouTakeAnySupplements,
-                                                    style: tt.titleLarge?.copyWith(
-                                                      color: cs.onSurfaceVariant,
-                                                      fontWeight: FontWeight.w600,
-                                                    ),
+                                                    style: tt.titleLarge
+                                                        ?.copyWith(
+                                                          color: cs
+                                                              .onSurfaceVariant,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
                                                   ),
                                                 ),
                                                 const SizedBox(height: 20),
                                               ],
                                               Text(
                                                 l10n.calendarAddSupplementLabel,
-                                                style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                                                style: tt.bodyMedium?.copyWith(
+                                                  color: cs.onSurfaceVariant,
+                                                ),
                                               ),
                                               const SizedBox(height: 6),
                                               DropdownButtonFormField<String>(
                                                 initialValue: safeProductId,
                                                 validator: (value) {
-                                                  if (value == null || value.isEmpty) {
-                                                    return l10n.calendarPleaseSelectSupplement;
+                                                  if (value == null ||
+                                                      value.isEmpty) {
+                                                    return l10n
+                                                        .calendarPleaseSelectSupplement;
                                                   }
                                                   return null;
                                                 },
                                                 onChanged: _busy
                                                     ? null
                                                     : (value) {
-                                                        selectedProductId.value = value;
+                                                        selectedProductId
+                                                                .value =
+                                                            value;
                                                         // Reset validation error state when user makes a selection
                                                         if (_hasValidationError) {
                                                           setState(() {
-                                                            _hasValidationError = false;
+                                                            _hasValidationError =
+                                                                false;
                                                           });
                                                         }
                                                       },
                                                 decoration: InputDecoration(
-                                                  hintText: l10n.calendarSelectSupplementHint,
+                                                  hintText: l10n
+                                                      .calendarSelectSupplementHint,
                                                   filled: true,
-                                                  fillColor: cs.surfaceContainerHighest,
-                                                  contentPadding: const EdgeInsets.symmetric(
-                                                    horizontal: 14,
-                                                    vertical: 12,
-                                                  ),
+                                                  fillColor: cs
+                                                      .surfaceContainerHighest,
+                                                  contentPadding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 14,
+                                                        vertical: 12,
+                                                      ),
                                                   border: OutlineInputBorder(
-                                                    borderRadius: BorderRadius.circular(10),
-                                                    borderSide: BorderSide(color: cs.outlineVariant),
-                                                  ),
-                                                  enabledBorder: OutlineInputBorder(
-                                                    borderRadius: BorderRadius.circular(10),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          10,
+                                                        ),
                                                     borderSide: BorderSide(
-                                                      color: cs.outlineVariant.withValues(alpha: 0.6),
+                                                      color: cs.outlineVariant,
                                                     ),
                                                   ),
+                                                  enabledBorder:
+                                                      OutlineInputBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              10,
+                                                            ),
+                                                        borderSide: BorderSide(
+                                                          color: cs
+                                                              .outlineVariant
+                                                              .withValues(
+                                                                alpha: 0.6,
+                                                              ),
+                                                        ),
+                                                      ),
                                                   errorBorder: OutlineInputBorder(
-                                                    borderRadius: BorderRadius.circular(10),
-                                                    borderSide: BorderSide(color: Theme.of(context).colorScheme.error),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          10,
+                                                        ),
+                                                    borderSide: BorderSide(
+                                                      color: Theme.of(
+                                                        context,
+                                                      ).colorScheme.error,
+                                                    ),
                                                   ),
-                                                  focusedErrorBorder: OutlineInputBorder(
-                                                    borderRadius: BorderRadius.circular(10),
-                                                    borderSide: BorderSide(color: Theme.of(context).colorScheme.error),
-                                                  ),
+                                                  focusedErrorBorder:
+                                                      OutlineInputBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              10,
+                                                            ),
+                                                        borderSide: BorderSide(
+                                                          color: Theme.of(
+                                                            context,
+                                                          ).colorScheme.error,
+                                                        ),
+                                                      ),
                                                 ),
                                                 menuMaxHeight: pickerMaxHeight,
-                                                borderRadius: BorderRadius.circular(16),
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
                                                 items: uniqueProducts
                                                     .map(
-                                                      (product) => DropdownMenuItem<String>(
-                                                        value: product.id,
-                                                        child: Text(product.name),
-                                                      ),
+                                                      (product) =>
+                                                          DropdownMenuItem<
+                                                            String
+                                                          >(
+                                                            value: product.id,
+                                                            child: Text(
+                                                              product.name,
+                                                            ),
+                                                          ),
                                                     )
                                                     .toList(growable: false),
                                               ),
@@ -1600,15 +1977,29 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                                     child: OutlinedButton(
                                                       style: OutlinedButton.styleFrom(
                                                         shape: RoundedRectangleBorder(
-                                                          borderRadius: BorderRadius.circular(10),
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                10,
+                                                              ),
                                                         ),
-                                                        side: BorderSide(color: cs.outlineVariant),
-                                                        foregroundColor: cs.onSurface,
+                                                        side: BorderSide(
+                                                          color:
+                                                              cs.outlineVariant,
+                                                        ),
+                                                        foregroundColor:
+                                                            cs.onSurface,
                                                       ),
-                                                      onPressed: _busy ? null : () => Navigator.of(context).pop(),
+                                                      onPressed: _busy
+                                                          ? null
+                                                          : () => Navigator.of(
+                                                              context,
+                                                            ).pop(),
                                                       child: const Text(
                                                         'Cancel',
-                                                        style: TextStyle(fontWeight: FontWeight.bold),
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
@@ -1617,14 +2008,29 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                                     flex: 1,
                                                     child: OutlinedButton(
                                                       style: OutlinedButton.styleFrom(
-                                                        backgroundColor: Theme.of(context).colorScheme.primary,
-                                                        foregroundColor: Colors.white,
-                                                        side: BorderSide(color: Theme.of(context).colorScheme.primary),
+                                                        backgroundColor:
+                                                            Theme.of(context)
+                                                                .colorScheme
+                                                                .primary,
+                                                        foregroundColor:
+                                                            Colors.white,
+                                                        side: BorderSide(
+                                                          color: Theme.of(
+                                                            context,
+                                                          ).colorScheme.primary,
+                                                        ),
                                                         shape: RoundedRectangleBorder(
-                                                          borderRadius: BorderRadius.circular(10),
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                10,
+                                                              ),
                                                         ),
                                                       ),
-                                                      onPressed: _busy || widget.products.isEmpty
+                                                      onPressed:
+                                                          _busy ||
+                                                              widget
+                                                                  .products
+                                                                  .isEmpty
                                                           ? null
                                                           : _addSupplement,
                                                       child: _busy
@@ -1632,13 +2038,24 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
                                                               width: 22,
                                                               height: 22,
                                                               child: CircularProgressIndicator(
-                                                                strokeWidth: 2.5,
-                                                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                                                strokeWidth:
+                                                                    2.5,
+                                                                valueColor:
+                                                                    AlwaysStoppedAnimation<
+                                                                      Color
+                                                                    >(
+                                                                      Colors
+                                                                          .white,
+                                                                    ),
                                                               ),
                                                             )
                                                           : Text(
                                                               'Add',
-                                                              style: const TextStyle(fontWeight: FontWeight.bold),
+                                                              style: const TextStyle(
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
                                                             ),
                                                     ),
                                                   ),
@@ -1726,7 +2143,11 @@ List<_CalendarCell> _buildMonthCells({
   }
 
   while (cells.length < 42) {
-    final date = DateTime(year, month, daysInMonth + (cells.length - (startOffset + daysInMonth)) + 1);
+    final date = DateTime(
+      year,
+      month,
+      daysInMonth + (cells.length - (startOffset + daysInMonth)) + 1,
+    );
     final key = _dateKey(date);
     cells.add(
       _CalendarCell(
@@ -1781,7 +2202,11 @@ double _dialogMaxHeightWithValidation(
 }
 
 class _SupplementCard extends StatelessWidget {
-  const _SupplementCard({required this.log, required this.busy, required this.onRemove});
+  const _SupplementCard({
+    required this.log,
+    required this.busy,
+    required this.onRemove,
+  });
 
   final SupplementLog log;
   final bool busy;
@@ -1819,7 +2244,10 @@ class _SupplementCard extends StatelessWidget {
                   style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
-                Text('\u{23F1} $timeText', style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant)),
+                Text(
+                  '\u{23F1} $timeText',
+                  style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
+                ),
               ],
             ),
           ),
@@ -1828,7 +2256,11 @@ class _SupplementCard extends StatelessWidget {
             constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
             padding: EdgeInsets.zero,
             onPressed: busy ? null : onRemove,
-            icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFFEF4444)),
+            icon: const Icon(
+              Icons.delete_outline,
+              size: 18,
+              color: Color(0xFFEF4444),
+            ),
           ),
         ],
       ),
@@ -1894,7 +2326,11 @@ class _SupplementCarousel extends StatelessWidget {
                     if (i > 0) const SizedBox(height: 8),
                     SizedBox(
                       height: _cardHeight,
-                      child: _SupplementCard(log: pageLogs[i], busy: busy, onRemove: () => onRemove(pageLogs[i])),
+                      child: _SupplementCard(
+                        log: pageLogs[i],
+                        busy: busy,
+                        onRemove: () => onRemove(pageLogs[i]),
+                      ),
                     ),
                   ],
                 ],
@@ -1934,15 +2370,21 @@ class _SupplementCarousel extends StatelessWidget {
 }
 
 Color _calendarPageBackground(BuildContext context) {
-  return Theme.of(context).brightness == Brightness.dark ? const Color(0xFF08193F) : const Color(0xFFF8FAFC);
+  return Theme.of(context).brightness == Brightness.dark
+      ? const Color(0xFF08193F)
+      : const Color(0xFFF8FAFC);
 }
 
 Color _calendarPanelBackground(BuildContext context) {
-  return Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1A2A49) : Colors.white;
+  return Theme.of(context).brightness == Brightness.dark
+      ? const Color(0xFF1A2A49)
+      : Colors.white;
 }
 
 Color _calendarMutedText(BuildContext context) {
-  return Theme.of(context).brightness == Brightness.dark ? const Color(0xFF86A0C6) : const Color(0xFF7D8798);
+  return Theme.of(context).brightness == Brightness.dark
+      ? const Color(0xFF86A0C6)
+      : const Color(0xFF7D8798);
 }
 
 Color _calendarDayBackground(
@@ -1960,7 +2402,9 @@ Color _calendarDayBackground(
   if (hasSupplement) {
     return const Color(0xFF10B981);
   }
-  return Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : Colors.white;
+  return Theme.of(context).brightness == Brightness.dark
+      ? const Color(0xFF1E293B)
+      : Colors.white;
 }
 
 String _dateKey(DateTime date) {

@@ -149,7 +149,7 @@ If any of these are true, the state **must** go through a cubit (emit state → 
 **Recommended pattern:**
 
 ```dart
-Future<void> initializeProfileOnFirstLogin({
+Future<void> example({
   required String userId,
   required String email,
   String? displayName,
@@ -164,21 +164,6 @@ Future<void> initializeProfileOnFirstLogin({
 - **Always add a matching widget test** under `test/presentation/controls/`.
 - Prefer extraction into `controls/` over duplicating similar widgets across pages.
 - Expose the **inner view widget as a public class** (e.g. `RegisterView`) so tests can inject a mock cubit via `BlocProvider.value` without `getIt`.
-
----
-
-## Testing
-
-- **Unit tests required** for all cubit state transitions.
-- **Widget test required** for every file in `lib/presentation/controls/`.
-- Widget tests for pages go under `test/presentation/pages/<feature>/`.
-- **Test files mirror the `lib/` structure** under `test/`.
-- **Never break existing tests** — `flutter test` must stay green.
-- **Use `mocktail`** for mocking — no code generation needed.
-- **For page tests**: `BlocProvider<MyCubit>.value(value: mockCubit, child: const MyView())`.
-- **Minimum widget test coverage**: renders content, loading/spinner state, disabled/null-tap state, reactive updates if using `ListenableBuilder`.
-- **No `bloc_test`** — incompatible with `auto_route_generator ^9.x`. Use plain `mocktail` + `flutter_test` with `expectLater(sut.stream, emitsInOrder([...]))`.
-- **Run only relevant tests per task** — when working on a feature, run only the tests for that feature slice (e.g. `flutter test test/cubit/calendar/ test/presentation/pages/calendar/`). Do **not** run the full test suite unless explicitly asked.
 
 ---
 

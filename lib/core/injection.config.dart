@@ -56,24 +56,42 @@ _i174.GetIt $initGetIt(
   gh.lazySingleton<_i974.FirebaseFirestore>(
     () => firebaseModule.firebaseFirestore,
   );
+  gh.factory<_i531.HealthSource>(
+    () => _i531.HealthSource(
+      gh<_i974.FirebaseFirestore>(),
+      gh<_i472.SupplementMapper>(),
+    ),
+  );
+  gh.factory<_i96.TrainingTypeSource>(
+    () => _i96.TrainingTypeSource(
+      gh<_i974.FirebaseFirestore>(),
+      gh<_i660.TrainingTypeMapper>(),
+    ),
+  );
+  gh.factory<_i17.HealthService>(
+    () => _i17.HealthService(gh<_i531.HealthSource>()),
+  );
   gh.factory<_i637.AuthService>(
     () => _i637.AuthService(gh<_i59.FirebaseAuth>()),
   );
+  gh.factory<_i905.UserSource>(
+    () =>
+        _i905.UserSource(gh<_i974.FirebaseFirestore>(), gh<_i455.UserMapper>()),
+  );
   gh.factory<_i497.AttendanceDaySource>(
-    () => _i497.AttendanceDaySource(gh<_i604.AttendanceDayMapper>()),
+    () => _i497.AttendanceDaySource(
+      gh<_i974.FirebaseFirestore>(),
+      gh<_i604.AttendanceDayMapper>(),
+    ),
   );
-  gh.factory<_i531.HealthSource>(
-    () => _i531.HealthSource(gh<_i472.SupplementMapper>()),
-  );
-  gh.factory<_i905.UserSource>(() => _i905.UserSource(gh<_i455.UserMapper>()));
   gh.factory<_i483.AttendanceService>(
     () => _i483.AttendanceService(gh<_i497.AttendanceDaySource>()),
   );
   gh.factory<_i243.AccountCleanupSource>(
     () => _i243.AccountCleanupSource(gh<_i974.FirebaseFirestore>()),
   );
-  gh.factory<_i96.TrainingTypeSource>(
-    () => _i96.TrainingTypeSource(gh<_i660.TrainingTypeMapper>()),
+  gh.factory<_i829.HealthCubit>(
+    () => _i829.HealthCubit(gh<_i17.HealthService>()),
   );
   gh.factory<_i729.UserService>(
     () => _i729.UserService(gh<_i905.UserSource>()),
@@ -81,8 +99,12 @@ _i174.GetIt $initGetIt(
   gh.factory<_i425.WorkoutService>(
     () => _i425.WorkoutService(gh<_i96.TrainingTypeSource>()),
   );
-  gh.factory<_i17.HealthService>(
-    () => _i17.HealthService(gh<_i531.HealthSource>()),
+  gh.factory<_i730.StatsCubit>(
+    () => _i730.StatsCubit(
+      gh<_i483.AttendanceService>(),
+      gh<_i425.WorkoutService>(),
+      gh<_i17.HealthService>(),
+    ),
   );
   gh.factory<_i1060.CalendarCubit>(
     () => _i1060.CalendarCubit(
@@ -97,21 +119,11 @@ _i174.GetIt $initGetIt(
   gh.factory<_i800.WorkoutCubit>(
     () => _i800.WorkoutCubit(gh<_i425.WorkoutService>()),
   );
-  gh.factory<_i829.HealthCubit>(
-    () => _i829.HealthCubit(gh<_i17.HealthService>()),
-  );
   gh.factory<_i548.AuthCubit>(
     () => _i548.AuthCubit(
       gh<_i637.AuthService>(),
       gh<_i729.UserService>(),
       gh<_i502.AccountCleanupService>(),
-    ),
-  );
-  gh.factory<_i730.StatsCubit>(
-    () => _i730.StatsCubit(
-      gh<_i483.AttendanceService>(),
-      gh<_i425.WorkoutService>(),
-      gh<_i17.HealthService>(),
     ),
   );
   return getIt;

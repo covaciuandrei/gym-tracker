@@ -74,7 +74,7 @@ class _HealthPageState extends State<HealthPage>
   Timer? _productsSkeletonTimer;
 
   String? get _userId =>
-      widget.testUserId ?? FirebaseAuth.instance.currentUser?.uid;
+      widget.testUserId ?? getIt<FirebaseAuth>().currentUser?.uid;
 
   String get _todayDateString {
     final now = DateTime.now();
