@@ -47,15 +47,15 @@ _i174.GetIt $initGetIt(
   final gh = _i526.GetItHelper(getIt, environment, environmentFilter);
   final firebaseModule = _$FirebaseModule();
   gh.factory<_i411.SettingsCubit>(() => _i411.SettingsCubit());
-  gh.factory<_i604.AttendanceDayMapper>(() => _i604.AttendanceDayMapper());
-  gh.factory<_i472.SupplementMapper>(() => _i472.SupplementMapper());
   gh.factory<_i660.TrainingTypeMapper>(() => _i660.TrainingTypeMapper());
+  gh.factory<_i604.AttendanceDayMapper>(() => _i604.AttendanceDayMapper());
   gh.factory<_i455.UserMapper>(() => _i455.UserMapper());
-  gh.lazySingleton<_i313.AppRouter>(() => _i313.AppRouter());
+  gh.factory<_i472.SupplementMapper>(() => _i472.SupplementMapper());
   gh.lazySingleton<_i59.FirebaseAuth>(() => firebaseModule.firebaseAuth);
   gh.lazySingleton<_i974.FirebaseFirestore>(
     () => firebaseModule.firebaseFirestore,
   );
+  gh.lazySingleton<_i313.AppRouter>(() => _i313.AppRouter());
   gh.factory<_i531.HealthSource>(
     () => _i531.HealthSource(
       gh<_i974.FirebaseFirestore>(),

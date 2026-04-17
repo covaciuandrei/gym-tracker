@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/assets/theme/custom_theme.dart';
@@ -17,6 +18,7 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   configureDependencies();
   await getIt.allReady();
 
@@ -35,9 +37,7 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   if (kDebugMode) {
-    await getIt<FirebaseAuth>().setSettings(
-      appVerificationDisabledForTesting: true,
-    );
+    await getIt<FirebaseAuth>().setSettings(appVerificationDisabledForTesting: true);
   }
 
   runApp(const MyApp());
@@ -98,9 +98,7 @@ class _MyAppState extends State<MyApp> {
         );
       },
 
-      routerConfig: _appRouter.config(
-        navigatorObservers: () => [AutoRouteObserver()],
-      ),
+      routerConfig: _appRouter.config(navigatorObservers: () => [AutoRouteObserver()]),
     );
   }
 }
