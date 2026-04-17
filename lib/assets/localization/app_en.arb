@@ -313,5 +313,18 @@
   "onboardingSubtitle3": "View detailed stats, streaks, and monthly breakdowns.",
   "onboardingNext": "Next",
   "onboardingGetStarted": "Get Started",
-  "onboardingSkip": "Skip"
+  "onboardingSkip": "Skip",
+  "forceUpdateTitle": "Update required",
+  "forceUpdateBody": "A new version of Gym Tracker is required to continue.",
+  "forceUpdateButton": "Update now",
+  "forceUpdateCurrentVersion": "Your version",
+  "forceUpdateRequiredVersion": "Required version",
+  "maintenanceTitle": "We'll be right back",
+  "maintenanceRetry": "Try again",
+  "noConnectionTitle": "No connection",
+  "noConnectionBody": "Gym Tracker needs an internet connection to start. Please check your network and try again.",
+  "noConnectionRetry": "Try again",
+  "softUpdateBannerMessage": "A new version is available.",
+  "softUpdateBannerAction": "Update",
+  "softUpdateBannerDismiss": "Dismiss"
 }

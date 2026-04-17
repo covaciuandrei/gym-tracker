@@ -143,4 +143,13 @@ class Emojis {
 
   /// 🧪  Test tube — no supplement found
   static const testTube = '\u{1F9EA}';
+
+  /// 🚀  Rocket — force-update screen
+  static const rocket = '\u{1F680}';
+
+  /// 🛠️  Hammer and wrench — maintenance screen
+  static const hammerAndWrench = '\u{1F6E0}\u{FE0F}';
+
+  /// 📡  Satellite antenna — no connection screen
+  static const satelliteAntenna = '\u{1F4E1}';
 }

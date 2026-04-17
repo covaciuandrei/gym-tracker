@@ -868,4 +868,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingSkip => 'Skip';
+
+  @override
+  String get forceUpdateTitle => 'Update required';
+
+  @override
+  String get forceUpdateBody =>
+      'A new version of Gym Tracker is required to continue.';
+
+  @override
+  String get forceUpdateButton => 'Update now';
+
+  @override
+  String get forceUpdateCurrentVersion => 'Your version';
+
+  @override
+  String get forceUpdateRequiredVersion => 'Required version';
+
+  @override
+  String get maintenanceTitle => 'We\'ll be right back';
+
+  @override
+  String get maintenanceRetry => 'Try again';
+
+  @override
+  String get noConnectionTitle => 'No connection';
+
+  @override
+  String get noConnectionBody =>
+      'Gym Tracker needs an internet connection to start. Please check your network and try again.';
+
+  @override
+  String get noConnectionRetry => 'Try again';
+
+  @override
+  String get softUpdateBannerMessage => 'A new version is available.';
+
+  @override
+  String get softUpdateBannerAction => 'Update';
+
+  @override
+  String get softUpdateBannerDismiss => 'Dismiss';
 }

@@ -28,11 +28,10 @@ class AppRouter extends RootStackRouter {
       ],
     ),
     AutoRoute(path: '/workout-types', page: WorkoutTypesRoute.page),
-    AutoRoute(
-      path: '/settings',
-      page: SettingsRoute.page,
-      maintainState: false,
-    ),
+    AutoRoute(path: '/settings', page: SettingsRoute.page, maintainState: false),
     AutoRoute(path: '/change-password', page: ChangePasswordRoute.page),
+    AutoRoute(path: '/force-update', page: ForceUpdateRoute.page),
+    AutoRoute(path: '/maintenance', page: MaintenanceRoute.page),
+    AutoRoute(path: '/no-connection', page: NoConnectionRoute.page),
   ];
 }

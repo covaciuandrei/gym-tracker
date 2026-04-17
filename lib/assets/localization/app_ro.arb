@@ -313,5 +313,18 @@
   "onboardingSubtitle3": "Vezi statistici detaliate, serii și defalcări lunare.",
   "onboardingNext": "Următorul",
   "onboardingGetStarted": "Să Începem",
-  "onboardingSkip": "Sari peste"
+  "onboardingSkip": "Sari peste",
+  "forceUpdateTitle": "Actualizare necesară",
+  "forceUpdateBody": "Este necesară o versiune nouă a Gym Tracker pentru a continua.",
+  "forceUpdateButton": "Actualizează acum",
+  "forceUpdateCurrentVersion": "Versiunea ta",
+  "forceUpdateRequiredVersion": "Versiunea necesară",
+  "maintenanceTitle": "Revenim imediat",
+  "maintenanceRetry": "Încearcă din nou",
+  "noConnectionTitle": "Fără conexiune",
+  "noConnectionBody": "Gym Tracker are nevoie de o conexiune la internet pentru a porni. Verifică rețeaua și încearcă din nou.",
+  "noConnectionRetry": "Încearcă din nou",
+  "softUpdateBannerMessage": "O nouă versiune este disponibilă.",
+  "softUpdateBannerAction": "Actualizează",
+  "softUpdateBannerDismiss": "Închide"
 }

@@ -880,4 +880,45 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get onboardingSkip => 'Sari peste';
+
+  @override
+  String get forceUpdateTitle => 'Actualizare necesară';
+
+  @override
+  String get forceUpdateBody =>
+      'Este necesară o versiune nouă a Gym Tracker pentru a continua.';
+
+  @override
+  String get forceUpdateButton => 'Actualizează acum';
+
+  @override
+  String get forceUpdateCurrentVersion => 'Versiunea ta';
+
+  @override
+  String get forceUpdateRequiredVersion => 'Versiunea necesară';
+
+  @override
+  String get maintenanceTitle => 'Revenim imediat';
+
+  @override
+  String get maintenanceRetry => 'Încearcă din nou';
+
+  @override
+  String get noConnectionTitle => 'Fără conexiune';
+
+  @override
+  String get noConnectionBody =>
+      'Gym Tracker are nevoie de o conexiune la internet pentru a porni. Verifică rețeaua și încearcă din nou.';
+
+  @override
+  String get noConnectionRetry => 'Încearcă din nou';
+
+  @override
+  String get softUpdateBannerMessage => 'O nouă versiune este disponibilă.';
+
+  @override
+  String get softUpdateBannerAction => 'Actualizează';
+
+  @override
+  String get softUpdateBannerDismiss => 'Închide';
 }

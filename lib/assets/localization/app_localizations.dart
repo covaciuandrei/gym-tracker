@@ -1687,6 +1687,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Skip'**
   String get onboardingSkip;
+
+  /// No description provided for @forceUpdateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update required'**
+  String get forceUpdateTitle;
+
+  /// No description provided for @forceUpdateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A new version of Gym Tracker is required to continue.'**
+  String get forceUpdateBody;
+
+  /// No description provided for @forceUpdateButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Update now'**
+  String get forceUpdateButton;
+
+  /// No description provided for @forceUpdateCurrentVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Your version'**
+  String get forceUpdateCurrentVersion;
+
+  /// No description provided for @forceUpdateRequiredVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Required version'**
+  String get forceUpdateRequiredVersion;
+
+  /// No description provided for @maintenanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll be right back'**
+  String get maintenanceTitle;
+
+  /// No description provided for @maintenanceRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get maintenanceRetry;
+
+  /// No description provided for @noConnectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection'**
+  String get noConnectionTitle;
+
+  /// No description provided for @noConnectionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Gym Tracker needs an internet connection to start. Please check your network and try again.'**
+  String get noConnectionBody;
+
+  /// No description provided for @noConnectionRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get noConnectionRetry;
+
+  /// No description provided for @softUpdateBannerMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'A new version is available.'**
+  String get softUpdateBannerMessage;
+
+  /// No description provided for @softUpdateBannerAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get softUpdateBannerAction;
+
+  /// No description provided for @softUpdateBannerDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get softUpdateBannerDismiss;
 }
 
 class _AppLocalizationsDelegate
