@@ -28,10 +28,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
+import 'package:gym_tracker/core/app_version_status.dart';
+import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/presentation/pages/main_shell/main_shell_page.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -86,6 +89,22 @@ void main() {
   setUpAll(() {
     registerFallbackValue(const InitialState());
     registerFallbackValue(const LoginRoute());
+  });
+
+  setUp(() {
+    // MainShellPage reads AppVersionStatus from getIt in initState to decide
+    // whether to render the soft-update banner. Register a default (empty)
+    // status so the banner branch stays inactive during these tests.
+    if (!getIt.isRegistered<AppVersionStatus>()) {
+      getIt.registerLazySingleton<AppVersionStatus>(AppVersionStatus.new);
+    }
+    // MainShellPage calls SharedPreferences.getInstance() to read the dismissal
+    // flag. Provide empty mock values so the async path completes cleanly.
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+  });
+
+  tearDown(() async {
+    await getIt.reset();
   });
 
   // ── initState ─────────────────────────────────────────────────────────────

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
@@ -18,19 +16,15 @@ class ForceUpdatePage extends StatelessWidget {
     super.key,
     required this.currentVersion,
     required this.requiredVersion,
-    required this.androidStoreUrl,
-    required this.iosStoreUrl,
+    required this.storeUrl,
   });
 
   final String currentVersion;
   final String requiredVersion;
-  final String androidStoreUrl;
-  final String iosStoreUrl;
-
-  String get _storeUrl => Platform.isAndroid ? androidStoreUrl : iosStoreUrl;
+  final String storeUrl;
 
   Future<void> _openStore() async {
-    final uri = Uri.tryParse(_storeUrl);
+    final uri = Uri.tryParse(storeUrl);
     if (uri == null) return;
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);

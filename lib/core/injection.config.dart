@@ -14,11 +14,11 @@ import 'package:firebase_auth/firebase_auth.dart' as _i59;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 
-import '../cubit/app_version/app_version_cubit.dart' as _i176;
 import '../cubit/auth/auth_cubit.dart' as _i548;
 import '../cubit/calendar/calendar_cubit.dart' as _i1060;
 import '../cubit/health/health_cubit.dart' as _i829;
 import '../cubit/settings/settings_cubit.dart' as _i411;
+import '../cubit/splash/splash_cubit.dart' as _i963;
 import '../cubit/stats/stats_cubit.dart' as _i730;
 import '../cubit/workout/workout_cubit.dart' as _i800;
 import '../data/mappers/app_config_mapper.dart' as _i710;
@@ -32,6 +32,8 @@ import '../data/remote/attendance/attendance_day_source.dart' as _i497;
 import '../data/remote/supplement/health_source.dart' as _i531;
 import '../data/remote/training_type/training_type_source.dart' as _i96;
 import '../data/remote/user/user_source.dart' as _i905;
+import '../presentation/helpers/locale_helper.dart' as _i214;
+import '../presentation/helpers/onboarding_helper.dart' as _i654;
 import '../service/account/account_cleanup_service.dart' as _i502;
 import '../service/app_config/app_config_service.dart' as _i952;
 import '../service/attendance/attendance_service.dart' as _i483;
@@ -40,6 +42,7 @@ import '../service/health/health_service.dart' as _i17;
 import '../service/user/user_service.dart' as _i729;
 import '../service/workout/workout_service.dart' as _i425;
 import 'app_router.dart' as _i313;
+import 'app_version_status.dart' as _i477;
 import 'firebase_module.dart' as _i616;
 
 // initializes the registration of main-scope dependencies inside of GetIt
@@ -61,6 +64,7 @@ _i174.GetIt $initGetIt(
     () => firebaseModule.firebaseFirestore,
   );
   gh.lazySingleton<_i313.AppRouter>(() => _i313.AppRouter());
+  gh.lazySingleton<_i477.AppVersionStatus>(() => _i477.AppVersionStatus());
   gh.factory<_i531.HealthSource>(
     () => _i531.HealthSource(
       gh<_i974.FirebaseFirestore>(),
@@ -110,9 +114,6 @@ _i174.GetIt $initGetIt(
   gh.factory<_i729.UserService>(
     () => _i729.UserService(gh<_i905.UserSource>()),
   );
-  gh.factory<_i176.AppVersionCubit>(
-    () => _i176.AppVersionCubit(gh<_i952.AppConfigService>()),
-  );
   gh.factory<_i425.WorkoutService>(
     () => _i425.WorkoutService(gh<_i96.TrainingTypeSource>()),
   );
@@ -121,6 +122,15 @@ _i174.GetIt $initGetIt(
       gh<_i483.AttendanceService>(),
       gh<_i425.WorkoutService>(),
       gh<_i17.HealthService>(),
+    ),
+  );
+  gh.factory<_i963.SplashCubit>(
+    () => _i963.SplashCubit(
+      gh<_i952.AppConfigService>(),
+      gh<_i654.OnboardingHelper>(),
+      gh<_i214.LocaleHelper>(),
+      gh<_i59.FirebaseAuth>(),
+      gh<_i477.AppVersionStatus>(),
     ),
   );
   gh.factory<_i1060.CalendarCubit>(

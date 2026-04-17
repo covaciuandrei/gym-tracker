@@ -78,8 +78,7 @@ class ForceUpdateRoute extends _i17.PageRouteInfo<ForceUpdateRouteArgs> {
     _i18.Key? key,
     required String currentVersion,
     required String requiredVersion,
-    required String androidStoreUrl,
-    required String iosStoreUrl,
+    required String storeUrl,
     List<_i17.PageRouteInfo>? children,
   }) : super(
          ForceUpdateRoute.name,
@@ -87,8 +86,7 @@ class ForceUpdateRoute extends _i17.PageRouteInfo<ForceUpdateRouteArgs> {
            key: key,
            currentVersion: currentVersion,
            requiredVersion: requiredVersion,
-           androidStoreUrl: androidStoreUrl,
-           iosStoreUrl: iosStoreUrl,
+           storeUrl: storeUrl,
          ),
          initialChildren: children,
        );
@@ -103,8 +101,7 @@ class ForceUpdateRoute extends _i17.PageRouteInfo<ForceUpdateRouteArgs> {
         key: args.key,
         currentVersion: args.currentVersion,
         requiredVersion: args.requiredVersion,
-        androidStoreUrl: args.androidStoreUrl,
-        iosStoreUrl: args.iosStoreUrl,
+        storeUrl: args.storeUrl,
       );
     },
   );
@@ -115,8 +112,7 @@ class ForceUpdateRouteArgs {
     this.key,
     required this.currentVersion,
     required this.requiredVersion,
-    required this.androidStoreUrl,
-    required this.iosStoreUrl,
+    required this.storeUrl,
   });
 
   final _i18.Key? key;
@@ -125,13 +121,11 @@ class ForceUpdateRouteArgs {
 
   final String requiredVersion;
 
-  final String androidStoreUrl;
-
-  final String iosStoreUrl;
+  final String storeUrl;
 
   @override
   String toString() {
-    return 'ForceUpdateRouteArgs{key: $key, currentVersion: $currentVersion, requiredVersion: $requiredVersion, androidStoreUrl: $androidStoreUrl, iosStoreUrl: $iosStoreUrl}';
+    return 'ForceUpdateRouteArgs{key: $key, currentVersion: $currentVersion, requiredVersion: $requiredVersion, storeUrl: $storeUrl}';
   }
 }
 
@@ -352,7 +346,7 @@ class SplashRoute extends _i17.PageRouteInfo<void> {
   static _i17.PageInfo page = _i17.PageInfo(
     name,
     builder: (data) {
-      return const _i14.SplashPage();
+      return _i17.WrappedRoute(child: const _i14.SplashPage());
     },
   );
 }
