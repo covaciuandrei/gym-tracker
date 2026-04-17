@@ -20,16 +20,19 @@ import '../cubit/health/health_cubit.dart' as _i829;
 import '../cubit/settings/settings_cubit.dart' as _i411;
 import '../cubit/stats/stats_cubit.dart' as _i730;
 import '../cubit/workout/workout_cubit.dart' as _i800;
+import '../data/mappers/app_config_mapper.dart' as _i710;
 import '../data/mappers/attendance_day_mapper.dart' as _i604;
 import '../data/mappers/supplement_mapper.dart' as _i472;
 import '../data/mappers/training_type_mapper.dart' as _i660;
 import '../data/mappers/user_mapper.dart' as _i455;
 import '../data/remote/account/account_cleanup_source.dart' as _i243;
+import '../data/remote/app_config/app_config_source.dart' as _i892;
 import '../data/remote/attendance/attendance_day_source.dart' as _i497;
 import '../data/remote/supplement/health_source.dart' as _i531;
 import '../data/remote/training_type/training_type_source.dart' as _i96;
 import '../data/remote/user/user_source.dart' as _i905;
 import '../service/account/account_cleanup_service.dart' as _i502;
+import '../service/app_config/app_config_service.dart' as _i952;
 import '../service/attendance/attendance_service.dart' as _i483;
 import '../service/auth/auth_service.dart' as _i637;
 import '../service/health/health_service.dart' as _i17;
@@ -51,6 +54,7 @@ _i174.GetIt $initGetIt(
   gh.factory<_i604.AttendanceDayMapper>(() => _i604.AttendanceDayMapper());
   gh.factory<_i455.UserMapper>(() => _i455.UserMapper());
   gh.factory<_i472.SupplementMapper>(() => _i472.SupplementMapper());
+  gh.factory<_i710.AppConfigMapper>(() => _i710.AppConfigMapper());
   gh.lazySingleton<_i59.FirebaseAuth>(() => firebaseModule.firebaseAuth);
   gh.lazySingleton<_i974.FirebaseFirestore>(
     () => firebaseModule.firebaseFirestore,
@@ -78,6 +82,12 @@ _i174.GetIt $initGetIt(
     () =>
         _i905.UserSource(gh<_i974.FirebaseFirestore>(), gh<_i455.UserMapper>()),
   );
+  gh.factory<_i892.AppConfigSource>(
+    () => _i892.AppConfigSource(
+      gh<_i974.FirebaseFirestore>(),
+      gh<_i710.AppConfigMapper>(),
+    ),
+  );
   gh.factory<_i497.AttendanceDaySource>(
     () => _i497.AttendanceDaySource(
       gh<_i974.FirebaseFirestore>(),
@@ -86,6 +96,9 @@ _i174.GetIt $initGetIt(
   );
   gh.factory<_i483.AttendanceService>(
     () => _i483.AttendanceService(gh<_i497.AttendanceDaySource>()),
+  );
+  gh.factory<_i952.AppConfigService>(
+    () => _i952.AppConfigService(gh<_i892.AppConfigSource>()),
   );
   gh.factory<_i243.AccountCleanupSource>(
     () => _i243.AccountCleanupSource(gh<_i974.FirebaseFirestore>()),

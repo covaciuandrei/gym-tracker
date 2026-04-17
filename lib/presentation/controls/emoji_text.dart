@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:gym_tracker/presentation/resources/emojis.dart';
 
 import 'package:flutter/material.dart';
 

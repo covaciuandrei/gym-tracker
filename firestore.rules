@@ -1,0 +1,43 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // helper function
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // App config: public read (the version/maintenance gate runs before auth).
+    // Writes only via Firebase Console / admin SDK.
+    match /appConfig/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Users collection: Strict ownership
+    match /users/{userId}/{document=**} {
+      allow read, write: if isSignedIn() && isOwner(userId);
+    }
+
+    // Global Ingredients: readable by all, writable by all (for seeding)
+    // Ideally should be locked down to admin only after seeding
+    match /ingredients/{ingredientId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn(); 
+    }
+
+    // Supplement Products:
+    // Read: All authenticated users
+    // Create: All authenticated users
+    // Update/Delete: Only the creator
+    match /supplementProducts/{productId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isSignedIn() && resource.data.createdBy == request.auth.uid;
+    }
+  }
+}
