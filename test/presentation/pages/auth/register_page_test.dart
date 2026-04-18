@@ -58,6 +58,7 @@ Future<void> _registerHelpers() async {
 void main() {
   setUpAll(() {
     registerFallbackValue(const InitialState());
+    registerFallbackValue(const <String, Object?>{});
   });
 
   setUp(() async {
@@ -193,6 +194,7 @@ void main() {
           email: any(named: 'email'),
           password: any(named: 'password'),
           displayName: any(named: 'displayName'),
+          consent: any(named: 'consent'),
         ),
       ).thenAnswer((_) async {});
 
@@ -204,24 +206,36 @@ void main() {
       await tester.enterText(find.byType(TextFormField).at(2), 'SecurePass1');
       await tester.enterText(find.byType(TextFormField).at(3), 'SecurePass1');
 
-      await tester.ensureVisible(find.byType(Checkbox));
-      await tester.tap(find.byType(Checkbox));
+      // Two checkboxes now: age (first) + legal consent (second).
+      await tester.ensureVisible(find.byType(Checkbox).first);
+      await tester.tap(find.byType(Checkbox).at(0));
+      await tester.pump();
+      await tester.ensureVisible(find.byType(Checkbox).at(1));
+      await tester.tap(find.byType(Checkbox).at(1));
       await tester.pump();
 
       await tester.ensureVisible(find.byType(GradientButton));
       await tester.tap(find.byType(GradientButton));
       await tester.pump();
 
-      verify(() => cubit.signUp(email: 'user@test.com', password: 'SecurePass1', displayName: 'Andrei')).called(1);
+      verify(
+        () => cubit.signUp(
+          email: 'user@test.com',
+          password: 'SecurePass1',
+          displayName: 'Andrei',
+          consent: any(named: 'consent'),
+        ),
+      ).called(1);
     });
 
-    testWidgets('does NOT call signUp when consent checkbox is unchecked', (tester) async {
+    testWidgets('does NOT call signUp when legal consent is unchecked', (tester) async {
       final cubit = _idleCubit();
       when(
         () => cubit.signUp(
           email: any(named: 'email'),
           password: any(named: 'password'),
           displayName: any(named: 'displayName'),
+          consent: any(named: 'consent'),
         ),
       ).thenAnswer((_) async {});
 
@@ -233,7 +247,11 @@ void main() {
       await tester.enterText(find.byType(TextFormField).at(2), 'SecurePass1');
       await tester.enterText(find.byType(TextFormField).at(3), 'SecurePass1');
 
-      // Deliberately skip ticking the checkbox.
+      // Tick age only, leave legal unchecked.
+      await tester.ensureVisible(find.byType(Checkbox).at(0));
+      await tester.tap(find.byType(Checkbox).at(0));
+      await tester.pump();
+
       await tester.ensureVisible(find.byType(GradientButton));
       await tester.tap(find.byType(GradientButton));
       await tester.pump();
@@ -243,9 +261,49 @@ void main() {
           email: any(named: 'email'),
           password: any(named: 'password'),
           displayName: any(named: 'displayName'),
+          consent: any(named: 'consent'),
         ),
       );
       expect(find.text('You must accept the Terms of Service and Privacy Policy to continue.'), findsOneWidget);
+    });
+
+    testWidgets('does NOT call signUp when age confirmation is unchecked', (tester) async {
+      final cubit = _idleCubit();
+      when(
+        () => cubit.signUp(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+          displayName: any(named: 'displayName'),
+          consent: any(named: 'consent'),
+        ),
+      ).thenAnswer((_) async {});
+
+      await tester.pumpWidget(_buildApp(cubit));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextFormField).at(0), 'Andrei');
+      await tester.enterText(find.byType(TextFormField).at(1), 'user@test.com');
+      await tester.enterText(find.byType(TextFormField).at(2), 'SecurePass1');
+      await tester.enterText(find.byType(TextFormField).at(3), 'SecurePass1');
+
+      // Tick legal only, leave age unchecked.
+      await tester.ensureVisible(find.byType(Checkbox).at(1));
+      await tester.tap(find.byType(Checkbox).at(1));
+      await tester.pump();
+
+      await tester.ensureVisible(find.byType(GradientButton));
+      await tester.tap(find.byType(GradientButton));
+      await tester.pump();
+
+      verifyNever(
+        () => cubit.signUp(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+          displayName: any(named: 'displayName'),
+          consent: any(named: 'consent'),
+        ),
+      );
+      expect(find.text('You must be at least 16 years old to use this app.'), findsOneWidget);
     });
 
     testWidgets('shows consent error then clears it when user ticks the checkbox', (tester) async {
@@ -255,6 +313,7 @@ void main() {
           email: any(named: 'email'),
           password: any(named: 'password'),
           displayName: any(named: 'displayName'),
+          consent: any(named: 'consent'),
         ),
       ).thenAnswer((_) async {});
 
@@ -272,9 +331,9 @@ void main() {
       await tester.pump();
       expect(find.text('You must accept the Terms of Service and Privacy Policy to continue.'), findsOneWidget);
 
-      // Ticking clears the error.
-      await tester.ensureVisible(find.byType(Checkbox));
-      await tester.tap(find.byType(Checkbox));
+      // Ticking the legal checkbox clears the legal error.
+      await tester.ensureVisible(find.byType(Checkbox).at(1));
+      await tester.tap(find.byType(Checkbox).at(1));
       await tester.pump();
 
       expect(find.text('You must accept the Terms of Service and Privacy Policy to continue.'), findsNothing);
@@ -287,6 +346,7 @@ void main() {
           email: any(named: 'email'),
           password: any(named: 'password'),
           displayName: any(named: 'displayName'),
+          consent: any(named: 'consent'),
         ),
       ).thenAnswer((_) async {});
 
@@ -306,6 +366,7 @@ void main() {
           email: any(named: 'email'),
           password: any(named: 'password'),
           displayName: any(named: 'displayName'),
+          consent: any(named: 'consent'),
         ),
       );
     });

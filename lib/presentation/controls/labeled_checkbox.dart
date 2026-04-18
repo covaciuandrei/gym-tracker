@@ -37,20 +37,22 @@ class LabeledCheckbox extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // 48x48 minimum tap target per Material accessibility
+                // guidelines. The visual checkbox stays compact inside.
                 SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: Checkbox(
-                    value: value,
-                    onChanged: enabled ? (_) => _handleToggle() : null,
-                    activeColor: cs.primary,
-                    visualDensity: VisualDensity.compact,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  width: 48,
+                  height: 48,
+                  child: Center(
+                    child: Checkbox(
+                      value: value,
+                      onChanged: enabled ? (_) => _handleToggle() : null,
+                      activeColor: cs.primary,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 4),
                 Expanded(
-                  child: Padding(padding: const EdgeInsets.only(top: 2), child: label),
+                  child: Padding(padding: const EdgeInsets.only(top: 14), child: label),
                 ),
               ],
             ),
@@ -59,7 +61,7 @@ class LabeledCheckbox extends StatelessWidget {
         if (errorText != null && errorText!.isNotEmpty) ...[
           const SizedBox(height: 6),
           Padding(
-            padding: const EdgeInsets.only(left: 36),
+            padding: const EdgeInsets.only(left: 52),
             child: Text(errorText!, style: tt.bodySmall?.copyWith(color: cs.error)),
           ),
         ],

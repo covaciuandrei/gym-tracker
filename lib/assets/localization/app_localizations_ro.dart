@@ -745,20 +745,26 @@ class AppLocalizationsRo extends AppLocalizations {
   String get settingsPrivacy => 'Politica de confidențialitate';
 
   @override
-  String get legalConsentPrefix => 'Am citit și sunt de acord cu';
+  String legalConsentMessage(String terms, String privacy) {
+    return 'Am citit și sunt de acord cu $terms și $privacy.';
+  }
 
   @override
-  String get legalConsentTerms => 'Termenii și Condițiile';
+  String get legalConsentTermsLabel => 'Termenii și Condițiile';
 
   @override
-  String get legalConsentAnd => 'și';
-
-  @override
-  String get legalConsentPrivacy => 'Politica de confidențialitate';
+  String get legalConsentPrivacyLabel => 'Politica de confidențialitate';
 
   @override
   String get legalConsentRequired =>
       'Trebuie să accepți Termenii și Politica de confidențialitate pentru a continua.';
+
+  @override
+  String get authAgeConfirm => 'Confirm că am cel puțin 16 ani.';
+
+  @override
+  String get authAgeRequired =>
+      'Trebuie să ai cel puțin 16 ani pentru a folosi această aplicație.';
 
   @override
   String get settingsTheme => 'Temă';

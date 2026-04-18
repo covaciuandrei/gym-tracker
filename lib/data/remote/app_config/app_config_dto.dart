@@ -13,6 +13,8 @@ class AppConfigDto {
     required this.iosStoreUrl,
     required this.termsUrls,
     required this.privacyUrls,
+    required this.termsVersion,
+    required this.privacyVersion,
   });
 
   factory AppConfigDto.fromJson(Map<String, dynamic> json) => _$AppConfigDtoFromJson(json);
@@ -47,4 +49,15 @@ class AppConfigDto {
   /// Same fallback behaviour as [termsUrls].
   @JsonKey(name: 'privacyUrls', defaultValue: <String, String>{})
   final Map<String, String> privacyUrls;
+
+  /// Revision id of the currently-published Terms of Service (free-form
+  /// string, e.g. a date like '2026-04-18' or a semver). Persisted with the
+  /// user's consent record so we can prove which text was accepted.
+  @JsonKey(name: 'termsVersion', defaultValue: '')
+  final String termsVersion;
+
+  /// Revision id of the currently-published Privacy Policy. Same semantics
+  /// as [termsVersion].
+  @JsonKey(name: 'privacyVersion', defaultValue: '')
+  final String privacyVersion;
 }

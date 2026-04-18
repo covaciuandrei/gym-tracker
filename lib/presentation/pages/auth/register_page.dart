@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
+import 'package:gym_tracker/core/app_version_status.dart';
 import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
@@ -11,10 +12,12 @@ import 'package:gym_tracker/presentation/controls/emoji_text.dart';
 import 'package:gym_tracker/presentation/controls/error_banner.dart';
 import 'package:gym_tracker/presentation/controls/form_card.dart';
 import 'package:gym_tracker/presentation/controls/gradient_button.dart';
+import 'package:gym_tracker/presentation/controls/labeled_checkbox.dart';
 import 'package:gym_tracker/presentation/controls/legal_consent_checkbox.dart';
 import 'package:gym_tracker/presentation/controls/password_match_indicator.dart';
 import 'package:gym_tracker/presentation/controls/password_strength_indicator.dart';
 import 'package:gym_tracker/presentation/controls/success_card.dart';
+import 'package:gym_tracker/presentation/helpers/locale_helper.dart';
 import 'package:gym_tracker/presentation/resources/emojis.dart';
 
 @RoutePage()
@@ -43,6 +46,15 @@ class _RegisterPageState extends State<RegisterPage> {
 
   final _acceptedTerms = ValueNotifier<bool>(false);
   final _showConsentError = ValueNotifier<bool>(false);
+  final _ageConfirmed = ValueNotifier<bool>(false);
+  final _showAgeError = ValueNotifier<bool>(false);
+
+  // Attached to the consent block so we can scroll it into view when the
+  // user tries to submit without ticking it.
+  final _consentBlockKey = GlobalKey();
+
+  final LocaleHelper _localeHelper = getIt<LocaleHelper>();
+  final AppVersionStatus _versionStatus = getIt<AppVersionStatus>();
 
   @override
   void dispose() {
@@ -52,21 +64,56 @@ class _RegisterPageState extends State<RegisterPage> {
     _confirmCtrl.dispose();
     _acceptedTerms.dispose();
     _showConsentError.dispose();
+    _ageConfirmed.dispose();
+    _showAgeError.dispose();
     super.dispose();
   }
 
   void _onSubmit(BuildContext ctx) {
-    if (_formKey.currentState?.validate() != true) return;
+    final formValid = _formKey.currentState?.validate() == true;
+
+    var hasError = false;
+    if (!_ageConfirmed.value) {
+      _showAgeError.value = true;
+      hasError = true;
+    }
     if (!_acceptedTerms.value) {
       _showConsentError.value = true;
+      hasError = true;
+    }
+
+    if (!formValid || hasError) {
+      if (hasError) _scrollToConsent();
       return;
     }
+
     _showConsentError.value = false;
+    _showAgeError.value = false;
+
+    final lang = _localeHelper.locale.languageCode;
+    final consent = <String, Object?>{
+      'termsAccepted': true,
+      'privacyAccepted': true,
+      'ageConfirmed16Plus': true,
+      'termsVersion': _versionStatus.termsVersion,
+      'privacyVersion': _versionStatus.privacyVersion,
+      'termsUrl': _versionStatus.termsUrlFor(lang),
+      'privacyUrl': _versionStatus.privacyUrlFor(lang),
+      'locale': lang,
+    };
+
     ctx.read<AuthCubit>().signUp(
       email: _emailCtrl.text.trim(),
       password: _passwordCtrl.text,
       displayName: _nicknameCtrl.text.trim(),
+      consent: consent,
     );
+  }
+
+  void _scrollToConsent() {
+    final ctx = _consentBlockKey.currentContext;
+    if (ctx == null) return;
+    Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut, alignment: 0.2);
   }
 
   @override
@@ -142,6 +189,11 @@ class _RegisterPageState extends State<RegisterPage> {
                                 confirmCtrl: _confirmCtrl,
                                 acceptedTerms: _acceptedTerms,
                                 showConsentError: _showConsentError,
+                                ageConfirmed: _ageConfirmed,
+                                showAgeError: _showAgeError,
+                                consentBlockKey: _consentBlockKey,
+                                termsUrl: _versionStatus.termsUrlFor(_localeHelper.locale.languageCode),
+                                privacyUrl: _versionStatus.privacyUrlFor(_localeHelper.locale.languageCode),
                                 isLoading: isLoading,
                                 errorMessage: errorMessage,
                                 onSubmit: () => _onSubmit(ctx),
@@ -200,6 +252,11 @@ class _RegisterCard extends StatelessWidget {
     required this.confirmCtrl,
     required this.acceptedTerms,
     required this.showConsentError,
+    required this.ageConfirmed,
+    required this.showAgeError,
+    required this.consentBlockKey,
+    required this.termsUrl,
+    required this.privacyUrl,
     required this.isLoading,
     required this.errorMessage,
     required this.onSubmit,
@@ -212,6 +269,11 @@ class _RegisterCard extends StatelessWidget {
   final TextEditingController confirmCtrl;
   final ValueNotifier<bool> acceptedTerms;
   final ValueNotifier<bool> showConsentError;
+  final ValueNotifier<bool> ageConfirmed;
+  final ValueNotifier<bool> showAgeError;
+  final GlobalKey consentBlockKey;
+  final String termsUrl;
+  final String privacyUrl;
   final bool isLoading;
   final String? errorMessage;
   final VoidCallback onSubmit;
@@ -308,7 +370,35 @@ class _RegisterCard extends StatelessWidget {
         PasswordMatchIndicator(passwordCtrl: passwordCtrl, confirmCtrl: confirmCtrl),
         const SizedBox(height: 20),
 
-        LegalConsentCheckbox(accepted: acceptedTerms, showError: showConsentError, enabled: !isLoading),
+        KeyedSubtree(
+          key: consentBlockKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListenableBuilder(
+                listenable: Listenable.merge([ageConfirmed, showAgeError]),
+                builder: (_, _) => LabeledCheckbox(
+                  value: ageConfirmed.value,
+                  enabled: !isLoading,
+                  onChanged: (v) {
+                    ageConfirmed.value = v;
+                    if (v) showAgeError.value = false;
+                  },
+                  label: Text(l10n.authAgeConfirm),
+                  errorText: showAgeError.value ? l10n.authAgeRequired : null,
+                ),
+              ),
+              const SizedBox(height: 8),
+              LegalConsentCheckbox(
+                accepted: acceptedTerms,
+                showError: showConsentError,
+                termsUrl: termsUrl,
+                privacyUrl: privacyUrl,
+                enabled: !isLoading,
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: 20),
 
         AnimatedSwitcher(

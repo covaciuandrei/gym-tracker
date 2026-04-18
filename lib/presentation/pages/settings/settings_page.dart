@@ -6,6 +6,7 @@ import 'package:gym_tracker/assets/theme/theme_helper.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/core/app_version_status.dart';
 import 'package:gym_tracker/core/injection.dart';
+import 'package:gym_tracker/core/utils/legal_url_launcher.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/cubit/settings/settings_cubit.dart';
@@ -15,7 +16,6 @@ import 'package:gym_tracker/presentation/controls/labeled_value_tile.dart';
 import 'package:gym_tracker/presentation/controls/option_toggle.dart';
 import 'package:gym_tracker/presentation/controls/surface_section_card.dart';
 import 'package:gym_tracker/presentation/helpers/locale_helper.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 @RoutePage()
 class SettingsPage extends StatefulWidget implements AutoRouteWrapper {
@@ -51,11 +51,7 @@ class _SettingsPageState extends State<SettingsPage> {
     ctx.read<AuthCubit>().signOut();
   }
 
-  Future<void> _openUrl(String url) async {
-    final uri = Uri.tryParse(url);
-    if (uri == null) return;
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
-  }
+  Future<void> _openUrl(String url) => launchLegalUrl(url);
 
   Future<void> _onDeleteAccount(BuildContext ctx) async {
     final password = await _showDeleteAccountDialog(ctx);

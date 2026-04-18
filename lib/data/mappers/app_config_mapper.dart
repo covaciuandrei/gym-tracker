@@ -14,5 +14,7 @@ class AppConfigMapper {
     iosStoreUrl: dto.iosStoreUrl,
     termsUrls: Map<String, String>.from(dto.termsUrls),
     privacyUrls: Map<String, String>.from(dto.privacyUrls),
+    termsVersion: dto.termsVersion,
+    privacyVersion: dto.privacyVersion,
   );
 }

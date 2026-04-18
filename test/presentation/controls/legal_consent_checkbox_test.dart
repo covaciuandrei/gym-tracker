@@ -1,12 +1,10 @@
 // Widget tests for LegalConsentCheckbox.
 //
-// The control reads LocaleHelper and AppVersionStatus via getIt; tests
-// register real instances (SharedPreferences mocked) before pumping.
-//
-// url_launcher is a plugin and cannot be exercised from a unit test, so these
-// tests do NOT verify that tapping a link actually opens the URL; they only
-// assert that the tappable link spans are present and that parent-owned state
-// (checkbox value + error visibility) flows correctly.
+// The control now takes termsUrl + privacyUrl as required params; it no
+// longer depends on getIt. url_launcher is a plugin and cannot be exercised
+// from a unit test, so these tests do NOT verify that tapping a link opens
+// the URL; they only assert the tappable link spans are present and that
+// parent-owned state flows correctly.
 //
 // Run: flutter test test/presentation/controls/legal_consent_checkbox_test.dart
 
@@ -14,11 +12,10 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
-import 'package:gym_tracker/core/app_version_status.dart';
-import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/presentation/controls/legal_consent_checkbox.dart';
-import 'package:gym_tracker/presentation/helpers/locale_helper.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+const String _termsUrl = 'https://example.com/terms-en.html';
+const String _privacyUrl = 'https://example.com/privacy-en.html';
 
 Widget _wrap(Widget child) => MaterialApp(
   localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -28,33 +25,21 @@ Widget _wrap(Widget child) => MaterialApp(
   ),
 );
 
-Future<void> _registerDeps({String languageCode = 'en'}) async {
-  SharedPreferences.setMockInitialValues({'app_locale': languageCode});
-  final prefs = await SharedPreferences.getInstance();
-
-  if (getIt.isRegistered<LocaleHelper>()) {
-    getIt.unregister<LocaleHelper>();
-  }
-  if (getIt.isRegistered<AppVersionStatus>()) {
-    getIt.unregister<AppVersionStatus>();
-  }
-  getIt.registerSingleton<LocaleHelper>(LocaleHelper(prefs));
-  getIt.registerSingleton<AppVersionStatus>(AppVersionStatus());
-}
+LegalConsentCheckbox _build({
+  required ValueNotifier<bool> accepted,
+  required ValueNotifier<bool> showError,
+  bool enabled = true,
+}) => LegalConsentCheckbox(
+  accepted: accepted,
+  showError: showError,
+  termsUrl: _termsUrl,
+  privacyUrl: _privacyUrl,
+  enabled: enabled,
+);
 
 void main() {
-  tearDown(() {
-    if (getIt.isRegistered<LocaleHelper>()) {
-      getIt.unregister<LocaleHelper>();
-    }
-    if (getIt.isRegistered<AppVersionStatus>()) {
-      getIt.unregister<AppVersionStatus>();
-    }
-  });
-
   group('LegalConsentCheckbox', () {
     testWidgets('renders checkbox and consent text with Terms + Privacy links', (tester) async {
-      await _registerDeps();
       final accepted = ValueNotifier<bool>(false);
       final showError = ValueNotifier<bool>(false);
       addTearDown(() {
@@ -62,7 +47,7 @@ void main() {
         showError.dispose();
       });
 
-      await tester.pumpWidget(_wrap(LegalConsentCheckbox(accepted: accepted, showError: showError)));
+      await tester.pumpWidget(_wrap(_build(accepted: accepted, showError: showError)));
 
       expect(find.byType(Checkbox), findsOneWidget);
       expect(find.textContaining('I have read and agree to the'), findsOneWidget);
@@ -71,7 +56,6 @@ void main() {
     });
 
     testWidgets('tapping the checkbox toggles accepted', (tester) async {
-      await _registerDeps();
       final accepted = ValueNotifier<bool>(false);
       final showError = ValueNotifier<bool>(false);
       addTearDown(() {
@@ -79,7 +63,7 @@ void main() {
         showError.dispose();
       });
 
-      await tester.pumpWidget(_wrap(LegalConsentCheckbox(accepted: accepted, showError: showError)));
+      await tester.pumpWidget(_wrap(_build(accepted: accepted, showError: showError)));
 
       expect(accepted.value, isFalse);
 
@@ -95,7 +79,6 @@ void main() {
     });
 
     testWidgets('tapping row toggles accepted (wider tap target)', (tester) async {
-      await _registerDeps();
       final accepted = ValueNotifier<bool>(false);
       final showError = ValueNotifier<bool>(false);
       addTearDown(() {
@@ -103,7 +86,7 @@ void main() {
         showError.dispose();
       });
 
-      await tester.pumpWidget(_wrap(LegalConsentCheckbox(accepted: accepted, showError: showError)));
+      await tester.pumpWidget(_wrap(_build(accepted: accepted, showError: showError)));
 
       // Tapping the surrounding InkWell also toggles.
       await tester.tap(find.byType(InkWell).first);
@@ -113,7 +96,6 @@ void main() {
     });
 
     testWidgets('toggling on clears showError', (tester) async {
-      await _registerDeps();
       final accepted = ValueNotifier<bool>(false);
       final showError = ValueNotifier<bool>(true);
       addTearDown(() {
@@ -121,7 +103,7 @@ void main() {
         showError.dispose();
       });
 
-      await tester.pumpWidget(_wrap(LegalConsentCheckbox(accepted: accepted, showError: showError)));
+      await tester.pumpWidget(_wrap(_build(accepted: accepted, showError: showError)));
 
       expect(showError.value, isTrue);
       expect(find.text('You must accept the Terms of Service and Privacy Policy to continue.'), findsOneWidget);
@@ -135,7 +117,6 @@ void main() {
     });
 
     testWidgets('showError=true renders the required-message text', (tester) async {
-      await _registerDeps();
       final accepted = ValueNotifier<bool>(false);
       final showError = ValueNotifier<bool>(false);
       addTearDown(() {
@@ -143,7 +124,7 @@ void main() {
         showError.dispose();
       });
 
-      await tester.pumpWidget(_wrap(LegalConsentCheckbox(accepted: accepted, showError: showError)));
+      await tester.pumpWidget(_wrap(_build(accepted: accepted, showError: showError)));
 
       expect(find.text('You must accept the Terms of Service and Privacy Policy to continue.'), findsNothing);
 
@@ -154,7 +135,6 @@ void main() {
     });
 
     testWidgets('disabled=true prevents toggling via tap', (tester) async {
-      await _registerDeps();
       final accepted = ValueNotifier<bool>(false);
       final showError = ValueNotifier<bool>(false);
       addTearDown(() {
@@ -162,7 +142,7 @@ void main() {
         showError.dispose();
       });
 
-      await tester.pumpWidget(_wrap(LegalConsentCheckbox(accepted: accepted, showError: showError, enabled: false)));
+      await tester.pumpWidget(_wrap(_build(accepted: accepted, showError: showError, enabled: false)));
 
       await tester.tap(find.byType(Checkbox), warnIfMissed: false);
       await tester.pump();
@@ -171,7 +151,6 @@ void main() {
     });
 
     testWidgets('link spans carry a TapGestureRecognizer', (tester) async {
-      await _registerDeps();
       final accepted = ValueNotifier<bool>(false);
       final showError = ValueNotifier<bool>(false);
       addTearDown(() {
@@ -179,7 +158,7 @@ void main() {
         showError.dispose();
       });
 
-      await tester.pumpWidget(_wrap(LegalConsentCheckbox(accepted: accepted, showError: showError)));
+      await tester.pumpWidget(_wrap(_build(accepted: accepted, showError: showError)));
 
       // Drill into the Text.rich to confirm each link span carries a
       // recognizer. We don't invoke it (url_launcher is a plugin).
@@ -198,7 +177,6 @@ void main() {
     });
 
     testWidgets('switches label copy when locale changes to ro', (tester) async {
-      await _registerDeps(languageCode: 'ro');
       final accepted = ValueNotifier<bool>(false);
       final showError = ValueNotifier<bool>(false);
       addTearDown(() {
@@ -214,7 +192,7 @@ void main() {
           home: Scaffold(
             body: Padding(
               padding: const EdgeInsets.all(16),
-              child: LegalConsentCheckbox(accepted: accepted, showError: showError),
+              child: _build(accepted: accepted, showError: showError),
             ),
           ),
         ),

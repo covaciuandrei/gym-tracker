@@ -270,11 +270,13 @@ The app's [version gate](#app-version-gate) reads a singleton document at `appCo
     "en": "https://<your-firebase-project>.web.app/privacy-en.html",
     "ro": "https://<your-firebase-project>.web.app/privacy-ro.html",
   },
+  "termsVersion": "2026-04-18",
+  "privacyVersion": "2026-04-18",
   "updatedAt": "<server timestamp>",
 }
 ```
 
-> `termsUrls` and `privacyUrls` are optional at runtime — the app falls back to hardcoded constants in `lib/core/constants/legal_urls.dart` when either is missing. The static HTML pages themselves live under `legal/` and are deployed via Firebase Hosting (`firebase deploy --only hosting`).
+> `termsUrls` and `privacyUrls` are optional at runtime — the app falls back to hardcoded constants in `lib/core/constants/legal_urls.dart` when either is missing. `termsVersion` / `privacyVersion` are short revision ids (free-form strings) persisted alongside the user's consent record so you can tell _which_ legal text each user accepted. The static HTML pages themselves live under `legal/` and are deployed via Firebase Hosting (`firebase deploy --only hosting`).
 
 ---
 
