@@ -99,6 +99,7 @@ class SplashCubit extends BaseCubit {
       latestVersion: config.latestVersion,
       storeUrl: storeUrl,
     );
+    _versionStatus.setLegalUrls(termsUrls: config.termsUrls, privacyUrls: config.privacyUrls);
 
     if (_onboardingHelper.isFirstLaunch) {
       return const SplashNavigateOnboardingState();

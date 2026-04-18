@@ -8,6 +8,8 @@ class AppConfig extends Equatable {
     required this.maintenanceMessages,
     required this.androidStoreUrl,
     required this.iosStoreUrl,
+    this.termsUrls = const <String, String>{},
+    this.privacyUrls = const <String, String>{},
   });
 
   /// Lowest version still allowed to run. Below this = hard block.
@@ -25,6 +27,15 @@ class AppConfig extends Equatable {
   final String androidStoreUrl;
   final String iosStoreUrl;
 
+  /// Localized Terms of Service URLs keyed by language code. May be empty if
+  /// remote config has not been populated; callers should fall back to
+  /// hardcoded defaults in `lib/core/constants/legal_urls.dart`.
+  final Map<String, String> termsUrls;
+
+  /// Localized Privacy Policy URLs keyed by language code. Same fallback
+  /// behaviour as [termsUrls].
+  final Map<String, String> privacyUrls;
+
   /// Returns the maintenance message for [languageCode], falling back to 'en'
   /// and finally to an empty string.
   String messageFor(String languageCode) => maintenanceMessages[languageCode] ?? maintenanceMessages['en'] ?? '';
@@ -37,5 +48,7 @@ class AppConfig extends Equatable {
     maintenanceMessages,
     androidStoreUrl,
     iosStoreUrl,
+    termsUrls,
+    privacyUrls,
   ];
 }

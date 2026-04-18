@@ -11,6 +11,8 @@ class AppConfigDto {
     required this.maintenanceMessages,
     required this.androidStoreUrl,
     required this.iosStoreUrl,
+    required this.termsUrls,
+    required this.privacyUrls,
   });
 
   factory AppConfigDto.fromJson(Map<String, dynamic> json) => _$AppConfigDtoFromJson(json);
@@ -34,4 +36,15 @@ class AppConfigDto {
 
   @JsonKey(name: 'iosStoreUrl', defaultValue: '')
   final String iosStoreUrl;
+
+  /// Localized Terms of Service URLs keyed by language code (e.g. 'en', 'ro').
+  /// When missing or empty, the app falls back to hardcoded constants in
+  /// `lib/core/constants/legal_urls.dart`.
+  @JsonKey(name: 'termsUrls', defaultValue: <String, String>{})
+  final Map<String, String> termsUrls;
+
+  /// Localized Privacy Policy URLs keyed by language code (e.g. 'en', 'ro').
+  /// Same fallback behaviour as [termsUrls].
+  @JsonKey(name: 'privacyUrls', defaultValue: <String, String>{})
+  final Map<String, String> privacyUrls;
 }

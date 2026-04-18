@@ -12,5 +12,7 @@ class AppConfigMapper {
     maintenanceMessages: Map<String, String>.from(dto.maintenanceMessages),
     androidStoreUrl: dto.androidStoreUrl,
     iosStoreUrl: dto.iosStoreUrl,
+    termsUrls: Map<String, String>.from(dto.termsUrls),
+    privacyUrls: Map<String, String>.from(dto.privacyUrls),
   );
 }

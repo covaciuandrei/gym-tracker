@@ -17,6 +17,16 @@ AppConfigDto _$AppConfigDtoFromJson(Map<String, dynamic> json) => AppConfigDto(
       {},
   androidStoreUrl: json['androidStoreUrl'] as String? ?? '',
   iosStoreUrl: json['iosStoreUrl'] as String? ?? '',
+  termsUrls:
+      (json['termsUrls'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(k, e as String),
+      ) ??
+      {},
+  privacyUrls:
+      (json['privacyUrls'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(k, e as String),
+      ) ??
+      {},
 );
 
 Map<String, dynamic> _$AppConfigDtoToJson(AppConfigDto instance) =>
@@ -27,4 +37,6 @@ Map<String, dynamic> _$AppConfigDtoToJson(AppConfigDto instance) =>
       'maintenanceMessages': instance.maintenanceMessages,
       'androidStoreUrl': instance.androidStoreUrl,
       'iosStoreUrl': instance.iosStoreUrl,
+      'termsUrls': instance.termsUrls,
+      'privacyUrls': instance.privacyUrls,
     };

@@ -1412,6 +1412,54 @@ abstract class AppLocalizations {
   /// **'Actions'**
   String get settingsActions;
 
+  /// No description provided for @settingsLegal.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal'**
+  String get settingsLegal;
+
+  /// No description provided for @settingsTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get settingsTerms;
+
+  /// No description provided for @settingsPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get settingsPrivacy;
+
+  /// No description provided for @legalConsentPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'I have read and agree to the'**
+  String get legalConsentPrefix;
+
+  /// No description provided for @legalConsentTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get legalConsentTerms;
+
+  /// No description provided for @legalConsentAnd.
+  ///
+  /// In en, this message translates to:
+  /// **'and'**
+  String get legalConsentAnd;
+
+  /// No description provided for @legalConsentPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get legalConsentPrivacy;
+
+  /// No description provided for @legalConsentRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'You must accept the Terms of Service and Privacy Policy to continue.'**
+  String get legalConsentRequired;
+
   /// No description provided for @settingsTheme.
   ///
   /// In en, this message translates to:

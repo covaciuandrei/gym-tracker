@@ -736,6 +736,31 @@ class AppLocalizationsRo extends AppLocalizations {
   String get settingsActions => 'Acțiuni';
 
   @override
+  String get settingsLegal => 'Legal';
+
+  @override
+  String get settingsTerms => 'Termeni și Condiții';
+
+  @override
+  String get settingsPrivacy => 'Politica de confidențialitate';
+
+  @override
+  String get legalConsentPrefix => 'Am citit și sunt de acord cu';
+
+  @override
+  String get legalConsentTerms => 'Termenii și Condițiile';
+
+  @override
+  String get legalConsentAnd => 'și';
+
+  @override
+  String get legalConsentPrivacy => 'Politica de confidențialitate';
+
+  @override
+  String get legalConsentRequired =>
+      'Trebuie să accepți Termenii și Politica de confidențialitate pentru a continua.';
+
+  @override
   String get settingsTheme => 'Temă';
 
   @override
