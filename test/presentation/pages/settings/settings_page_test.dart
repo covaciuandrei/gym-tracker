@@ -4,18 +4,18 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/assets/theme/theme_helper.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
+import 'package:gym_tracker/core/app_version_status.dart';
 import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/cubit/settings/settings_cubit.dart';
 import 'package:gym_tracker/presentation/helpers/locale_helper.dart';
 import 'package:gym_tracker/presentation/pages/settings/settings_page.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MockAuthCubit extends Mock implements AuthCubit {}
 
@@ -23,11 +23,7 @@ class MockSettingsCubit extends Mock implements SettingsCubit {}
 
 class MockStackRouter extends Mock implements StackRouter {}
 
-Widget _buildApp(
-  AuthCubit authCubit,
-  SettingsCubit settingsCubit,
-  StackRouter router,
-) {
+Widget _buildApp(AuthCubit authCubit, SettingsCubit settingsCubit, StackRouter router) {
   return StackRouterScope(
     controller: router,
     stateHash: 0,
@@ -50,9 +46,7 @@ MockAuthCubit _stubAuthCubit(BaseState state, Stream<BaseState> stream) {
   when(() => cubit.state).thenReturn(state);
   when(() => cubit.stream).thenAnswer((_) => stream);
   when(() => cubit.signOut()).thenAnswer((_) async {});
-  when(
-    () => cubit.deleteAccount(currentPassword: any(named: 'currentPassword')),
-  ).thenAnswer((_) async {});
+  when(() => cubit.deleteAccount(currentPassword: any(named: 'currentPassword'))).thenAnswer((_) async {});
   return cubit;
 }
 
@@ -65,10 +59,7 @@ MockSettingsCubit _stubSettingsCubit(BaseState state) {
 }
 
 Future<void> _registerHelpers() async {
-  SharedPreferences.setMockInitialValues(const {
-    'app_theme_dark': true,
-    'app_locale': 'en',
-  });
+  SharedPreferences.setMockInitialValues(const {'app_theme_dark': true, 'app_locale': 'en'});
   final prefs = await SharedPreferences.getInstance();
 
   if (getIt.isRegistered<ThemeHelper>()) {
@@ -77,23 +68,20 @@ Future<void> _registerHelpers() async {
   if (getIt.isRegistered<LocaleHelper>()) {
     getIt.unregister<LocaleHelper>();
   }
+  if (getIt.isRegistered<AppVersionStatus>()) {
+    getIt.unregister<AppVersionStatus>();
+  }
 
   getIt.registerSingleton<ThemeHelper>(ThemeHelper(prefs));
   getIt.registerSingleton<LocaleHelper>(LocaleHelper(prefs));
+  getIt.registerSingleton<AppVersionStatus>(AppVersionStatus());
 }
 
 StackRouter _stubRouter() {
   final router = MockStackRouter();
   when(() => router.canPop()).thenReturn(true);
-  when(
-    () => router.push(any<PageRouteInfo>(), onFailure: any(named: 'onFailure')),
-  ).thenAnswer((_) async => null);
-  when(
-    () => router.replace(
-      any<PageRouteInfo>(),
-      onFailure: any(named: 'onFailure'),
-    ),
-  ).thenAnswer((_) async => null);
+  when(() => router.push(any<PageRouteInfo>(), onFailure: any(named: 'onFailure'))).thenAnswer((_) async => null);
+  when(() => router.replace(any<PageRouteInfo>(), onFailure: any(named: 'onFailure'))).thenAnswer((_) async => null);
   return router;
 }
 
@@ -112,6 +100,9 @@ void main() {
     if (getIt.isRegistered<LocaleHelper>()) {
       getIt.unregister<LocaleHelper>();
     }
+    if (getIt.isRegistered<AppVersionStatus>()) {
+      getIt.unregister<AppVersionStatus>();
+    }
   });
 
   group('SettingsPage', () {
@@ -119,13 +110,8 @@ void main() {
       await _registerHelpers();
 
       final router = _stubRouter();
-      final authCubit = _stubAuthCubit(
-        const InitialState(),
-        const Stream.empty(),
-      );
-      final settingsCubit = _stubSettingsCubit(
-        const SettingsReadyState(appVersion: '1.0.0'),
-      );
+      final authCubit = _stubAuthCubit(const InitialState(), const Stream.empty());
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
 
       await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
       await tester.pump();
@@ -142,19 +128,31 @@ void main() {
       verify(() => settingsCubit.init()).called(1);
     });
 
-    testWidgets('navigates to change-password page from account row', (
-      tester,
-    ) async {
+    testWidgets('renders LEGAL section with Terms and Privacy rows', (tester) async {
       await _registerHelpers();
 
       final router = _stubRouter();
-      final authCubit = _stubAuthCubit(
-        const InitialState(),
-        const Stream.empty(),
-      );
-      final settingsCubit = _stubSettingsCubit(
-        const SettingsReadyState(appVersion: '1.0.0'),
-      );
+      final authCubit = _stubAuthCubit(const InitialState(), const Stream.empty());
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
+
+      await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
+      await tester.pump();
+
+      // Scroll the LEGAL section into view if necessary.
+      final legalHeader = find.text('LEGAL');
+      await tester.scrollUntilVisible(legalHeader, 200, scrollable: find.byType(Scrollable).first);
+
+      expect(legalHeader, findsOneWidget);
+      expect(find.text('Terms of Service'), findsOneWidget);
+      expect(find.text('Privacy Policy'), findsOneWidget);
+    });
+
+    testWidgets('navigates to change-password page from account row', (tester) async {
+      await _registerHelpers();
+
+      final router = _stubRouter();
+      final authCubit = _stubAuthCubit(const InitialState(), const Stream.empty());
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
 
       await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
       await tester.pump();
@@ -162,25 +160,15 @@ void main() {
       await tester.tap(find.text('Change Password'));
       await tester.pump();
 
-      verify(
-        () => router.push(
-          const ChangePasswordRoute(),
-          onFailure: any(named: 'onFailure'),
-        ),
-      ).called(1);
+      verify(() => router.push(const ChangePasswordRoute(), onFailure: any(named: 'onFailure'))).called(1);
     });
 
     testWidgets('calls signOut when Sign Out is tapped', (tester) async {
       await _registerHelpers();
 
       final router = _stubRouter();
-      final authCubit = _stubAuthCubit(
-        const InitialState(),
-        const Stream.empty(),
-      );
-      final settingsCubit = _stubSettingsCubit(
-        const SettingsReadyState(appVersion: '1.0.0'),
-      );
+      final authCubit = _stubAuthCubit(const InitialState(), const Stream.empty());
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
 
       await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
       await tester.pump();
@@ -200,9 +188,7 @@ void main() {
       addTearDown(controller.close);
 
       final authCubit = _stubAuthCubit(const InitialState(), controller.stream);
-      final settingsCubit = _stubSettingsCubit(
-        const SettingsReadyState(appVersion: '1.0.0'),
-      );
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
 
       await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
       await tester.pump();
@@ -210,12 +196,7 @@ void main() {
       controller.add(const AuthSignOutSuccessState());
       await tester.pump();
 
-      verify(
-        () => router.replace(
-          const LoginRoute(),
-          onFailure: any(named: 'onFailure'),
-        ),
-      ).called(1);
+      verify(() => router.replace(const LoginRoute(), onFailure: any(named: 'onFailure'))).called(1);
     });
 
     testWidgets('redirects to login on account deleted', (tester) async {
@@ -226,9 +207,7 @@ void main() {
       addTearDown(controller.close);
 
       final authCubit = _stubAuthCubit(const InitialState(), controller.stream);
-      final settingsCubit = _stubSettingsCubit(
-        const SettingsReadyState(appVersion: '1.0.0'),
-      );
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
 
       await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
       await tester.pump();
@@ -236,27 +215,15 @@ void main() {
       controller.add(const AuthAccountDeletedState());
       await tester.pump();
 
-      verify(
-        () => router.replace(
-          const LoginRoute(),
-          onFailure: any(named: 'onFailure'),
-        ),
-      ).called(1);
+      verify(() => router.replace(const LoginRoute(), onFailure: any(named: 'onFailure'))).called(1);
     });
 
-    testWidgets('shows delete account option in actions section', (
-      tester,
-    ) async {
+    testWidgets('shows delete account option in actions section', (tester) async {
       await _registerHelpers();
 
       final router = _stubRouter();
-      final authCubit = _stubAuthCubit(
-        const InitialState(),
-        const Stream.empty(),
-      );
-      final settingsCubit = _stubSettingsCubit(
-        const SettingsReadyState(appVersion: '1.0.0'),
-      );
+      final authCubit = _stubAuthCubit(const InitialState(), const Stream.empty());
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
 
       await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
       await tester.pump();
@@ -269,10 +236,7 @@ void main() {
       await _registerHelpers();
 
       final router = _stubRouter();
-      final authCubit = _stubAuthCubit(
-        const InitialState(),
-        const Stream.empty(),
-      );
+      final authCubit = _stubAuthCubit(const InitialState(), const Stream.empty());
       final settingsCubit = _stubSettingsCubit(const PendingState());
 
       await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
@@ -289,9 +253,7 @@ void main() {
       addTearDown(controller.close);
 
       final authCubit = _stubAuthCubit(const InitialState(), controller.stream);
-      final settingsCubit = _stubSettingsCubit(
-        const SettingsReadyState(appVersion: '1.0.0'),
-      );
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
 
       await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
       await tester.pump();
@@ -310,9 +272,7 @@ void main() {
       addTearDown(controller.close);
 
       final authCubit = _stubAuthCubit(const InitialState(), controller.stream);
-      final settingsCubit = _stubSettingsCubit(
-        const SettingsReadyState(appVersion: '1.0.0'),
-      );
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
 
       await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
       await tester.pump();
@@ -320,25 +280,15 @@ void main() {
       controller.add(const SomethingWentWrongState());
       await tester.pump();
 
-      expect(
-        find.text('Something went wrong. Please try again.'),
-        findsOneWidget,
-      );
+      expect(find.text('Something went wrong. Please try again.'), findsOneWidget);
     });
 
-    testWidgets('delete account dialog submits password to cubit', (
-      tester,
-    ) async {
+    testWidgets('delete account dialog submits password to cubit', (tester) async {
       await _registerHelpers();
 
       final router = _stubRouter();
-      final authCubit = _stubAuthCubit(
-        const InitialState(),
-        const Stream.empty(),
-      );
-      final settingsCubit = _stubSettingsCubit(
-        const SettingsReadyState(appVersion: '1.0.0'),
-      );
+      final authCubit = _stubAuthCubit(const InitialState(), const Stream.empty());
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
 
       await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
       await tester.pump();
@@ -367,43 +317,29 @@ void main() {
       await tester.tap(find.text('Delete My Account'));
       await tester.pumpAndSettle();
 
-      verify(
-        () => authCubit.deleteAccount(currentPassword: 'MyPassword1!'),
-      ).called(1);
+      verify(() => authCubit.deleteAccount(currentPassword: 'MyPassword1!')).called(1);
     });
 
-    testWidgets(
-      'delete account dialog does not call cubit with empty password',
-      (tester) async {
-        await _registerHelpers();
+    testWidgets('delete account dialog does not call cubit with empty password', (tester) async {
+      await _registerHelpers();
 
-        final router = _stubRouter();
-        final authCubit = _stubAuthCubit(
-          const InitialState(),
-          const Stream.empty(),
-        );
-        final settingsCubit = _stubSettingsCubit(
-          const SettingsReadyState(appVersion: '1.0.0'),
-        );
+      final router = _stubRouter();
+      final authCubit = _stubAuthCubit(const InitialState(), const Stream.empty());
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
 
-        await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
-        await tester.pump();
+      await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
+      await tester.pump();
 
-        // Open the dialog.
-        await tester.ensureVisible(find.text('Delete Account'));
-        await tester.tap(find.text('Delete Account'));
-        await tester.pumpAndSettle();
+      // Open the dialog.
+      await tester.ensureVisible(find.text('Delete Account'));
+      await tester.tap(find.text('Delete Account'));
+      await tester.pumpAndSettle();
 
-        // Tap confirm without entering a password.
-        await tester.tap(find.text('Delete My Account'));
-        await tester.pumpAndSettle();
+      // Tap confirm without entering a password.
+      await tester.tap(find.text('Delete My Account'));
+      await tester.pumpAndSettle();
 
-        verifyNever(
-          () => authCubit.deleteAccount(
-            currentPassword: any(named: 'currentPassword'),
-          ),
-        );
-      },
-    );
+      verifyNever(() => authCubit.deleteAccount(currentPassword: any(named: 'currentPassword')));
+    });
   });
 }

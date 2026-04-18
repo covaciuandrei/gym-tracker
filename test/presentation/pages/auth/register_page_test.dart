@@ -9,13 +9,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
+import 'package:gym_tracker/core/app_version_status.dart';
+import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/presentation/controls/gradient_button.dart';
+import 'package:gym_tracker/presentation/helpers/locale_helper.dart';
 import 'package:gym_tracker/presentation/pages/auth/register_page.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // ── Mock ─────────────────────────────────────────────────────────────────────
 
@@ -26,10 +29,7 @@ class MockAuthCubit extends Mock implements AuthCubit {}
 Widget _buildApp(AuthCubit cubit) => MaterialApp(
   localizationsDelegates: AppLocalizations.localizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
-  home: BlocProvider<AuthCubit>.value(
-    value: cubit,
-    child: const RegisterPage(),
-  ),
+  home: BlocProvider<AuthCubit>.value(value: cubit, child: const RegisterPage()),
 );
 
 MockAuthCubit _idleCubit() {
@@ -39,6 +39,20 @@ MockAuthCubit _idleCubit() {
   return cubit;
 }
 
+Future<void> _registerHelpers() async {
+  SharedPreferences.setMockInitialValues(const {'app_locale': 'en'});
+  final prefs = await SharedPreferences.getInstance();
+
+  if (getIt.isRegistered<LocaleHelper>()) {
+    getIt.unregister<LocaleHelper>();
+  }
+  if (getIt.isRegistered<AppVersionStatus>()) {
+    getIt.unregister<AppVersionStatus>();
+  }
+  getIt.registerSingleton<LocaleHelper>(LocaleHelper(prefs));
+  getIt.registerSingleton<AppVersionStatus>(AppVersionStatus());
+}
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 void main() {
@@ -46,18 +60,28 @@ void main() {
     registerFallbackValue(const InitialState());
   });
 
+  setUp(() async {
+    await _registerHelpers();
+  });
+
+  tearDown(() {
+    if (getIt.isRegistered<LocaleHelper>()) {
+      getIt.unregister<LocaleHelper>();
+    }
+    if (getIt.isRegistered<AppVersionStatus>()) {
+      getIt.unregister<AppVersionStatus>();
+    }
+  });
+
   group('RegisterPage — initial state', () {
-    testWidgets(
-      'shows four form fields (displayName, email, password, confirm)',
-      (tester) async {
-        final cubit = _idleCubit();
+    testWidgets('shows four form fields (displayName, email, password, confirm)', (tester) async {
+      final cubit = _idleCubit();
 
-        await tester.pumpWidget(_buildApp(cubit));
-        await tester.pumpAndSettle();
+      await tester.pumpWidget(_buildApp(cubit));
+      await tester.pumpAndSettle();
 
-        expect(find.byType(TextFormField), findsNWidgets(4));
-      },
-    );
+      expect(find.byType(TextFormField), findsNWidgets(4));
+    });
 
     testWidgets('shows submit GradientButton', (tester) async {
       final cubit = _idleCubit();
@@ -79,9 +103,7 @@ void main() {
   });
 
   group('RegisterPage — loading state', () {
-    testWidgets('GradientButton shows spinner when PendingState', (
-      tester,
-    ) async {
+    testWidgets('GradientButton shows spinner when PendingState', (tester) async {
       final cubit = MockAuthCubit();
       when(() => cubit.state).thenReturn(const PendingState());
       when(() => cubit.stream).thenAnswer((_) => const Stream.empty());
@@ -94,9 +116,7 @@ void main() {
   });
 
   group('RegisterPage — error states', () {
-    testWidgets('shows error banner for AuthEmailAlreadyInUseState', (
-      tester,
-    ) async {
+    testWidgets('shows error banner for AuthEmailAlreadyInUseState', (tester) async {
       final cubit = MockAuthCubit();
       when(() => cubit.state).thenReturn(const AuthEmailAlreadyInUseState());
       when(() => cubit.stream).thenAnswer((_) => const Stream.empty());
@@ -118,9 +138,7 @@ void main() {
       expect(find.text('Password is too weak.'), findsOneWidget);
     });
 
-    testWidgets('shows error banner for SomethingWentWrongState', (
-      tester,
-    ) async {
+    testWidgets('shows error banner for SomethingWentWrongState', (tester) async {
       final cubit = MockAuthCubit();
       when(() => cubit.state).thenReturn(const SomethingWentWrongState());
       when(() => cubit.stream).thenAnswer((_) => const Stream.empty());
@@ -128,17 +146,12 @@ void main() {
       await tester.pumpWidget(_buildApp(cubit));
       await tester.pumpAndSettle();
 
-      expect(
-        find.text('Something went wrong. Please try again.'),
-        findsOneWidget,
-      );
+      expect(find.text('Something went wrong. Please try again.'), findsOneWidget);
     });
   });
 
   group('RegisterPage — success state', () {
-    testWidgets('shows success card for AuthSignUpSuccessState', (
-      tester,
-    ) async {
+    testWidgets('shows success card for AuthSignUpSuccessState', (tester) async {
       final cubit = MockAuthCubit();
       when(() => cubit.state).thenReturn(const AuthSignUpSuccessState());
       when(() => cubit.stream).thenAnswer((_) => const Stream.empty());
@@ -173,9 +186,7 @@ void main() {
   });
 
   group('RegisterPage — form submit', () {
-    testWidgets('calls cubit.signUp with correct credentials on valid submit', (
-      tester,
-    ) async {
+    testWidgets('calls cubit.signUp with correct credentials on valid submit', (tester) async {
       final cubit = _idleCubit();
       when(
         () => cubit.signUp(
@@ -193,17 +204,80 @@ void main() {
       await tester.enterText(find.byType(TextFormField).at(2), 'SecurePass1');
       await tester.enterText(find.byType(TextFormField).at(3), 'SecurePass1');
 
+      await tester.ensureVisible(find.byType(Checkbox));
+      await tester.tap(find.byType(Checkbox));
+      await tester.pump();
+
       await tester.ensureVisible(find.byType(GradientButton));
       await tester.tap(find.byType(GradientButton));
       await tester.pump();
 
-      verify(
+      verify(() => cubit.signUp(email: 'user@test.com', password: 'SecurePass1', displayName: 'Andrei')).called(1);
+    });
+
+    testWidgets('does NOT call signUp when consent checkbox is unchecked', (tester) async {
+      final cubit = _idleCubit();
+      when(
         () => cubit.signUp(
-          email: 'user@test.com',
-          password: 'SecurePass1',
-          displayName: 'Andrei',
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+          displayName: any(named: 'displayName'),
         ),
-      ).called(1);
+      ).thenAnswer((_) async {});
+
+      await tester.pumpWidget(_buildApp(cubit));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextFormField).at(0), 'Andrei');
+      await tester.enterText(find.byType(TextFormField).at(1), 'user@test.com');
+      await tester.enterText(find.byType(TextFormField).at(2), 'SecurePass1');
+      await tester.enterText(find.byType(TextFormField).at(3), 'SecurePass1');
+
+      // Deliberately skip ticking the checkbox.
+      await tester.ensureVisible(find.byType(GradientButton));
+      await tester.tap(find.byType(GradientButton));
+      await tester.pump();
+
+      verifyNever(
+        () => cubit.signUp(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+          displayName: any(named: 'displayName'),
+        ),
+      );
+      expect(find.text('You must accept the Terms of Service and Privacy Policy to continue.'), findsOneWidget);
+    });
+
+    testWidgets('shows consent error then clears it when user ticks the checkbox', (tester) async {
+      final cubit = _idleCubit();
+      when(
+        () => cubit.signUp(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+          displayName: any(named: 'displayName'),
+        ),
+      ).thenAnswer((_) async {});
+
+      await tester.pumpWidget(_buildApp(cubit));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextFormField).at(0), 'Andrei');
+      await tester.enterText(find.byType(TextFormField).at(1), 'user@test.com');
+      await tester.enterText(find.byType(TextFormField).at(2), 'SecurePass1');
+      await tester.enterText(find.byType(TextFormField).at(3), 'SecurePass1');
+
+      // Trigger the error first by submitting without consent.
+      await tester.ensureVisible(find.byType(GradientButton));
+      await tester.tap(find.byType(GradientButton));
+      await tester.pump();
+      expect(find.text('You must accept the Terms of Service and Privacy Policy to continue.'), findsOneWidget);
+
+      // Ticking clears the error.
+      await tester.ensureVisible(find.byType(Checkbox));
+      await tester.tap(find.byType(Checkbox));
+      await tester.pump();
+
+      expect(find.text('You must accept the Terms of Service and Privacy Policy to continue.'), findsNothing);
     });
 
     testWidgets('does not call signUp when email is invalid', (tester) async {
@@ -238,9 +312,7 @@ void main() {
   });
 
   group('RegisterPage — buildWhen', () {
-    testWidgets('rebuilds when PendingState is emitted via stream', (
-      tester,
-    ) async {
+    testWidgets('rebuilds when PendingState is emitted via stream', (tester) async {
       final streamCtrl = StreamController<BaseState>.broadcast();
       final cubit = MockAuthCubit();
       when(() => cubit.state).thenReturn(const InitialState());
