@@ -2,9 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
-import 'package:gym_tracker/presentation/controls/emoji_text.dart';
 import 'package:gym_tracker/presentation/controls/gradient_button.dart';
-import 'package:gym_tracker/presentation/resources/emojis.dart';
 
 /// Full-screen blocker shown when remote config has `maintenanceMode: true`.
 ///
@@ -33,7 +31,13 @@ class MaintenancePage extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  EmojiText(Emojis.hammerAndWrench, style: const TextStyle(fontSize: 72)),
+                  Image.asset(
+                    'lib/assets/images/maintenance.png',
+                    width: 200,
+                    height: 200,
+                    fit: BoxFit.contain,
+                    semanticLabel: l10n.maintenanceTitle,
+                  ),
                   const SizedBox(height: 24),
                   Text(l10n.maintenanceTitle, textAlign: TextAlign.center, style: tt.headlineSmall),
                   if (message.isNotEmpty) ...[

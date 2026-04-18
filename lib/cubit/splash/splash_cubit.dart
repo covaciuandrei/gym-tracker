@@ -24,7 +24,7 @@ part 'splash_states.dart';
 ///   * Enforce a minimum on-screen duration so the intro animation always
 ///     completes, regardless of how fast the remote config resolves.
 ///   * Populate [AppVersionStatus] on the ok path so [MainShellPage] can
-///     render the soft-update banner.
+///     decide whether to present the big-update bottom sheet.
 ///   * Pick the post-splash destination (maintenance / force-update /
 ///     no-connection / onboarding / main-shell / login) and emit it as a
 ///     terminal navigation state.

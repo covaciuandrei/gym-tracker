@@ -17,6 +17,7 @@ import 'package:injectable/injectable.dart' as _i526;
 import '../cubit/app_version/app_version_cubit.dart' as _i176;
 import '../cubit/auth/auth_cubit.dart' as _i548;
 import '../cubit/calendar/calendar_cubit.dart' as _i1060;
+import '../cubit/checking_update/checking_update_cubit.dart' as _i772;
 import '../cubit/health/health_cubit.dart' as _i829;
 import '../cubit/settings/settings_cubit.dart' as _i411;
 import '../cubit/splash/splash_cubit.dart' as _i963;
@@ -39,6 +40,7 @@ import '../service/account/account_cleanup_service.dart' as _i502;
 import '../service/app_config/app_config_service.dart' as _i952;
 import '../service/attendance/attendance_service.dart' as _i483;
 import '../service/auth/auth_service.dart' as _i637;
+import '../service/checking_update/checking_update_service.dart' as _i975;
 import '../service/health/health_service.dart' as _i17;
 import '../service/user/user_service.dart' as _i729;
 import '../service/workout/workout_service.dart' as _i425;
@@ -88,6 +90,9 @@ _i174.GetIt $initGetIt(
     () =>
         _i905.UserSource(gh<_i974.FirebaseFirestore>(), gh<_i455.UserMapper>()),
   );
+  gh.factory<_i975.CheckingUpdateService>(
+    () => _i975.CheckingUpdateService(gh<_i477.AppVersionStatus>()),
+  );
   gh.factory<_i892.AppConfigSource>(
     () => _i892.AppConfigSource(
       gh<_i974.FirebaseFirestore>(),
@@ -117,6 +122,9 @@ _i174.GetIt $initGetIt(
   );
   gh.factory<_i176.AppVersionCubit>(
     () => _i176.AppVersionCubit(gh<_i952.AppConfigService>()),
+  );
+  gh.factory<_i772.CheckingUpdateCubit>(
+    () => _i772.CheckingUpdateCubit(gh<_i975.CheckingUpdateService>()),
   );
   gh.factory<_i425.WorkoutService>(
     () => _i425.WorkoutService(gh<_i96.TrainingTypeSource>()),

@@ -28,17 +28,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
-import 'package:gym_tracker/core/app_version_status.dart';
-import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
+import 'package:gym_tracker/cubit/checking_update/checking_update_cubit.dart';
 import 'package:gym_tracker/presentation/pages/main_shell/main_shell_page.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
 class MockAuthCubit extends Mock implements AuthCubit {}
+
+class MockCheckingUpdateCubit extends Mock implements CheckingUpdateCubit {}
 
 class MockStackRouter extends Mock implements StackRouter {}
 
@@ -47,25 +47,32 @@ class MockStackRouter extends Mock implements StackRouter {}
 /// Wraps [MainShellPage] in the minimum scaffolding needed for tests:
 ///   • [StackRouterScope] so that [ctx.router] resolves to [mockRouter].
 ///   • [MaterialApp] for theme / l10n delegates.
-///   • [BlocProvider.value] for the injected cubit.
+///   • [BlocProvider.value] for the injected cubits.
 ///
 /// NOTE: [AutoTabsScaffold] additionally requires a [RouterScope] and cannot
 /// render tab pages without a full [RootStackRouter]. The tests below consume
 /// the resulting [FlutterError] via [WidgetTester.takeException].
-Widget _buildApp(AuthCubit cubit, {StackRouter? router}) {
+Widget _buildApp(AuthCubit authCubit, {StackRouter? router, CheckingUpdateCubit? checkingUpdateCubit}) {
   final effectiveRouter = router ?? MockStackRouter();
+  final effectiveCheckingUpdate = checkingUpdateCubit ?? _idleCheckingUpdateCubit();
   return StackRouterScope(
     controller: effectiveRouter,
     stateHash: 0,
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: BlocProvider<AuthCubit>.value(value: cubit, child: const MainShellPage()),
+      home: MultiBlocProvider(
+        providers: [
+          BlocProvider<AuthCubit>.value(value: authCubit),
+          BlocProvider<CheckingUpdateCubit>.value(value: effectiveCheckingUpdate),
+        ],
+        child: const MainShellPage(),
+      ),
     ),
   );
 }
 
-/// Idle cubit: holds [InitialState] and emits nothing.
+/// Idle [AuthCubit]: holds [InitialState] and emits nothing.
 MockAuthCubit _idleCubit() {
   final cubit = MockAuthCubit();
   when(() => cubit.state).thenReturn(const InitialState());
@@ -74,7 +81,17 @@ MockAuthCubit _idleCubit() {
   return cubit;
 }
 
-/// Cubit backed by a [StreamController] so tests can push states on demand.
+/// Idle [CheckingUpdateCubit]: never emits a show-sheet state so the test
+/// path stays focused on auth behavior.
+MockCheckingUpdateCubit _idleCheckingUpdateCubit() {
+  final cubit = MockCheckingUpdateCubit();
+  when(() => cubit.state).thenReturn(const InitialState());
+  when(() => cubit.stream).thenAnswer((_) => const Stream.empty());
+  when(() => cubit.evaluate()).thenAnswer((_) async {});
+  return cubit;
+}
+
+/// [AuthCubit] backed by a [StreamController] so tests can push states on demand.
 MockAuthCubit _streamCubit(Stream<BaseState> stream) {
   final cubit = MockAuthCubit();
   when(() => cubit.state).thenReturn(const InitialState());
@@ -91,22 +108,6 @@ void main() {
     registerFallbackValue(const LoginRoute());
   });
 
-  setUp(() {
-    // MainShellPage reads AppVersionStatus from getIt in initState to decide
-    // whether to render the soft-update banner. Register a default (empty)
-    // status so the banner branch stays inactive during these tests.
-    if (!getIt.isRegistered<AppVersionStatus>()) {
-      getIt.registerLazySingleton<AppVersionStatus>(AppVersionStatus.new);
-    }
-    // MainShellPage calls SharedPreferences.getInstance() to read the dismissal
-    // flag. Provide empty mock values so the async path completes cleanly.
-    SharedPreferences.setMockInitialValues(<String, Object>{});
-  });
-
-  tearDown(() async {
-    await getIt.reset();
-  });
-
   // ── initState ─────────────────────────────────────────────────────────────
 
   group('MainShellPage — init', () {
@@ -120,6 +121,18 @@ void main() {
       tester.takeException();
 
       verify(() => cubit.watchAuthState()).called(1);
+    });
+
+    testWidgets('calls CheckingUpdateCubit.evaluate() on the first post-frame', (tester) async {
+      final auth = _idleCubit();
+      final checkingUpdate = _idleCheckingUpdateCubit();
+
+      await tester.pumpWidget(_buildApp(auth, checkingUpdateCubit: checkingUpdate));
+      tester.takeException();
+      // Post-frame callback runs on the next pump.
+      await tester.pump();
+
+      verify(() => checkingUpdate.evaluate()).called(1);
     });
   });
 

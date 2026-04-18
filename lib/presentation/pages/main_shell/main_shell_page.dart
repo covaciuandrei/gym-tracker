@@ -3,13 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
-import 'package:gym_tracker/core/app_version_status.dart';
 import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
+import 'package:gym_tracker/cubit/checking_update/checking_update_cubit.dart';
 import 'package:gym_tracker/presentation/controls/big_update_bottom_sheet.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 @RoutePage()
 class MainShellPage extends StatefulWidget implements AutoRouteWrapper {
@@ -20,104 +18,65 @@ class MainShellPage extends StatefulWidget implements AutoRouteWrapper {
 
   @override
   Widget wrappedRoute(BuildContext context) {
-    return BlocProvider<AuthCubit>(create: (_) => getIt<AuthCubit>(), child: this);
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthCubit>(create: (_) => getIt<AuthCubit>()),
+        BlocProvider<CheckingUpdateCubit>(create: (_) => getIt<CheckingUpdateCubit>()),
+      ],
+      child: this,
+    );
   }
 }
 
 class _MainShellPageState extends State<MainShellPage> {
-  /// SharedPreferences key holding the [AppVersionStatus.latestVersion] for
-  /// which the user last tapped "Remind me later". Paired with
-  /// [_dismissedAtPrefsKey] to enforce a 3-day cool-down before re-showing
-  /// the bottom sheet for the same version.
-  static const String _dismissedVersionPrefsKey = 'big_update_dismissed_version';
-
-  /// SharedPreferences key storing the UTC epoch millis at which the user
-  /// last dismissed the big-update bottom sheet for [_dismissedVersionPrefsKey].
-  static const String _dismissedAtPrefsKey = 'big_update_dismissed_at_ms';
-
-  /// How long a per-version "Remind me later" dismissal is honored before the
-  /// bottom sheet becomes eligible to re-appear.
-  static const Duration _dismissalCoolDown = Duration(days: 3);
-
-  /// Delay before presenting the big-update bottom sheet after the shell has
-  /// mounted. Gives the home tab a moment to paint so the sheet slides in on
-  /// top of a settled UI instead of competing with first-frame layout.
-  static const Duration _bottomSheetPresentationDelay = Duration(seconds: 5);
-
-  bool _bottomSheetShown = false;
-
   @override
   void initState() {
     super.initState();
     context.read<AuthCubit>().watchAuthState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowBigUpdateSheet());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<CheckingUpdateCubit>().evaluate();
+    });
   }
 
-  /// Decides whether to show the big-update bottom sheet on first main-shell
-  /// open. Skips when:
-  ///   * no big jump was detected by the splash cubit,
-  ///   * `latestVersion` is empty (should not happen in ok state),
-  ///   * the sheet was already shown this frame, or
-  ///   * the user dismissed the same version within [_dismissalCoolDown].
-  Future<void> _maybeShowBigUpdateSheet() async {
-    if (_bottomSheetShown) return;
-    final status = getIt<AppVersionStatus>();
-    if (!status.bigUpdateAvailable || status.latestVersion.isEmpty) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    final dismissedVersion = prefs.getString(_dismissedVersionPrefsKey);
-    final dismissedAtMs = prefs.getInt(_dismissedAtPrefsKey);
-    if (dismissedVersion == status.latestVersion && dismissedAtMs != null) {
-      final dismissedAt = DateTime.fromMillisecondsSinceEpoch(dismissedAtMs);
-      if (DateTime.now().difference(dismissedAt) < _dismissalCoolDown) return;
-    }
-
-    await Future<void>.delayed(_bottomSheetPresentationDelay);
-    if (!mounted) return;
-    _bottomSheetShown = true;
-
-    await showModalBottomSheet<void>(
+  void _onCheckingUpdateState(BuildContext context, BaseState state) {
+    if (state is! CheckingUpdateShowSheetState) return;
+    final cubit = context.read<CheckingUpdateCubit>();
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
       builder: (sheetCtx) => BigUpdateBottomSheet(
-        latestVersion: status.latestVersion,
+        latestVersion: state.latestVersion,
         onUpdate: () {
           Navigator.of(sheetCtx).pop();
-          _launchStoreUrl();
+          cubit.updateNow();
         },
         onLater: () {
           Navigator.of(sheetCtx).pop();
-          _persistDismissal();
+          cubit.remindLater();
         },
       ),
     );
-  }
-
-  Future<void> _persistDismissal() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_dismissedVersionPrefsKey, getIt<AppVersionStatus>().latestVersion);
-    await prefs.setInt(_dismissedAtPrefsKey, DateTime.now().millisecondsSinceEpoch);
-  }
-
-  Future<void> _launchStoreUrl() async {
-    final url = getIt<AppVersionStatus>().storeUrl;
-    final uri = Uri.tryParse(url);
-    if (uri == null) return;
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return BlocListener<AuthCubit, BaseState>(
-      listenWhen: (_, curr) => curr is AuthSignOutSuccessState || curr is AuthUnauthenticatedState,
-      listener: (ctx, _) {
-        ctx.router.replace(const LoginRoute());
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<AuthCubit, BaseState>(
+          listenWhen: (_, curr) => curr is AuthSignOutSuccessState || curr is AuthUnauthenticatedState,
+          listener: (ctx, _) {
+            ctx.router.replace(const LoginRoute());
+          },
+        ),
+        BlocListener<CheckingUpdateCubit, BaseState>(
+          listenWhen: (_, curr) => curr is CheckingUpdateShowSheetState,
+          listener: _onCheckingUpdateState,
+        ),
+      ],
       child: AutoTabsScaffold(
         routes: [CalendarRoute(), StatsRoute(), HealthRoute(), ProfileRoute()],
         bottomNavigationBuilder: (_, tabsRouter) {

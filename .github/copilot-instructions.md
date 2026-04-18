@@ -93,32 +93,33 @@ decoration: BoxDecoration(
 
 ## 5. Controls Inventory
 
-| File                               | What it is                                                                                                                                                                                                                                              |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `gradient_button.dart`             | Full-width indigo-gradient button; shows spinner when `isLoading: true`. **Use for every primary submit action.**                                                                                                              |
-| `primary_button.dart`              | Material `ElevatedButton` wrapper; use only for secondary/outline actions that don't need gradient.                                                                                                                                                     |
-| `primary_fab.dart`                 | Standard reusable FloatingActionButton wrapper for add/create actions across tabs/pages.                                                                                                                                                                |
-| `custom_text_field.dart`           | Styled `TextFormField`; handles password-visibility toggle internally. Use for all form inputs.                                                                                                                                                         |
-| `search_input.dart`                | Reusable search field with search icon and clear action; use for searchable list/catalog pages.                                                                                                                                                         |
-| `error_banner.dart`                | Inline red pill for form-level server errors. Use below form fields, above the submit button.                                                                                                                                                           |
-| `error_state.dart`                 | Full-section error (emoji + title + retry). Use for page-level load failures.                                                                                                                                                                           |
-| `empty_state.dart`                 | No-data placeholder (emoji + title + optional CTA). Use when a list/section has zero items.                                                                                                                                                             |
-| `confirmation_dialog.dart`         | Generic yes/no destructive confirmation dialog with customizable labels and confirm color.                                                                                                                                                              |
-| `action_bottom_sheet.dart`         | Reusable draggable modal-sheet scaffold (handle, title, body, footer). Use for create/edit forms and action sheets.                                                                                                                                     |
-| `password_strength_indicator.dart` | Animated strength bar + 4 requirement bullets. Add below every new-password field. Uses `ListenableBuilder` — no setState.                                                                                                                              |
-| `password_match_indicator.dart`    | Green/red match label below confirm-password field. Uses `ListenableBuilder.merge` — no setState.                                                                                                                                                       |
-| `form_card.dart`                   | Styled card container for auth forms (shadow, rounded corners, `surfaceContainerHigh` bg). Takes `formKey` + `children`; wraps them in `AutofillGroup > Form > Column`. **Use as the base for every form panel instead of duplicating the decoration.** |
-| `success_card.dart`                | Green-tinted confirmation card. Takes `title`, `message`, `buttonLabel`, `onAction`, optional `icon` (default `✅`). **Use after any successful async action (sign-up, password reset, etc.).**                                                         |
-| `surface_section_card.dart`        | Generic elevated surface card for settings/section blocks with shared styling and rounded corners.                                                                                                                                                      |
-| `main_list_item.dart`              | Reusable list item card (title + optional leading/trailing + tap) for simple entity rows.                                                                                                                                                               |
-| `summary_action_card.dart`         | Reusable entity summary card (subtitle/title/description + optional action row + optional onTap). Use for catalog and summary lists.                                                                                                                    |
-| `labeled_value_tile.dart`          | Reusable list tile for static key-value rows (for example app version/about rows).                                                                                                                                                                      |
-| `option_toggle.dart`               | Generic segmented option toggle using chips/buttons for language/view-mode filters.                                                                                                                                                                     |
-| `auth_footer_link.dart`            | Divider + centred "prompt + action-link" row. Used at the bottom of every auth screen to switch between pages. Takes `prompt`, `actionLabel`, `onTap`, optional `enabled` (pass `!isLoading` to disable during requests).                               |
-| `emoji_text.dart`                  | Shared wrapper for rendering emoji symbols consistently across cards, labels, and icon-like UI elements.                                                                                                                                                |
-| `gym_app_bar.dart`                 | Standard app bar wrapper used across feature pages for consistent title/back/action behavior.                                                                                                                                                           |
-| `gym_tab_bar.dart`                 | Shared tab-strip control used by pages with segmented content (calendar, stats, health).                                                                                                                                                                |
-| `set_password_card.dart`           | Reusable password form card (current/new/confirm variants) used in auth action and change-password flows.                                                                                                                                               |
+| File                               | What it is                                                                                                                                                                                                                                                                                                                             |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `gradient_button.dart`             | Full-width indigo-gradient button; shows spinner when `isLoading: true`. **Use for every primary submit action.**                                                                                                                                                                                                                      |
+| `primary_button.dart`              | Material `ElevatedButton` wrapper; use only for secondary/outline actions that don't need gradient.                                                                                                                                                                                                                                    |
+| `primary_fab.dart`                 | Standard reusable FloatingActionButton wrapper for add/create actions across tabs/pages.                                                                                                                                                                                                                                               |
+| `custom_text_field.dart`           | Styled `TextFormField`; handles password-visibility toggle internally. Use for all form inputs.                                                                                                                                                                                                                                        |
+| `search_input.dart`                | Reusable search field with search icon and clear action; use for searchable list/catalog pages.                                                                                                                                                                                                                                        |
+| `error_banner.dart`                | Inline red pill for form-level server errors. Use below form fields, above the submit button.                                                                                                                                                                                                                                          |
+| `error_state.dart`                 | Full-section error (emoji + title + retry). Use for page-level load failures.                                                                                                                                                                                                                                                          |
+| `empty_state.dart`                 | No-data placeholder (emoji + title + optional CTA). Use when a list/section has zero items.                                                                                                                                                                                                                                            |
+| `confirmation_dialog.dart`         | Generic yes/no destructive confirmation dialog with customizable labels and confirm color.                                                                                                                                                                                                                                             |
+| `action_bottom_sheet.dart`         | Reusable draggable modal-sheet scaffold (handle, title, body, footer). Use for create/edit forms and action sheets.                                                                                                                                                                                                                    |
+| `password_strength_indicator.dart` | Animated strength bar + 4 requirement bullets. Add below every new-password field. Uses `ListenableBuilder` — no setState.                                                                                                                                                                                                             |
+| `password_match_indicator.dart`    | Green/red match label below confirm-password field. Uses `ListenableBuilder.merge` — no setState.                                                                                                                                                                                                                                      |
+| `form_card.dart`                   | Styled card container for auth forms (shadow, rounded corners, `surfaceContainerHigh` bg). Takes `formKey` + `children`; wraps them in `AutofillGroup > Form > Column`. **Use as the base for every form panel instead of duplicating the decoration.**                                                                                |
+| `success_card.dart`                | Green-tinted confirmation card. Takes `title`, `message`, `buttonLabel`, `onAction`, optional `icon` (default `✅`). **Use after any successful async action (sign-up, password reset, etc.).**                                                                                                                                        |
+| `surface_section_card.dart`        | Generic elevated surface card for settings/section blocks with shared styling and rounded corners.                                                                                                                                                                                                                                     |
+| `main_list_item.dart`              | Reusable list item card (title + optional leading/trailing + tap) for simple entity rows.                                                                                                                                                                                                                                              |
+| `summary_action_card.dart`         | Reusable entity summary card (subtitle/title/description + optional action row + optional onTap). Use for catalog and summary lists.                                                                                                                                                                                                   |
+| `labeled_value_tile.dart`          | Reusable list tile for static key-value rows (for example app version/about rows).                                                                                                                                                                                                                                                     |
+| `option_toggle.dart`               | Generic segmented option toggle using chips/buttons for language/view-mode filters.                                                                                                                                                                                                                                                    |
+| `auth_footer_link.dart`            | Divider + centred "prompt + action-link" row. Used at the bottom of every auth screen to switch between pages. Takes `prompt`, `actionLabel`, `onTap`, optional `enabled` (pass `!isLoading` to disable during requests).                                                                                                              |
+| `emoji_text.dart`                  | Shared wrapper for rendering emoji symbols consistently across cards, labels, and icon-like UI elements.                                                                                                                                                                                                                               |
+| `gym_app_bar.dart`                 | Standard app bar wrapper used across feature pages for consistent title/back/action behavior.                                                                                                                                                                                                                                          |
+| `gym_tab_bar.dart`                 | Shared tab-strip control used by pages with segmented content (calendar, stats, health).                                                                                                                                                                                                                                               |
+| `set_password_card.dart`           | Reusable password form card (current/new/confirm variants) used in auth action and change-password flows.                                                                                                                                                                                                                              |
+| `big_update_bottom_sheet.dart`     | Modal bottom-sheet content announcing a "big" version bump (major jump or minor ≥2). Presented from `MainShellPage` when `CheckingUpdateCubit` emits `CheckingUpdateShowSheetState`. Exposes `latestVersion`, `onUpdate`, `onLater` callbacks; the caller pops the sheet and delegates to cubit actions (`updateNow` / `remindLater`). |
 
 ---
 
@@ -138,6 +139,8 @@ decoration: BoxDecoration(
 | Firestore sources + DTOs | `lib/data/remote/<feature>/`                                 |
 | Mappers                  | `lib/data/mappers/`                                          |
 | Screen prep docs         | `docs/screens/<page_name>.md`                                |
+| App version status cache | `lib/core/app_version_status.dart`                           |
+| App version gate docs    | `docs/app_version_gate/`                                     |
 
 ---
 
@@ -160,24 +163,26 @@ decoration: BoxDecoration(
 /workout-types  [auth]    → WorkoutTypesPage   (lib/presentation/pages/workout_types/workout_types_page.dart)
 /settings       [auth]    → SettingsPage       (lib/presentation/pages/settings/settings_page.dart)
 /change-password[auth]    → ChangePasswordPage (lib/presentation/pages/change_password/change_password_page.dart)
+/maintenance    [guest]   → MaintenancePage    (lib/presentation/pages/maintenance/maintenance_page.dart)
+/force-update   [guest]   → ForceUpdatePage    (lib/presentation/pages/force_update/force_update_page.dart)
+/no-connection  [guest]   → NoConnectionPage   (lib/presentation/pages/no_connection/no_connection_page.dart)
 ```
 
 **Auth gating in current implementation:**
 
 - No `auto_route` guard classes are registered.
-- `SplashPage` redirects to `MainShellRoute` or `LoginRoute` based on `FirebaseAuth.currentUser`.
+- `SplashPage` runs the `SplashCubit` version gate **before** evaluating auth; it then `replaceAll`s with one of the terminal routes: `MaintenanceRoute`, `ForceUpdateRoute`, `NoConnectionRoute`, `OnboardingRoute`, `MainShellRoute`, or `LoginRoute`.
 - Feature pages also self-check auth and redirect to `LoginRoute` when user is missing.
 
 ### 7.2 Feature Inventory
 
 #### AUTH FEATURE
 
-| Component                   | Actions / State                                                                                                                                                                                                                                                                                                                                                                                                       |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **LoginComponent**          | `email`, `password` fields; `isLoading`, `errorMessage`; `onSubmit()` → `authService.signIn()` → navigate `MainShell` (`/app/calendar` tab); link to `/register`, `/forgot-password`                                                                                                                                                                                                                                  |
-| **RegisterComponent**       | `email`, `password`, `confirmPassword`; validates: email format, password ≥8 chars + uppercase + lowercase + number, passwords match; `onSubmit()` → `authService.signUp()` → shows "verify email" success state; link to `/login`                                                                                                                                                                                    |
-| **ForgotPasswordComponent** | `email` field; `isLoading`, `errorMessage`, `successMessage`; `onSubmit()` → `authService.resetPassword(email)` → success message; email validation; link back to `/login`                                                                                                                                                                                                                                            |
-
+| Component                   | Actions / State                                                                                                                                                                                                                    |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **LoginComponent**          | `email`, `password` fields; `isLoading`, `errorMessage`; `onSubmit()` → `authService.signIn()` → navigate `MainShell` (`/app/calendar` tab); link to `/register`, `/forgot-password`                                               |
+| **RegisterComponent**       | `email`, `password`, `confirmPassword`; validates: email format, password ≥8 chars + uppercase + lowercase + number, passwords match; `onSubmit()` → `authService.signUp()` → shows "verify email" success state; link to `/login` |
+| **ForgotPasswordComponent** | `email` field; `isLoading`, `errorMessage`, `successMessage`; `onSubmit()` → `authService.resetPassword(email)` → success message; email validation; link back to `/login`                                                         |
 
 #### CALENDAR FEATURE
 
@@ -250,13 +255,28 @@ All stats tabs share:
 
 #### SETTINGS FEATURE
 
-| Aspect                 | Detail                                                                                                                                           |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Appearance section** | Dark/light theme toggle → `themeService.toggleTheme()`                                                                                           |
-| **Language section**   | Language picker (EN / RO) → `languageService.setLanguage(lang)`                                                                                  |
+| Aspect                 | Detail                                                                                              |
+| ---------------------- | --------------------------------------------------------------------------------------------------- |
+| **Appearance section** | Dark/light theme toggle → `themeService.toggleTheme()`                                              |
+| **Language section**   | Language picker (EN / RO) → `languageService.setLanguage(lang)`                                     |
 | **Account section**    | "Change password" navigates to dedicated `ChangePasswordPage`; form uses reusable `SetPasswordCard` |
-| **App version**        | Loaded dynamically via `package_info_plus` in `SettingsCubit.init()`                                                                             |
-| **Navigation**         | Back arrow → previous page                                                                                                                       |
+| **App version**        | Loaded dynamically via `package_info_plus` in `SettingsCubit.init()`                                |
+| **Navigation**         | Back arrow → previous page                                                                          |
+
+#### APP VERSION GATE FEATURE
+
+| Component                 | Actions / State                                                                                                                                                                                                                                   |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **SplashCubit**           | Reads current version via `PackageInfo`, fetches `appConfig/version`, classifies result, waits for min-splash duration (2.8s), populates `AppVersionStatus` on the ok path, and emits a terminal navigation state.                                |
+| **States**                | `SplashNavigateMaintenanceState`, `SplashNavigateForceUpdateState`, `SplashNavigateNoConnectionState`, `SplashNavigateOnboardingState`, `SplashNavigateMainShellState`, `SplashNavigateLoginState`.                                               |
+| **MaintenancePage**       | Blocker; shows maintenance illustration from `lib/assets/images/maintenance.png` plus localized message from `appConfig.maintenanceMessages[lang]` with `en` fallback. "Try again" button `replaceAll`s back to `SplashRoute` to re-run the gate. |
+| **ForceUpdatePage**       | Blocker; shows current vs required version; "Update now" opens `storeUrl` (already resolved per-platform by the cubit).                                                                                                                           |
+| **NoConnectionPage**      | Shown when the config fetch throws. "Try again" button `replaceAll`s back to `SplashRoute`.                                                                                                                                                       |
+| **CheckingUpdateCubit**   | Main-shell cubit that runs `evaluate()` after shell mount, applies a 2-second presentation delay, emits `CheckingUpdateShowSheetState` when eligible, and handles `updateNow()` / `remindLater()` actions from the sheet.                         |
+| **CheckingUpdateService** | Service used by `CheckingUpdateCubit`; checks `AppVersionStatus` + 3-day per-version cool-down in `SharedPreferences`, and opens store URLs with `url_launcher`.                                                                                  |
+| **BigUpdateBottomSheet**  | Presented by `MainShellPage` when `CheckingUpdateShowSheetState` is emitted. Displays `latestVersion` and delegates CTA taps back to the cubit callbacks.                                                                                         |
+| **Version classifier**    | `VersionComparator.isBigJump(from, to)` — true iff major increased OR minor diff ≥ 2. Single-step minor / patch bumps are silent.                                                                                                                 |
+| **Dismissal cool-down**   | `SharedPreferences` keys `big_update_dismissed_version` + `big_update_dismissed_at_ms`. Sheet re-appears when `latestVersion` changes OR 3 days have elapsed.                                                                                     |
 
 ### 7.3 Firestore Data Model
 
@@ -286,26 +306,41 @@ firestore/
 │
 └── ingredients/{stdId}
     └── { name, aliases?, category, defaultUnit, safeUpperLimit?, rda? }
+
+appConfig/
+└── version                     ← public-read singleton, fetched on every cold-launch
+    ├── minRequiredVersion      String   ← below this = force update
+    ├── latestVersion           String   ← used by BigUpdateBottomSheet when diff is "big"
+    ├── maintenanceMode         Bool
+    ├── maintenanceMessages     Map<String,String>  ← { en, ro } with 'en' fallback
+    ├── androidStoreUrl         String
+    ├── iosStoreUrl             String
+    └── updatedAt               Timestamp?
 ```
 
 **Key Firestore patterns:**
+
 - All `UserSource` writes use `SetOptions(merge: true)` — safe for concurrent updates, preserves subcollections and existing fields.
 - `lastVerificationEmailSentAt` uses `Timestamp.now()` (device time) — avoids server/device clock skew in cooldown computation.
 - `lastVerificationEmailSentAt` is cleared on successful login via `_initializeProfileOnFirstLogin()`.
+- Reads on `appConfig/version` are **public** (anyone, including signed-out users) and happen on every cold-launch before any auth flow. Writes are blocked — only the Firebase Console can update it.
 
 ### 7.4 Service / Source Map
 
-| Domain                | Service                                          | Source                                                  |
-| --------------------- | ------------------------------------------------ | ------------------------------------------------------- |
-| Auth                  | `lib/service/auth/auth_service.dart`             | — (Firebase Auth SDK directly)                          |
-| Auth (cubit)          | `lib/cubit/auth/auth_cubit.dart`                 |                               |
-| User profile          | `lib/service/user/user_service.dart`             | `lib/data/remote/user/user_source.dart`                 |
-| Attendance            | `lib/service/attendance/attendance_service.dart`  | `lib/data/remote/attendance/attendance_day_source.dart`  |
-| Workout types         | `lib/service/workout/workout_service.dart`        | `lib/data/remote/training_type/training_type_source.dart`|
-| Health / Supplements  | `lib/service/health/health_service.dart`          | `lib/data/remote/supplement/health_source.dart`         |
-| Stats                 | `StatsCubit` composes attendance/workout/health services | —                                                |
-| Theme                 | `lib/assets/theme/theme_helper.dart`              | —                                                       |
-| Language              | `lib/presentation/helpers/locale_helper.dart`     | —                                                       |
+| Domain                 | Service                                                                   | Source                                                                  |
+| ---------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Auth                   | `lib/service/auth/auth_service.dart`                                      | — (Firebase Auth SDK directly)                                          |
+| Auth (cubit)           | `lib/cubit/auth/auth_cubit.dart`                                          |                                                                         |
+| User profile           | `lib/service/user/user_service.dart`                                      | `lib/data/remote/user/user_source.dart`                                 |
+| Attendance             | `lib/service/attendance/attendance_service.dart`                          | `lib/data/remote/attendance/attendance_day_source.dart`                 |
+| Workout types          | `lib/service/workout/workout_service.dart`                                | `lib/data/remote/training_type/training_type_source.dart`               |
+| Health / Supplements   | `lib/service/health/health_service.dart`                                  | `lib/data/remote/supplement/health_source.dart`                         |
+| Stats                  | `StatsCubit` composes attendance/workout/health services                  | —                                                                       |
+| App config             | `lib/service/app_config/app_config_service.dart`                          | `lib/data/remote/app_config/app_config_source.dart`                     |
+| App version gate       | `lib/cubit/splash/splash_cubit.dart` + `lib/core/app_version_status.dart` | — (reads `AppConfigService`)                                            |
+| Checking update prompt | `lib/service/checking_update/checking_update_service.dart`                | — (uses `SharedPreferences` + `url_launcher`, reads `AppVersionStatus`) |
+| Theme                  | `lib/assets/theme/theme_helper.dart`                                      | —                                                                       |
+| Language               | `lib/presentation/helpers/locale_helper.dart`                             | —                                                                       |
 
 ---
 
@@ -315,9 +350,22 @@ firestore/
 App Start
     │
     ▼
-SplashPage (2s delay)
+SplashPage (SplashCubit: min 2.8s animation + appConfig/version fetch)
     │
-    ├─── FirebaseAuth.currentUser == null ──────────► LoginPage
+    ├── maintenanceMode == true ─────────────────────► MaintenancePage   (replaceAll)
+    │                                                      └── [Try again] → SplashRoute (re-runs gate)
+    │
+    ├── current < minRequiredVersion ────────────────► ForceUpdatePage   (replaceAll)
+    │                                                      └── [Update now] → launchUrl(storeUrl)
+    │
+    ├── config fetch threw ──────────────────────────► NoConnectionPage  (replaceAll)
+    │                                                      └── [Try again] → SplashRoute
+    │
+    └── OK path (optionally bigUpdateAvailable)
+          │
+          ├── OnboardingHelper.isFirstLaunch ────────► OnboardingPage
+          │
+          ├── FirebaseAuth.currentUser == null ──────► LoginPage
     │                                                      │
     │                                                      ├── [submit] signIn()
     │                                                      │       ├── success + verified ──► MainShell
@@ -336,7 +384,13 @@ SplashPage (2s delay)
     │                                                              │       └── error ────────► ErrorBanner (inline)
     │                                                              └── [tap "Back to login"] LoginPage
     │
-    └─── FirebaseAuth.currentUser != null ─────────► MainShell (bottom nav)
+          └── FirebaseAuth.currentUser != null ────────► MainShell (bottom nav)
+                                                         │
+                                                         ├── post-frame → CheckingUpdateCubit.evaluate()
+                                                         │     (2s delay + eligibility checks in CheckingUpdateService)
+                                                         │        └── emits ShowSheet → BigUpdateBottomSheet
+                                                         │              ├── [Update now] → CheckingUpdateCubit.updateNow() → launchUrl(storeUrl)
+                                                         │              └── [Remind me later] → CheckingUpdateCubit.remindLater() → persist 3-day snooze
                                                          │
                               ┌──────────────────────────┼──────────────────────────┐
                               ▼                          ▼                          ▼ (+ more tabs)
@@ -374,6 +428,11 @@ Firebase email links (out-of-app):
 ```
 
 ### 8.1 Authentication State Machine
+
+> On cold-launch, the `SplashCubit` version gate runs **before** any auth state
+> is evaluated. Maintenance / force-update / no-connection states short-circuit
+> the auth flow entirely — the user never reaches `UNAUTHENTICATED` or
+> `AUTHENTICATED` in those cases.
 
 ```
 State: UNAUTHENTICATED
@@ -709,7 +768,6 @@ When building or updating a page's UI, **always** follow this sequence:
 
 ---
 
-
 Every AI session must start with these files loaded, regardless of feature:
 
 - `.github/copilot-instructions.md` — architecture map, design tokens, controls inventory, rules
@@ -723,14 +781,14 @@ Every AI session must start with these files loaded, regardless of feature:
 
 For any task, load **only** the relevant vertical slice on top of the foundations:
 
-| Feature | Slice to load | ~Tokens |
-|---|---|---|
-| Auth | auth pages + auth cubit/states + auth service | ~25k |
-| Calendar | calendar page + calendar cubit + attendance service/data + mappers | ~50k |
-| Stats | stats page + stats cubit + relevant services | ~40k |
-| Health | health page + health cubit + health service/data + supplement models | ~35k |
-| Workout Types | workout_types page + workout cubit + workout service/data | ~20k |
-| Profile/Settings | profile + settings pages + settings cubit | ~15k |
+| Feature          | Slice to load                                                        | ~Tokens |
+| ---------------- | -------------------------------------------------------------------- | ------- |
+| Auth             | auth pages + auth cubit/states + auth service                        | ~25k    |
+| Calendar         | calendar page + calendar cubit + attendance service/data + mappers   | ~50k    |
+| Stats            | stats page + stats cubit + relevant services                         | ~40k    |
+| Health           | health page + health cubit + health service/data + supplement models | ~35k    |
+| Workout Types    | workout_types page + workout cubit + workout service/data            | ~20k    |
+| Profile/Settings | profile + settings pages + settings cubit                            | ~15k    |
 
 This approach works within any 200k context window, leaving room for conversation and output.
 
@@ -741,7 +799,6 @@ The entire Flutter project (lib + test + docs + config, no generated files) fits
 - Cross-cutting refactors that touch 3+ features
 - Architecture changes (DI, routing, base classes)
 - Full audit / review tasks
-
 
 ### Never load
 
@@ -755,6 +812,5 @@ The entire Flutter project (lib + test + docs + config, no generated files) fits
 - Default branch: `main`.
 - Feature branches: `feature/<phase>-<description>`.
 - Commit message style: `feat: <description>` / `chore: <description>` / `fix: <description>`.
-
 
 At every prompt, if there is something needed to be updated in copilot-instructions.md tell me to update it and wait for my confirmation before proceeding. Always ask if you are unsure about any aspect of the instructions or the project structure.

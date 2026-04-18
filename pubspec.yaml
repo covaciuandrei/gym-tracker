@@ -68,6 +68,7 @@ flutter:
 
   assets:
     - lib/assets/localization/
+    - lib/assets/images/
 
 fonts:
   - family: Raleway
