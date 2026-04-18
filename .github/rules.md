@@ -267,3 +267,21 @@ For a 200k context window this leaves ~14k for conversation — tight but workab
 - Default branch: `master`.
 - Feature branches: `feature/<phase>-<description>`.
 - Commit message style: `feat: <description>` / `chore: <description>` / `fix: <description>`.
+
+---
+
+## README Maintenance
+
+The root [`README.md`](../README.md) is the public face of the project and **must stay in sync with the actual app**. After completing any of the following, update `README.md` in the same change set (or explicitly remind the user to do so before closing the task):
+
+- **A new user-facing feature** is shipped (new screen, new flow, new major capability).
+- **A major flow changes** (auth flow, navigation tree, version gate, onboarding, etc.).
+- **The tech stack changes** — Flutter/Dart version bump, new core dependency (state mgmt, routing, backend, storage), or a removed one.
+- **Setup, run, build, or test commands change** (new env var, new code-gen step, new platform target, new Firebase config requirement).
+- **The Firestore data model changes** at the collection / top-level-field level.
+- **The project structure changes** (top-level `lib/` folders added/renamed/removed).
+- **Supported languages or platforms** change.
+
+Sections to keep accurate at minimum: Features, Tech Stack, Project Structure, Getting Started, Configuration, Running the App, Testing, Firestore Data Model.
+
+If a task touches one of the triggers above and the README was **not** updated, flag it to the user before considering the task done.

@@ -813,4 +813,6 @@ The entire Flutter project (lib + test + docs + config, no generated files) fits
 - Feature branches: `feature/<phase>-<description>`.
 - Commit message style: `feat: <description>` / `chore: <description>` / `fix: <description>`.
 
+---
+
 At every prompt, if there is something needed to be updated in copilot-instructions.md tell me to update it and wait for my confirmation before proceeding. Always ask if you are unsure about any aspect of the instructions or the project structure.
