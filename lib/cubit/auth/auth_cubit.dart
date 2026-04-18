@@ -25,11 +25,7 @@ class AuthCubit extends BaseCubit {
   void watchAuthState() {
     _authSubscription?.cancel();
     _authSubscription = _authService.currentUser$.listen(
-      (user) => safeEmit(
-        user == null
-            ? const AuthUnauthenticatedState()
-            : AuthAuthenticatedState(user: user),
-      ),
+      (user) => safeEmit(user == null ? const AuthUnauthenticatedState() : AuthAuthenticatedState(user: user)),
       onError: (_) => safeEmit(const SomethingWentWrongState()),
     );
   }
@@ -53,11 +49,12 @@ class AuthCubit extends BaseCubit {
     required String email,
     required String password,
     required String displayName,
+    required Map<String, Object?> consent,
   }) async {
     safeEmit(const PendingState());
     try {
       final user = await _authService.signUp(email: email, password: password);
-      await _createUser(user: user, displayName: displayName);
+      await _createUser(user: user, displayName: displayName, consent: consent);
       safeEmit(const AuthSignUpSuccessState());
     } on EmailAlreadyInUseException {
       safeEmit(const AuthEmailAlreadyInUseState());
@@ -88,16 +85,10 @@ class AuthCubit extends BaseCubit {
     }
   }
 
-  Future<void> changePassword({
-    required String currentPassword,
-    required String newPassword,
-  }) async {
+  Future<void> changePassword({required String currentPassword, required String newPassword}) async {
     safeEmit(const PendingState());
     try {
-      await _authService.changePassword(
-        currentPassword: currentPassword,
-        newPassword: newPassword,
-      );
+      await _authService.changePassword(currentPassword: currentPassword, newPassword: newPassword);
       safeEmit(const AuthPasswordChangedState());
     } on InvalidCredentialsException {
       safeEmit(const AuthInvalidCredentialsState());
@@ -134,12 +125,14 @@ class AuthCubit extends BaseCubit {
   Future<void> _createUser({
     required AuthUser user,
     required String displayName,
+    required Map<String, Object?> consent,
   }) async {
     try {
       await _userService.createUser(
         userId: user.uid,
         email: user.email ?? '',
         displayName: displayName,
+        consent: consent,
       );
     } catch (_) {
       // Best-effort — do not block auth flow on profile sync failure.

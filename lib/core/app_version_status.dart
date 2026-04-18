@@ -1,3 +1,6 @@
+import 'dart:collection';
+
+import 'package:gym_tracker/core/constants/legal_urls.dart';
 import 'package:injectable/injectable.dart';
 
 /// In-memory snapshot of the remote-config version gate result, captured by
@@ -27,6 +30,27 @@ class AppVersionStatus {
   /// bottom sheet's Update action.
   String storeUrl = '';
 
+  Map<String, String> _termsUrls = const <String, String>{};
+  Map<String, String> _privacyUrls = const <String, String>{};
+  String _termsVersion = '';
+  String _privacyVersion = '';
+
+  /// Localized Terms of Service URLs captured from remote config. Empty until
+  /// the splash flow populates them. Readers should go through [termsUrlFor]
+  /// which transparently falls back to hardcoded constants when empty.
+  UnmodifiableMapView<String, String> get termsUrls => UnmodifiableMapView(_termsUrls);
+
+  /// Localized Privacy Policy URLs — same semantics as [termsUrls].
+  UnmodifiableMapView<String, String> get privacyUrls => UnmodifiableMapView(_privacyUrls);
+
+  /// Revision id of the currently-published Terms of Service as set in
+  /// remote config. Persisted alongside the user's consent record so we can
+  /// tell which text was accepted. Empty until splash populates it.
+  String get termsVersion => _termsVersion;
+
+  /// Revision id of the currently-published Privacy Policy.
+  String get privacyVersion => _privacyVersion;
+
   /// Records the result of a successful version check so it can be read
   /// later by the main shell's big-update bottom sheet.
   void getAppVersionDetails({
@@ -38,4 +62,36 @@ class AppVersionStatus {
     this.latestVersion = latestVersion;
     this.storeUrl = storeUrl;
   }
+
+  /// Stores the localized legal URL maps + current legal revision ids
+  /// captured from remote config. Called once per cold launch on the ok
+  /// (non-maintenance / non-force-update) path.
+  void setLegalUrls({
+    required Map<String, String> termsUrls,
+    required Map<String, String> privacyUrls,
+    String termsVersion = '',
+    String privacyVersion = '',
+  }) {
+    _termsUrls = Map<String, String>.unmodifiable(termsUrls);
+    _privacyUrls = Map<String, String>.unmodifiable(privacyUrls);
+    _termsVersion = termsVersion;
+    _privacyVersion = privacyVersion;
+  }
+
+  /// Returns the Terms of Service URL for [languageCode], falling back to the
+  /// English entry and finally to the hardcoded constant defined in
+  /// [legalTermsUrlEn] / [legalTermsUrlRo].
+  String termsUrlFor(String languageCode) => resolveLegalUrl(
+    languageMap: _termsUrls,
+    languageCode: languageCode,
+    fallback: legalTermsFallbackUrls[languageCode] ?? legalTermsUrlEn,
+  );
+
+  /// Returns the Privacy Policy URL for [languageCode]. Same fallback
+  /// behaviour as [termsUrlFor].
+  String privacyUrlFor(String languageCode) => resolveLegalUrl(
+    languageMap: _privacyUrls,
+    languageCode: languageCode,
+    fallback: legalPrivacyFallbackUrls[languageCode] ?? legalPrivacyUrlEn,
+  );
 }

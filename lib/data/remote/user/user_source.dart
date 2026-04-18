@@ -42,12 +42,18 @@ class UserSource {
 
   /// Creates a new user profile document on sign-up.
   ///
+  /// [consent] is a free-form map describing the user's acceptance of the
+  /// legal documents (terms / privacy / age confirmation) at sign-up time.
+  /// Written verbatim under `users/{uid}.consent` so we can prove which
+  /// text was accepted and when (GDPR Art. 7(1)).
+  ///
   /// Uses `SetOptions(merge: true)` — safe for concurrent updates,
   /// preserves subcollections and existing fields.
   Future<void> create({
     required String userId,
     required String email,
     required String displayName,
+    required Map<String, Object?> consent,
   }) => _db.collection('users').doc(userId).set({
     'email': email,
     'displayName': displayName,
@@ -56,14 +62,14 @@ class UserSource {
     'createdAt': FieldValue.serverTimestamp(),
     'lastLoginAt': FieldValue.serverTimestamp(),
     'lastVerificationEmailSentAt': Timestamp.now(),
+    'consent': {...consent, 'acceptedAt': FieldValue.serverTimestamp()},
   }, SetOptions(merge: true));
 
   /// Records a returning login timestamp and clears the verification email cooldown.
   ///
   /// Uses `SetOptions(merge: true)` — does not touch any other fields.
-  Future<void> recordLogin({required String userId}) =>
-      _db.collection('users').doc(userId).set({
-        'lastLoginAt': FieldValue.serverTimestamp(),
-        'lastVerificationEmailSentAt': FieldValue.delete(),
-      }, SetOptions(merge: true));
+  Future<void> recordLogin({required String userId}) => _db.collection('users').doc(userId).set({
+    'lastLoginAt': FieldValue.serverTimestamp(),
+    'lastVerificationEmailSentAt': FieldValue.delete(),
+  }, SetOptions(merge: true));
 }

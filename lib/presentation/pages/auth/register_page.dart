@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
+import 'package:gym_tracker/core/app_version_status.dart';
 import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
@@ -11,9 +12,12 @@ import 'package:gym_tracker/presentation/controls/emoji_text.dart';
 import 'package:gym_tracker/presentation/controls/error_banner.dart';
 import 'package:gym_tracker/presentation/controls/form_card.dart';
 import 'package:gym_tracker/presentation/controls/gradient_button.dart';
+import 'package:gym_tracker/presentation/controls/labeled_checkbox.dart';
+import 'package:gym_tracker/presentation/controls/legal_consent_checkbox.dart';
 import 'package:gym_tracker/presentation/controls/password_match_indicator.dart';
 import 'package:gym_tracker/presentation/controls/password_strength_indicator.dart';
 import 'package:gym_tracker/presentation/controls/success_card.dart';
+import 'package:gym_tracker/presentation/helpers/locale_helper.dart';
 import 'package:gym_tracker/presentation/resources/emojis.dart';
 
 @RoutePage()
@@ -25,10 +29,7 @@ class RegisterPage extends StatefulWidget implements AutoRouteWrapper {
 
   @override
   Widget wrappedRoute(BuildContext context) {
-    return BlocProvider<AuthCubit>(
-      create: (_) => getIt<AuthCubit>(),
-      child: this,
-    );
+    return BlocProvider<AuthCubit>(create: (_) => getIt<AuthCubit>(), child: this);
   }
 }
 
@@ -43,22 +44,76 @@ class _RegisterPageState extends State<RegisterPage> {
   final _passwordCtrl = TextEditingController(text: 'Test1234');
   final _confirmCtrl = TextEditingController(text: 'Test1234');
 
+  final _acceptedTerms = ValueNotifier<bool>(false);
+  final _showConsentError = ValueNotifier<bool>(false);
+  final _ageConfirmed = ValueNotifier<bool>(false);
+  final _showAgeError = ValueNotifier<bool>(false);
+
+  // Attached to the consent block so we can scroll it into view when the
+  // user tries to submit without ticking it.
+  final _consentBlockKey = GlobalKey();
+
+  final LocaleHelper _localeHelper = getIt<LocaleHelper>();
+  final AppVersionStatus _versionStatus = getIt<AppVersionStatus>();
+
   @override
   void dispose() {
     _nicknameCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     _confirmCtrl.dispose();
+    _acceptedTerms.dispose();
+    _showConsentError.dispose();
+    _ageConfirmed.dispose();
+    _showAgeError.dispose();
     super.dispose();
   }
 
   void _onSubmit(BuildContext ctx) {
-    if (_formKey.currentState?.validate() != true) return;
+    final formValid = _formKey.currentState?.validate() == true;
+
+    var hasError = false;
+    if (!_ageConfirmed.value) {
+      _showAgeError.value = true;
+      hasError = true;
+    }
+    if (!_acceptedTerms.value) {
+      _showConsentError.value = true;
+      hasError = true;
+    }
+
+    if (!formValid || hasError) {
+      if (hasError) _scrollToConsent();
+      return;
+    }
+
+    _showConsentError.value = false;
+    _showAgeError.value = false;
+
+    final lang = _localeHelper.locale.languageCode;
+    final consent = <String, Object?>{
+      'termsAccepted': true,
+      'privacyAccepted': true,
+      'ageConfirmed16Plus': true,
+      'termsVersion': _versionStatus.termsVersion,
+      'privacyVersion': _versionStatus.privacyVersion,
+      'termsUrl': _versionStatus.termsUrlFor(lang),
+      'privacyUrl': _versionStatus.privacyUrlFor(lang),
+      'locale': lang,
+    };
+
     ctx.read<AuthCubit>().signUp(
       email: _emailCtrl.text.trim(),
       password: _passwordCtrl.text,
       displayName: _nicknameCtrl.text.trim(),
+      consent: consent,
     );
+  }
+
+  void _scrollToConsent() {
+    final ctx = _consentBlockKey.currentContext;
+    if (ctx == null) return;
+    Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut, alignment: 0.2);
   }
 
   @override
@@ -100,25 +155,17 @@ class _RegisterPageState extends State<RegisterPage> {
                     children: [
                       const SizedBox(height: 24),
 
-                      const EmojiText(
-                        Emojis.biceps,
-                        style: TextStyle(fontSize: 48),
-                      ),
+                      const EmojiText(Emojis.biceps, style: TextStyle(fontSize: 48)),
                       const SizedBox(height: 16),
                       Text(
                         l10n.authRegisterTitle,
-                        style: tt.headlineLarge?.copyWith(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: tt.headlineLarge?.copyWith(fontSize: 28, fontWeight: FontWeight.w700),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
                       Text(
                         l10n.authRegisterSubtitle,
-                        style: tt.bodyLarge?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
+                        style: tt.bodyLarge?.copyWith(color: cs.onSurfaceVariant),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 32),
@@ -131,8 +178,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 title: l10n.authRegisterSuccess,
                                 message: l10n.authRegisterSuccessMessage,
                                 buttonLabel: l10n.authRegisterGoToLogin,
-                                onAction: () =>
-                                    ctx.router.replace(const LoginRoute()),
+                                onAction: () => ctx.router.replace(const LoginRoute()),
                               )
                             : _RegisterCard(
                                 key: const ValueKey('form'),
@@ -141,6 +187,13 @@ class _RegisterPageState extends State<RegisterPage> {
                                 emailCtrl: _emailCtrl,
                                 passwordCtrl: _passwordCtrl,
                                 confirmCtrl: _confirmCtrl,
+                                acceptedTerms: _acceptedTerms,
+                                showConsentError: _showConsentError,
+                                ageConfirmed: _ageConfirmed,
+                                showAgeError: _showAgeError,
+                                consentBlockKey: _consentBlockKey,
+                                termsUrl: _versionStatus.termsUrlFor(_localeHelper.locale.languageCode),
+                                privacyUrl: _versionStatus.privacyUrlFor(_localeHelper.locale.languageCode),
                                 isLoading: isLoading,
                                 errorMessage: errorMessage,
                                 onSubmit: () => _onSubmit(ctx),
@@ -158,9 +211,7 @@ class _RegisterPageState extends State<RegisterPage> {
                           children: [
                             Text(
                               l10n.authRegisterHaveAccount,
-                              style: tt.bodyMedium?.copyWith(
-                                color: cs.onSurfaceVariant,
-                              ),
+                              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                             ),
                             const SizedBox(width: 4),
                             TextButton(
@@ -169,16 +220,10 @@ class _RegisterPageState extends State<RegisterPage> {
                                 minimumSize: Size.zero,
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               ),
-                              onPressed: isLoading
-                                  ? null
-                                  : () =>
-                                        ctx.router.replace(const LoginRoute()),
+                              onPressed: isLoading ? null : () => ctx.router.replace(const LoginRoute()),
                               child: Text(
                                 l10n.authRegisterSignIn,
-                                style: TextStyle(
-                                  color: cs.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: TextStyle(color: cs.primary, fontWeight: FontWeight.w600),
                               ),
                             ),
                           ], // Wrap children
@@ -205,6 +250,13 @@ class _RegisterCard extends StatelessWidget {
     required this.emailCtrl,
     required this.passwordCtrl,
     required this.confirmCtrl,
+    required this.acceptedTerms,
+    required this.showConsentError,
+    required this.ageConfirmed,
+    required this.showAgeError,
+    required this.consentBlockKey,
+    required this.termsUrl,
+    required this.privacyUrl,
     required this.isLoading,
     required this.errorMessage,
     required this.onSubmit,
@@ -215,6 +267,13 @@ class _RegisterCard extends StatelessWidget {
   final TextEditingController emailCtrl;
   final TextEditingController passwordCtrl;
   final TextEditingController confirmCtrl;
+  final ValueNotifier<bool> acceptedTerms;
+  final ValueNotifier<bool> showConsentError;
+  final ValueNotifier<bool> ageConfirmed;
+  final ValueNotifier<bool> showAgeError;
+  final GlobalKey consentBlockKey;
+  final String termsUrl;
+  final String privacyUrl;
   final bool isLoading;
   final String? errorMessage;
   final VoidCallback onSubmit;
@@ -225,11 +284,7 @@ class _RegisterCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final labelStyle = tt.bodySmall?.copyWith(
-      fontSize: 14,
-      fontWeight: FontWeight.w500,
-      color: cs.onSurface,
-    );
+    final labelStyle = tt.bodySmall?.copyWith(fontSize: 14, fontWeight: FontWeight.w500, color: cs.onSurface);
 
     return FormCard(
       formKey: formKey,
@@ -285,9 +340,7 @@ class _RegisterCard extends StatelessWidget {
           validator: (v) {
             if (v == null || v.isEmpty) return l10n.errorsFieldRequired;
             if (v.length < 8) return l10n.errorsPasswordTooShort;
-            if (!v.contains(RegExp(r'[A-Z]')) ||
-                !v.contains(RegExp(r'[a-z]')) ||
-                !v.contains(RegExp(r'[0-9]'))) {
+            if (!v.contains(RegExp(r'[A-Z]')) || !v.contains(RegExp(r'[a-z]')) || !v.contains(RegExp(r'[0-9]'))) {
               return l10n.errorsWeakPassword;
             }
             return null;
@@ -314,9 +367,37 @@ class _RegisterCard extends StatelessWidget {
             return null;
           },
         ),
-        PasswordMatchIndicator(
-          passwordCtrl: passwordCtrl,
-          confirmCtrl: confirmCtrl,
+        PasswordMatchIndicator(passwordCtrl: passwordCtrl, confirmCtrl: confirmCtrl),
+        const SizedBox(height: 20),
+
+        KeyedSubtree(
+          key: consentBlockKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListenableBuilder(
+                listenable: Listenable.merge([ageConfirmed, showAgeError]),
+                builder: (_, _) => LabeledCheckbox(
+                  value: ageConfirmed.value,
+                  enabled: !isLoading,
+                  onChanged: (v) {
+                    ageConfirmed.value = v;
+                    if (v) showAgeError.value = false;
+                  },
+                  label: Text(l10n.authAgeConfirm),
+                  errorText: showAgeError.value ? l10n.authAgeRequired : null,
+                ),
+              ),
+              const SizedBox(height: 8),
+              LegalConsentCheckbox(
+                accepted: acceptedTerms,
+                showError: showConsentError,
+                termsUrl: termsUrl,
+                privacyUrl: privacyUrl,
+                enabled: !isLoading,
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 20),
 
@@ -333,11 +414,7 @@ class _RegisterCard extends StatelessWidget {
               : const SizedBox.shrink(),
         ),
 
-        GradientButton(
-          label: l10n.authRegisterButton,
-          isLoading: isLoading,
-          onTap: onSubmit,
-        ),
+        GradientButton(label: l10n.authRegisterButton, isLoading: isLoading, onTap: onSubmit),
       ],
     );
   }

@@ -268,6 +268,26 @@
   "settingsSecurity": "Security",
   "settingsGeneral": "General",
   "settingsActions": "Actions",
+  "settingsLegal": "Legal",
+  "settingsTerms": "Terms of Service",
+  "settingsPrivacy": "Privacy Policy",
+  "legalConsentMessage": "I have read and agree to the {terms} and {privacy}.",
+  "@legalConsentMessage": {
+    "description": "Required-consent sentence shown on the Register page. {terms} and {privacy} are replaced by the localized labels rendered as tappable links.",
+    "placeholders": {
+      "terms": {
+        "type": "String"
+      },
+      "privacy": {
+        "type": "String"
+      }
+    }
+  },
+  "legalConsentTermsLabel": "Terms of Service",
+  "legalConsentPrivacyLabel": "Privacy Policy",
+  "legalConsentRequired": "You must accept the Terms of Service and Privacy Policy to continue.",
+  "authAgeConfirm": "I confirm I am at least 16 years old.",
+  "authAgeRequired": "You must be at least 16 years old to use this app.",
   "settingsTheme": "Theme",
   "settingsThemeDark": "Dark",
   "settingsThemeLight": "Light",

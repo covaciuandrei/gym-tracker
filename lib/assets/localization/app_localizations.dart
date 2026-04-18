@@ -1412,6 +1412,60 @@ abstract class AppLocalizations {
   /// **'Actions'**
   String get settingsActions;
 
+  /// No description provided for @settingsLegal.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal'**
+  String get settingsLegal;
+
+  /// No description provided for @settingsTerms.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get settingsTerms;
+
+  /// No description provided for @settingsPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get settingsPrivacy;
+
+  /// Required-consent sentence shown on the Register page. {terms} and {privacy} are replaced by the localized labels rendered as tappable links.
+  ///
+  /// In en, this message translates to:
+  /// **'I have read and agree to the {terms} and {privacy}.'**
+  String legalConsentMessage(String terms, String privacy);
+
+  /// No description provided for @legalConsentTermsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get legalConsentTermsLabel;
+
+  /// No description provided for @legalConsentPrivacyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get legalConsentPrivacyLabel;
+
+  /// No description provided for @legalConsentRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'You must accept the Terms of Service and Privacy Policy to continue.'**
+  String get legalConsentRequired;
+
+  /// No description provided for @authAgeConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'I confirm I am at least 16 years old.'**
+  String get authAgeConfirm;
+
+  /// No description provided for @authAgeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'You must be at least 16 years old to use this app.'**
+  String get authAgeRequired;
+
   /// No description provided for @settingsTheme.
   ///
   /// In en, this message translates to:

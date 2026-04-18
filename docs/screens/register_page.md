@@ -1,14 +1,17 @@
 # Register Page — Screen Doc
 
-> Last updated: 2026-04-08
+> Last updated: 2026-04-19
 
 ## Route
+
 `/register`
 
 ## Angular Source
+
 `src/app/features/auth/register/`
 
 ## Visual Layout
+
 ```
 Scaffold(backgroundColor: cs.surface)
   SingleChildScrollView → Center → ConstrainedBox(maxWidth: 400)
@@ -50,6 +53,25 @@ Scaffold(backgroundColor: cs.surface)
           Text(match ? 'Passwords match' : 'Passwords do not match',
                color: same, style: tt.bodySmall)
         ]  ← only visible when confirmPassword is non-empty
+        SizedBox(height: 16)
+
+        ── Legal consent (GDPR Art. 9 explicit consent for health data) ──
+        LegalConsentCheckbox(
+          accepted: _acceptedTerms,        // ValueNotifier<bool>
+          showError: _showConsentError,    // ValueNotifier<bool>
+          enabled: !isLoading,
+        )
+        ── Renders:
+        ──   Row [ Checkbox + Text.rich(
+        ──     "I have read and agree to the [Terms of Service] and [Privacy Policy]."
+        ──   )]
+        ── Tapping either link opens the localized hosted URL
+        ── (resolved via LocaleHelper + AppVersionStatus → core/constants/legal_urls.dart fallback)
+        ── via launchUrl(..., mode: LaunchMode.externalApplication).
+        ── If user taps submit without ticking, _showConsentError flips true and
+        ── the inline error "You must accept the Terms of Service and Privacy
+        ── Policy to continue." appears below the checkbox (padded 36px left).
+        ── Ticking the checkbox clears the error automatically.
         SizedBox(height: 24)
         PrimaryButton(label: 'Create Account', onPressed: _onRegister, isLoading: state is PendingState)
 
@@ -61,6 +83,7 @@ Scaffold(backgroundColor: cs.surface)
 ```
 
 ## Success Card (replaces form on `AuthSignUpSuccessState`)
+
 ```
 Card(cs.primaryContainer, padding: 24, rounded)
   Column(center)
@@ -75,6 +98,7 @@ Card(cs.primaryContainer, padding: 24, rounded)
 ```
 
 ## Password Strength Logic
+
 ```dart
 String _strengthLabel(String pw) {
   int score = 0;
@@ -86,26 +110,40 @@ String _strengthLabel(String pw) {
 }
 ```
 
+## Consent gate (must-check before submit)
+
+`_onSubmit(ctx)` order:
+
+1. `if (!_formKey.currentState!.validate()) return;`
+2. `if (!_acceptedTerms.value) { _showConsentError.value = true; return; }`
+3. `ctx.read<AuthCubit>().signUp(...)`
+
+Rationale: the app collects GDPR Art. 9 special-category health data (workout attendance, supplement logs). Explicit consent via the checkbox satisfies Art. 9(2)(a); the Terms + Privacy links give the user access to the binding texts before they consent.
+
 ## State → UI Mapping
-| State | Behavior |
-|---|---|
-| `PendingState` | button loading, fields disabled |
-| `AuthSignUpSuccessState` | show success card with countdown, auto-navigate to /login after 5s |
-| `AuthEmailAlreadyInUseState` | show "An account with this email already exists." error |
-| `AuthWeakPasswordState` | show "Password is too weak." error |
-| `SomethingWentWrongState` | show generic error |
+
+| State                        | Behavior                                                           |
+| ---------------------------- | ------------------------------------------------------------------ |
+| `PendingState`               | button loading, fields disabled                                    |
+| `AuthSignUpSuccessState`     | show success card with countdown, auto-navigate to /login after 5s |
+| `AuthEmailAlreadyInUseState` | show "An account with this email already exists." error            |
+| `AuthWeakPasswordState`      | show "Password is too weak." error                                 |
+| `SomethingWentWrongState`    | show generic error                                                 |
 
 ## Colors / Styles
+
 - Background: `cs.surface`
 - Strength bar colors: weak=`cs.error`, medium=`Colors.orange`, strong=`cs.primary`
 - Requirements: met=`cs.primary`, unmet=`cs.outline`
 - Success card: `cs.primaryContainer`
 
 ## Navigation In/Out
+
 - IN: from `LoginPage` (replace)
 - OUT: → `LoginRoute` (replace, after success or footer link)
 
 ## Data
+
 ```dart
 context.read<AuthCubit>().signUp(email: email, password: password);
 ```

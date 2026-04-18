@@ -724,6 +724,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsActions => 'Actions';
 
   @override
+  String get settingsLegal => 'Legal';
+
+  @override
+  String get settingsTerms => 'Terms of Service';
+
+  @override
+  String get settingsPrivacy => 'Privacy Policy';
+
+  @override
+  String legalConsentMessage(String terms, String privacy) {
+    return 'I have read and agree to the $terms and $privacy.';
+  }
+
+  @override
+  String get legalConsentTermsLabel => 'Terms of Service';
+
+  @override
+  String get legalConsentPrivacyLabel => 'Privacy Policy';
+
+  @override
+  String get legalConsentRequired =>
+      'You must accept the Terms of Service and Privacy Policy to continue.';
+
+  @override
+  String get authAgeConfirm => 'I confirm I am at least 16 years old.';
+
+  @override
+  String get authAgeRequired =>
+      'You must be at least 16 years old to use this app.';
+
+  @override
   String get settingsTheme => 'Theme';
 
   @override
