@@ -211,26 +211,58 @@ void main() {
   });
 
   group('start — AppVersionStatus population', () {
-    test('populates soft-update status when current < latest', () async {
-      when(() => service.getAppConfig()).thenAnswer((_) async => _config(min: '1.0.0', latest: '1.2.0'));
-      final sut = buildSut(version: '1.1.0');
+    test('flags bigUpdateAvailable=true on a major bump', () async {
+      when(() => service.getAppConfig()).thenAnswer((_) async => _config(min: '1.0.0', latest: '3.0.0'));
+      final sut = buildSut(version: '2.5.0');
 
       await sut.start(minSplashDuration: Duration.zero);
       await sut.close();
 
-      expect(versionStatus.softUpdateAvailable, isTrue);
-      expect(versionStatus.latestVersion, '1.2.0');
+      expect(versionStatus.bigUpdateAvailable, isTrue);
+      expect(versionStatus.latestVersion, '3.0.0');
       expect(versionStatus.storeUrl, 'https://play/android');
     });
 
-    test('populates with softUpdateAvailable=false when current == latest', () async {
+    test('flags bigUpdateAvailable=true on a minor bump of 2 or more', () async {
+      when(() => service.getAppConfig()).thenAnswer((_) async => _config(min: '1.0.0', latest: '2.4.0'));
+      final sut = buildSut(version: '2.1.0');
+
+      await sut.start(minSplashDuration: Duration.zero);
+      await sut.close();
+
+      expect(versionStatus.bigUpdateAvailable, isTrue);
+      expect(versionStatus.latestVersion, '2.4.0');
+    });
+
+    test('flags bigUpdateAvailable=false for single-step minor bumps', () async {
+      when(() => service.getAppConfig()).thenAnswer((_) async => _config(min: '1.0.0', latest: '2.2.0'));
+      final sut = buildSut(version: '2.1.0');
+
+      await sut.start(minSplashDuration: Duration.zero);
+      await sut.close();
+
+      expect(versionStatus.bigUpdateAvailable, isFalse);
+      expect(versionStatus.latestVersion, '2.2.0');
+    });
+
+    test('flags bigUpdateAvailable=false for patch-only bumps', () async {
+      when(() => service.getAppConfig()).thenAnswer((_) async => _config(min: '1.0.0', latest: '2.1.9'));
+      final sut = buildSut(version: '2.1.1');
+
+      await sut.start(minSplashDuration: Duration.zero);
+      await sut.close();
+
+      expect(versionStatus.bigUpdateAvailable, isFalse);
+    });
+
+    test('flags bigUpdateAvailable=false when current == latest', () async {
       when(() => service.getAppConfig()).thenAnswer((_) async => _config(min: '1.0.0', latest: '1.0.0'));
       final sut = buildSut(version: '1.0.0');
 
       await sut.start(minSplashDuration: Duration.zero);
       await sut.close();
 
-      expect(versionStatus.softUpdateAvailable, isFalse);
+      expect(versionStatus.bigUpdateAvailable, isFalse);
       expect(versionStatus.latestVersion, '1.0.0');
     });
 

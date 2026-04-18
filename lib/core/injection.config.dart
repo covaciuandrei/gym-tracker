@@ -14,6 +14,7 @@ import 'package:firebase_auth/firebase_auth.dart' as _i59;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 
+import '../cubit/app_version/app_version_cubit.dart' as _i176;
 import '../cubit/auth/auth_cubit.dart' as _i548;
 import '../cubit/calendar/calendar_cubit.dart' as _i1060;
 import '../cubit/health/health_cubit.dart' as _i829;
@@ -63,8 +64,8 @@ _i174.GetIt $initGetIt(
   gh.lazySingleton<_i974.FirebaseFirestore>(
     () => firebaseModule.firebaseFirestore,
   );
-  gh.lazySingleton<_i313.AppRouter>(() => _i313.AppRouter());
   gh.lazySingleton<_i477.AppVersionStatus>(() => _i477.AppVersionStatus());
+  gh.lazySingleton<_i313.AppRouter>(() => _i313.AppRouter());
   gh.factory<_i531.HealthSource>(
     () => _i531.HealthSource(
       gh<_i974.FirebaseFirestore>(),
@@ -113,6 +114,9 @@ _i174.GetIt $initGetIt(
   );
   gh.factory<_i729.UserService>(
     () => _i729.UserService(gh<_i905.UserSource>()),
+  );
+  gh.factory<_i176.AppVersionCubit>(
+    () => _i176.AppVersionCubit(gh<_i952.AppConfigService>()),
   );
   gh.factory<_i425.WorkoutService>(
     () => _i425.WorkoutService(gh<_i96.TrainingTypeSource>()),

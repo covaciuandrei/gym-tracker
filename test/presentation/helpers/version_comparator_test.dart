@@ -54,4 +54,34 @@ void main() {
       expect(VersionComparator.isBelow('1.0.2', '1.0.1'), isFalse);
     });
   });
+
+  group('VersionComparator.isBigJump', () {
+    test('true on any major bump', () {
+      expect(VersionComparator.isBigJump('2.9.9', '3.0.0'), isTrue);
+      expect(VersionComparator.isBigJump('1.0.0', '2.0.0'), isTrue);
+    });
+
+    test('true when minor increases by 2 or more within same major', () {
+      expect(VersionComparator.isBigJump('2.1.0', '2.3.0'), isTrue);
+      expect(VersionComparator.isBigJump('2.1.5', '2.4.0'), isTrue);
+    });
+
+    test('false for single-step minor bumps', () {
+      expect(VersionComparator.isBigJump('2.1.0', '2.2.0'), isFalse);
+      expect(VersionComparator.isBigJump('2.4.5', '2.5.0'), isFalse);
+    });
+
+    test('false for patch-only bumps', () {
+      expect(VersionComparator.isBigJump('2.1.1', '2.1.9'), isFalse);
+      expect(VersionComparator.isBigJump('1.0.0', '1.0.5'), isFalse);
+    });
+
+    test('false when from == to', () {
+      expect(VersionComparator.isBigJump('2.0.0', '2.0.0'), isFalse);
+    });
+
+    test('false when from is already newer', () {
+      expect(VersionComparator.isBigJump('3.0.0', '2.9.9'), isFalse);
+    });
+  });
 }

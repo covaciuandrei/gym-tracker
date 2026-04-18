@@ -1748,23 +1748,29 @@ abstract class AppLocalizations {
   /// **'Try again'**
   String get noConnectionRetry;
 
-  /// No description provided for @softUpdateBannerMessage.
+  /// No description provided for @bigUpdateTitle.
   ///
   /// In en, this message translates to:
-  /// **'A new version is available.'**
-  String get softUpdateBannerMessage;
+  /// **'A big update is here'**
+  String get bigUpdateTitle;
 
-  /// No description provided for @softUpdateBannerAction.
+  /// No description provided for @bigUpdateBody.
   ///
   /// In en, this message translates to:
-  /// **'Update'**
-  String get softUpdateBannerAction;
+  /// **'Version {version} is available with major improvements. Update now to get the latest features.'**
+  String bigUpdateBody(String version);
 
-  /// No description provided for @softUpdateBannerDismiss.
+  /// No description provided for @bigUpdateAction.
   ///
   /// In en, this message translates to:
-  /// **'Dismiss'**
-  String get softUpdateBannerDismiss;
+  /// **'Update now'**
+  String get bigUpdateAction;
+
+  /// No description provided for @bigUpdateLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind me later'**
+  String get bigUpdateLater;
 }
 
 class _AppLocalizationsDelegate

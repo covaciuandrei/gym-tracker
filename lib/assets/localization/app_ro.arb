@@ -324,7 +324,16 @@
   "noConnectionTitle": "Fără conexiune",
   "noConnectionBody": "Gym Tracker are nevoie de o conexiune la internet pentru a porni. Verifică rețeaua și încearcă din nou.",
   "noConnectionRetry": "Încearcă din nou",
-  "softUpdateBannerMessage": "O nouă versiune este disponibilă.",
-  "softUpdateBannerAction": "Actualizează",
-  "softUpdateBannerDismiss": "Închide"
+  "bigUpdateTitle": "A apărut o actualizare importantă",
+  "bigUpdateBody": "Versiunea {version} aduce îmbunătățiri majore. Actualizează acum pentru a beneficia de cele mai noi funcții.",
+  "@bigUpdateBody": {
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "3.0.0"
+      }
+    }
+  },
+  "bigUpdateAction": "Actualizează acum",
+  "bigUpdateLater": "Mai târziu"
 }

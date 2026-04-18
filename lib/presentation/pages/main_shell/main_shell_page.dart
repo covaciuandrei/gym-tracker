@@ -1,14 +1,13 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/core/app_version_status.dart';
 import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
-import 'package:gym_tracker/presentation/controls/soft_update_banner.dart';
+import 'package:gym_tracker/presentation/controls/big_update_bottom_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -27,37 +26,81 @@ class MainShellPage extends StatefulWidget implements AutoRouteWrapper {
 
 class _MainShellPageState extends State<MainShellPage> {
   /// SharedPreferences key holding the [AppVersionStatus.latestVersion] for
-  /// which the user has dismissed the soft-update banner. The banner reappears
-  /// only when remote config advertises a newer version.
-  static const String _dismissedPrefsKey = 'soft_update_dismissed_for_version';
+  /// which the user last tapped "Remind me later". Paired with
+  /// [_dismissedAtPrefsKey] to enforce a 3-day cool-down before re-showing
+  /// the bottom sheet for the same version.
+  static const String _dismissedVersionPrefsKey = 'big_update_dismissed_version';
 
-  bool _bannerVisible = false;
+  /// SharedPreferences key storing the UTC epoch millis at which the user
+  /// last dismissed the big-update bottom sheet for [_dismissedVersionPrefsKey].
+  static const String _dismissedAtPrefsKey = 'big_update_dismissed_at_ms';
+
+  /// How long a per-version "Remind me later" dismissal is honored before the
+  /// bottom sheet becomes eligible to re-appear.
+  static const Duration _dismissalCoolDown = Duration(days: 3);
+
+  /// Delay before presenting the big-update bottom sheet after the shell has
+  /// mounted. Gives the home tab a moment to paint so the sheet slides in on
+  /// top of a settled UI instead of competing with first-frame layout.
+  static const Duration _bottomSheetPresentationDelay = Duration(seconds: 5);
+
+  bool _bottomSheetShown = false;
 
   @override
   void initState() {
     super.initState();
     context.read<AuthCubit>().watchAuthState();
-    _evaluateBannerVisibility();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShowBigUpdateSheet());
   }
 
-  Future<void> _evaluateBannerVisibility() async {
+  /// Decides whether to show the big-update bottom sheet on first main-shell
+  /// open. Skips when:
+  ///   * no big jump was detected by the splash cubit,
+  ///   * `latestVersion` is empty (should not happen in ok state),
+  ///   * the sheet was already shown this frame, or
+  ///   * the user dismissed the same version within [_dismissalCoolDown].
+  Future<void> _maybeShowBigUpdateSheet() async {
+    if (_bottomSheetShown) return;
     final status = getIt<AppVersionStatus>();
-    if (!status.softUpdateAvailable || status.latestVersion.isEmpty) return;
+    if (!status.bigUpdateAvailable || status.latestVersion.isEmpty) return;
+
     final prefs = await SharedPreferences.getInstance();
-    final dismissedFor = prefs.getString(_dismissedPrefsKey);
+    final dismissedVersion = prefs.getString(_dismissedVersionPrefsKey);
+    final dismissedAtMs = prefs.getInt(_dismissedAtPrefsKey);
+    if (dismissedVersion == status.latestVersion && dismissedAtMs != null) {
+      final dismissedAt = DateTime.fromMillisecondsSinceEpoch(dismissedAtMs);
+      if (DateTime.now().difference(dismissedAt) < _dismissalCoolDown) return;
+    }
+
+    await Future<void>.delayed(_bottomSheetPresentationDelay);
     if (!mounted) return;
-    if (dismissedFor == status.latestVersion) return;
-    setState(() => _bannerVisible = true);
+    _bottomSheetShown = true;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetCtx) => BigUpdateBottomSheet(
+        latestVersion: status.latestVersion,
+        onUpdate: () {
+          Navigator.of(sheetCtx).pop();
+          _launchStoreUrl();
+        },
+        onLater: () {
+          Navigator.of(sheetCtx).pop();
+          _persistDismissal();
+        },
+      ),
+    );
   }
 
-  Future<void> _onBannerDismiss() async {
+  Future<void> _persistDismissal() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_dismissedPrefsKey, getIt<AppVersionStatus>().latestVersion);
-    if (!mounted) return;
-    setState(() => _bannerVisible = false);
+    await prefs.setString(_dismissedVersionPrefsKey, getIt<AppVersionStatus>().latestVersion);
+    await prefs.setInt(_dismissedAtPrefsKey, DateTime.now().millisecondsSinceEpoch);
   }
 
-  Future<void> _onBannerUpdate() async {
+  Future<void> _launchStoreUrl() async {
     final url = getIt<AppVersionStatus>().storeUrl;
     final uri = Uri.tryParse(url);
     if (uri == null) return;
@@ -77,19 +120,6 @@ class _MainShellPageState extends State<MainShellPage> {
       },
       child: AutoTabsScaffold(
         routes: [CalendarRoute(), StatsRoute(), HealthRoute(), ProfileRoute()],
-        appBarBuilder: _bannerVisible
-            ? (ctx, _) => PreferredSize(
-                preferredSize: const Size.fromHeight(64),
-                child: SafeArea(
-                  bottom: false,
-                  child: SoftUpdateBanner(
-                    latestVersion: getIt<AppVersionStatus>().latestVersion,
-                    onUpdate: _onBannerUpdate,
-                    onDismiss: _onBannerDismiss,
-                  ),
-                ),
-              )
-            : null,
         bottomNavigationBuilder: (_, tabsRouter) {
           final cs = Theme.of(context).colorScheme;
           final destinations = [

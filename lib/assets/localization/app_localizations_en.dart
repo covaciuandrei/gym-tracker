@@ -902,11 +902,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noConnectionRetry => 'Try again';
 
   @override
-  String get softUpdateBannerMessage => 'A new version is available.';
+  String get bigUpdateTitle => 'A big update is here';
 
   @override
-  String get softUpdateBannerAction => 'Update';
+  String bigUpdateBody(String version) {
+    return 'Version $version is available with major improvements. Update now to get the latest features.';
+  }
 
   @override
-  String get softUpdateBannerDismiss => 'Dismiss';
+  String get bigUpdateAction => 'Update now';
+
+  @override
+  String get bigUpdateLater => 'Remind me later';
 }

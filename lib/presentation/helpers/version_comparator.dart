@@ -26,6 +26,26 @@ class VersionComparator {
   /// True when [current] is strictly older than [other].
   static bool isBelow(String current, String other) => compare(current, other) < 0;
 
+  /// True when moving from [from] to [to] is a "big" version jump:
+  ///   * the major segment increased (e.g. `2.9.9` → `3.0.0`), **or**
+  ///   * the major is unchanged but the minor increased by at least 2
+  ///     (e.g. `2.1.0` → `2.4.0`).
+  ///
+  /// Patch-only bumps and single-step minor bumps are considered small and
+  /// return `false`.
+  static bool isBigJump(String from, String to) {
+    if (!isBelow(from, to)) return false;
+    final fromParts = _parse(from);
+    final toParts = _parse(to);
+    final fromMajor = fromParts.isNotEmpty ? fromParts[0] : 0;
+    final toMajor = toParts.isNotEmpty ? toParts[0] : 0;
+    if (toMajor > fromMajor) return true;
+    if (toMajor < fromMajor) return false;
+    final fromMinor = fromParts.length > 1 ? fromParts[1] : 0;
+    final toMinor = toParts.length > 1 ? toParts[1] : 0;
+    return (toMinor - fromMinor) >= 2;
+  }
+
   static List<int> _parse(String version) {
     // Strip Flutter build number suffix like "+1" if present.
     final base = version.split('+').first;

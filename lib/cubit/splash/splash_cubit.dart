@@ -93,9 +93,9 @@ class SplashCubit extends BaseCubit {
       );
     }
 
-    final softUpdateAvailable = VersionComparator.isBelow(currentVersion, config.latestVersion);
+    final bigUpdateAvailable = VersionComparator.isBigJump(currentVersion, config.latestVersion);
     _versionStatus.getAppVersionDetails(
-      softUpdateAvailable: softUpdateAvailable,
+      bigUpdateAvailable: bigUpdateAvailable,
       latestVersion: config.latestVersion,
       storeUrl: storeUrl,
     );

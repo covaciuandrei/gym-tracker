@@ -914,11 +914,16 @@ class AppLocalizationsRo extends AppLocalizations {
   String get noConnectionRetry => 'Încearcă din nou';
 
   @override
-  String get softUpdateBannerMessage => 'O nouă versiune este disponibilă.';
+  String get bigUpdateTitle => 'A apărut o actualizare importantă';
 
   @override
-  String get softUpdateBannerAction => 'Actualizează';
+  String bigUpdateBody(String version) {
+    return 'Versiunea $version aduce îmbunătățiri majore. Actualizează acum pentru a beneficia de cele mai noi funcții.';
+  }
 
   @override
-  String get softUpdateBannerDismiss => 'Închide';
+  String get bigUpdateAction => 'Actualizează acum';
+
+  @override
+  String get bigUpdateLater => 'Mai târziu';
 }

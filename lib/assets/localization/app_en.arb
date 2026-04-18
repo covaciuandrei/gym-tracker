@@ -324,7 +324,16 @@
   "noConnectionTitle": "No connection",
   "noConnectionBody": "Gym Tracker needs an internet connection to start. Please check your network and try again.",
   "noConnectionRetry": "Try again",
-  "softUpdateBannerMessage": "A new version is available.",
-  "softUpdateBannerAction": "Update",
-  "softUpdateBannerDismiss": "Dismiss"
+  "bigUpdateTitle": "A big update is here",
+  "bigUpdateBody": "Version {version} is available with major improvements. Update now to get the latest features.",
+  "@bigUpdateBody": {
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "3.0.0"
+      }
+    }
+  },
+  "bigUpdateAction": "Update now",
+  "bigUpdateLater": "Remind me later"
 }
