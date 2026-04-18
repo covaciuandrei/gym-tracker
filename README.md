@@ -48,7 +48,7 @@ Track your workouts, log your supplements, monitor your streaks, and visualize y
 ### Workout Types — your own taxonomy
 
 - Create **fully custom workout types** with:
-  - A name (e.g. *Push day*, *Climbing*, *Yoga*).
+  - A name (e.g. _Push day_, _Climbing_, _Yoga_).
   - A color picked from 10 preset swatches.
   - An emoji icon picked from 20 presets (🏋️ 🏃 🚴 🧘 🥊 🏊 ⚽ 🎾 🏀 💪 …).
 - Edit or delete any type from the management screen.
@@ -90,6 +90,7 @@ All tabs share unified loading skeletons and "no data" empty states.
 
 - **Appearance** — toggle between **dark and light** Material 3 themes.
 - **Language** — switch between **English** and **Romanian** at runtime.
+- **Legal** — quick links to the hosted **Terms of Service** and **Privacy Policy** (localized per-language, opened in the external browser).
 - **Account** — open the dedicated **Change Password** screen (current password + new + confirm, with strength indicator and live match feedback).
 - **Account deletion** — re-authenticates and performs a cascading cleanup of all your Firestore data before deleting your auth account.
 - **App version** — shown live, read from the platform via `package_info_plus`.
@@ -98,6 +99,7 @@ All tabs share unified loading skeletons and "no data" empty states.
 
 - Email + password sign-in / sign-up via **Firebase Auth**.
 - Email verification, password reset, and resend-verification flows (with cooldown tracking).
+- **Mandatory legal consent** on Register — user must tick an "I have read and agree to the [Terms of Service] and [Privacy Policy]" checkbox (links open the localized hosted page) before the account is created. Required by GDPR Art. 9(2)(a) since the app collects health-related data.
 - First-launch **onboarding** walkthrough.
 
 ### App version gate (cold-launch)
@@ -130,19 +132,19 @@ Detailed UI specs for every screen live under [`docs/screens/`](docs/screens/):
 
 ## Tech Stack
 
-| Area              | Choice                                          |
-| ----------------- | ----------------------------------------------- |
-| Framework         | Flutter **3.41.0** / Dart **^3.11.0**           |
-| Platforms         | Android + iOS                                   |
-| State management  | `flutter_bloc` (Cubits)                         |
-| Navigation        | `auto_route`                                    |
-| Dependency inj.   | `get_it` + `injectable`                         |
-| Backend           | Firebase Auth + Cloud Firestore                 |
-| Local storage     | `shared_preferences` + `flutter_secure_storage` |
-| Serialization     | `json_serializable` / `json_annotation`         |
-| Localization      | `flutter_localizations` + ARB files             |
-| Testing           | `flutter_test` + `mocktail`                     |
-| Min Java (build)  | JDK 17                                          |
+| Area             | Choice                                          |
+| ---------------- | ----------------------------------------------- |
+| Framework        | Flutter **3.41.0** / Dart **^3.11.0**           |
+| Platforms        | Android + iOS                                   |
+| State management | `flutter_bloc` (Cubits)                         |
+| Navigation       | `auto_route`                                    |
+| Dependency inj.  | `get_it` + `injectable`                         |
+| Backend          | Firebase Auth + Cloud Firestore                 |
+| Local storage    | `shared_preferences` + `flutter_secure_storage` |
+| Serialization    | `json_serializable` / `json_annotation`         |
+| Localization     | `flutter_localizations` + ARB files             |
+| Testing          | `flutter_test` + `mocktail`                     |
+| Min Java (build) | JDK 17                                          |
 
 See [`pubspec.yaml`](pubspec.yaml) for the full dependency list and pinned versions.
 
@@ -254,12 +256,25 @@ The app's [version gate](#app-version-gate) reads a singleton document at `appCo
   "minRequiredVersion": "1.0.0",
   "latestVersion": "1.0.0",
   "maintenanceMode": false,
-  "maintenanceMessages": { "en": "We'll be right back.", "ro": "Revenim imediat." },
+  "maintenanceMessages": {
+    "en": "We'll be right back.",
+    "ro": "Revenim imediat.",
+  },
   "androidStoreUrl": "https://play.google.com/store/apps/details?id=...",
   "iosStoreUrl": "https://apps.apple.com/app/id...",
-  "updatedAt": "<server timestamp>"
+  "termsUrls": {
+    "en": "https://<your-firebase-project>.web.app/terms-en.html",
+    "ro": "https://<your-firebase-project>.web.app/terms-ro.html",
+  },
+  "privacyUrls": {
+    "en": "https://<your-firebase-project>.web.app/privacy-en.html",
+    "ro": "https://<your-firebase-project>.web.app/privacy-ro.html",
+  },
+  "updatedAt": "<server timestamp>",
 }
 ```
+
+> `termsUrls` and `privacyUrls` are optional at runtime — the app falls back to hardcoded constants in `lib/core/constants/legal_urls.dart` when either is missing. The static HTML pages themselves live under `legal/` and are deployed via Firebase Hosting (`firebase deploy --only hosting`).
 
 ---
 
@@ -319,6 +334,7 @@ dart run build_runner watch --delete-conflicting-outputs
 ```
 
 Re-run after:
+
 - Adding/changing `@injectable` services or cubits
 - Adding/changing `@RoutePage()` pages or modifying `app_router.dart`
 - Adding/changing `@JsonSerializable()` DTOs
@@ -352,14 +368,14 @@ All user-visible strings **must** go through `AppLocalizations.of(context)` — 
 
 On every cold launch, `SplashCubit` fetches `appConfig/version` and routes the user accordingly:
 
-| Condition                         | Destination          | Behavior                                  |
-| --------------------------------- | -------------------- | ----------------------------------------- |
-| `maintenanceMode == true`         | `MaintenancePage`    | Blocking, with localized message + retry  |
-| `currentVersion < minRequired`    | `ForceUpdatePage`    | Blocking, opens store URL                 |
-| Network/config fetch failed       | `NoConnectionPage`   | Blocking, with retry                      |
-| First launch                      | `OnboardingPage`     | One-time walkthrough                      |
-| Signed in                         | `MainShellPage`      | Normal app entry                          |
-| Signed out                        | `LoginPage`          | Normal auth entry                         |
+| Condition                      | Destination        | Behavior                                 |
+| ------------------------------ | ------------------ | ---------------------------------------- |
+| `maintenanceMode == true`      | `MaintenancePage`  | Blocking, with localized message + retry |
+| `currentVersion < minRequired` | `ForceUpdatePage`  | Blocking, opens store URL                |
+| Network/config fetch failed    | `NoConnectionPage` | Blocking, with retry                     |
+| First launch                   | `OnboardingPage`   | One-time walkthrough                     |
+| Signed in                      | `MainShellPage`    | Normal app entry                         |
+| Signed out                     | `LoginPage`        | Normal auth entry                        |
 
 After reaching `MainShellPage`, `CheckingUpdateCubit` may also surface a soft `BigUpdateBottomSheet` when `latestVersion` is a "big" jump (major bump, or minor diff ≥ 2). It respects a 3-day per-version snooze stored in `SharedPreferences`.
 
@@ -396,20 +412,3 @@ Full field-level documentation lives in [`.github/copilot-instructions.md`](.git
 ## License
 
 Private project — all rights reserved unless stated otherwise.
-# gym_tracker
-
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
