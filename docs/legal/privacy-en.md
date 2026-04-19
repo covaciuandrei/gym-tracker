@@ -44,8 +44,9 @@ Because the App lets you log workouts and supplements, the following data may re
 - Timestamps for account creation, last login, and last verification email
 - Firebase Authentication metadata (e.g. last sign-in time)
 - Infrastructure-level logs kept by our sub-processor Google (e.g. IP address, device type) for security and service reliability. We do not have direct access to these logs; they are processed by Google under its own terms.
+- **Crash and error reports** collected by Firebase Crashlytics when the App encounters an unexpected error. Reports include a stack trace, device model, operating-system version, and your Firebase user identifier (not your email or display name), so we can correlate reports to the affected account and diagnose issues. Crashlytics does not collect the contents of your workouts, supplements, or messages.
 
-We do **not** currently use any third-party analytics, advertising, or crash-reporting SDKs. The App does not use cookies.
+We do **not** currently use any third-party analytics or advertising SDKs. The App does not use cookies.
 
 ## 3. Purposes and Legal Bases
 
@@ -64,7 +65,7 @@ You can withdraw your consent for processing health-related data at any time by 
 
 We share personal data only with the service providers we need to operate the App. Currently:
 
-- **Google Ireland Limited / Google LLC** — provides Firebase Authentication, Cloud Firestore, and Firebase Hosting. Data is processed under the [Google Cloud Data Processing Addendum](https://cloud.google.com/terms/data-processing-addendum) and Google's Standard Contractual Clauses.
+- **Google Ireland Limited / Google LLC** — provides Firebase Authentication, Cloud Firestore, Firebase Hosting, and Firebase Crashlytics (crash and error reporting). Data is processed under the [Google Cloud Data Processing Addendum](https://cloud.google.com/terms/data-processing-addendum) and Google's Standard Contractual Clauses.
 
 We do **not** sell your personal data and we do not share it with advertisers.
 

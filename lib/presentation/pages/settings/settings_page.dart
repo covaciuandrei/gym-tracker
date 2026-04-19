@@ -75,11 +75,18 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             Text(l10n.settingsDeleteAccountMessage),
             const SizedBox(height: 16),
-            CustomTextField(controller: controller, label: l10n.settingsDeleteAccountPasswordHint, isPassword: true),
+            CustomTextField(
+              controller: controller,
+              label: l10n.settingsDeleteAccountPasswordHint,
+              isPassword: true,
+            ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(dialogCtx).pop(), child: Text(l10n.calendarCancel)),
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: Text(l10n.calendarCancel),
+          ),
           TextButton(
             onPressed: () => Navigator.of(dialogCtx).pop(controller.text),
             style: TextButton.styleFrom(foregroundColor: cs.error),
@@ -113,7 +120,10 @@ class _SettingsPageState extends State<SettingsPage> {
           showDialog<void>(
             context: ctx,
             barrierDismissible: false,
-            builder: (_) => const PopScope(canPop: false, child: Center(child: CircularProgressIndicator())),
+            builder: (_) => const PopScope(
+              canPop: false,
+              child: Center(child: CircularProgressIndicator()),
+            ),
           );
           return;
         }
@@ -123,22 +133,30 @@ class _SettingsPageState extends State<SettingsPage> {
           Navigator.of(ctx).pop();
         }
 
-        if (state is AuthSignOutSuccessState || state is AuthAccountDeletedState) {
+        if (state is AuthSignOutSuccessState ||
+            state is AuthAccountDeletedState) {
           ctx.router.replace(const LoginRoute());
           return;
         }
         if (state is AuthInvalidCredentialsState) {
-          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.errorsInvalidCredentials)));
+          ScaffoldMessenger.of(ctx).showSnackBar(
+            SnackBar(content: Text(l10n.errorsInvalidCredentials)),
+          );
           return;
         }
         if (state is SomethingWentWrongState) {
-          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
+          ScaffoldMessenger.of(
+            ctx,
+          ).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
         }
       },
       child: BlocBuilder<SettingsCubit, BaseState>(
-        buildWhen: (_, curr) => curr is PendingState || curr is SettingsReadyState,
+        buildWhen: (_, curr) =>
+            curr is PendingState || curr is SettingsReadyState,
         builder: (ctx, settingsState) {
-          final version = settingsState is SettingsReadyState ? settingsState.appVersion : '-';
+          final version = settingsState is SettingsReadyState
+              ? settingsState.appVersion
+              : '-';
 
           return ListenableBuilder(
             listenable: Listenable.merge([_themeHelper, _localeHelper]),
@@ -148,14 +166,19 @@ class _SettingsPageState extends State<SettingsPage> {
                 appBar: GymAppBar(title: l10n.settingsTitle),
                 body: SafeArea(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
                     child: Center(
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 600),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _SectionHeader(title: l10n.settingsAbout.toUpperCase()),
+                            _SectionHeader(
+                              title: l10n.settingsAbout.toUpperCase(),
+                            ),
                             SurfaceSectionCard(
                               children: [
                                 LabeledValueTile(
@@ -166,50 +189,96 @@ class _SettingsPageState extends State<SettingsPage> {
                               ],
                             ),
                             const SizedBox(height: 24),
-                            _SectionHeader(title: l10n.settingsLegal.toUpperCase()),
-                            SurfaceSectionCard(
-                              children: [
-                                ListTile(
-                                  leading: Icon(Icons.description_outlined, color: cs.primary),
-                                  title: Text(l10n.settingsTerms),
-                                  trailing: Icon(Icons.open_in_new, color: cs.onSurfaceVariant, size: 20),
-                                  onTap: () => _openUrl(_versionStatus.termsUrlFor(_localeHelper.locale.languageCode)),
-                                ),
-                                Divider(indent: 16, endIndent: 16, color: cs.outline, height: 1),
-                                ListTile(
-                                  leading: Icon(Icons.privacy_tip_outlined, color: cs.primary),
-                                  title: Text(l10n.settingsPrivacy),
-                                  trailing: Icon(Icons.open_in_new, color: cs.onSurfaceVariant, size: 20),
-                                  onTap: () =>
-                                      _openUrl(_versionStatus.privacyUrlFor(_localeHelper.locale.languageCode)),
-                                ),
-                              ],
+                            _SectionHeader(
+                              title: l10n.settingsLegal.toUpperCase(),
                             ),
-                            const SizedBox(height: 24),
-                            _SectionHeader(title: l10n.profileAccount.toUpperCase()),
-                            SurfaceSectionCard(
-                              children: [
-                                ListTile(
-                                  leading: Icon(Icons.lock_outline, color: cs.primary),
-                                  title: Text(l10n.settingsChangePassword),
-                                  trailing: Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
-                                  onTap: () => ctx.router.push(const ChangePasswordRoute()),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 24),
-                            _SectionHeader(title: l10n.settingsGeneral.toUpperCase()),
                             SurfaceSectionCard(
                               children: [
                                 ListTile(
                                   leading: Icon(
-                                    _themeHelper.isDark ? Icons.dark_mode : Icons.light_mode,
+                                    Icons.description_outlined,
+                                    color: cs.primary,
+                                  ),
+                                  title: Text(l10n.settingsTerms),
+                                  trailing: Icon(
+                                    Icons.open_in_new,
+                                    color: cs.onSurfaceVariant,
+                                    size: 20,
+                                  ),
+                                  onTap: () => _openUrl(
+                                    _versionStatus.termsUrlFor(
+                                      _localeHelper.locale.languageCode,
+                                    ),
+                                  ),
+                                ),
+                                Divider(
+                                  indent: 16,
+                                  endIndent: 16,
+                                  color: cs.outline,
+                                  height: 1,
+                                ),
+                                ListTile(
+                                  leading: Icon(
+                                    Icons.privacy_tip_outlined,
+                                    color: cs.primary,
+                                  ),
+                                  title: Text(l10n.settingsPrivacy),
+                                  trailing: Icon(
+                                    Icons.open_in_new,
+                                    color: cs.onSurfaceVariant,
+                                    size: 20,
+                                  ),
+                                  onTap: () => _openUrl(
+                                    _versionStatus.privacyUrlFor(
+                                      _localeHelper.locale.languageCode,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            _SectionHeader(
+                              title: l10n.profileAccount.toUpperCase(),
+                            ),
+                            SurfaceSectionCard(
+                              children: [
+                                ListTile(
+                                  leading: Icon(
+                                    Icons.lock_outline,
+                                    color: cs.primary,
+                                  ),
+                                  title: Text(l10n.settingsChangePassword),
+                                  trailing: Icon(
+                                    Icons.chevron_right,
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                  onTap: () => ctx.router.push(
+                                    const ChangePasswordRoute(),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            _SectionHeader(
+                              title: l10n.settingsGeneral.toUpperCase(),
+                            ),
+                            SurfaceSectionCard(
+                              children: [
+                                ListTile(
+                                  leading: Icon(
+                                    _themeHelper.isDark
+                                        ? Icons.dark_mode
+                                        : Icons.light_mode,
                                     color: cs.primary,
                                   ),
                                   title: Text(l10n.settingsTheme),
                                   subtitle: Text(
-                                    _themeHelper.isDark ? l10n.settingsThemeDark : l10n.settingsThemeLight,
-                                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                                    _themeHelper.isDark
+                                        ? l10n.settingsThemeDark
+                                        : l10n.settingsThemeLight,
+                                    style: tt.bodySmall?.copyWith(
+                                      color: cs.onSurfaceVariant,
+                                    ),
                                   ),
                                   trailing: Switch(
                                     value: _themeHelper.isDark,
@@ -217,21 +286,38 @@ class _SettingsPageState extends State<SettingsPage> {
                                     activeThumbColor: cs.primary,
                                   ),
                                 ),
-                                Divider(indent: 16, endIndent: 16, color: cs.outline, height: 1),
+                                Divider(
+                                  indent: 16,
+                                  endIndent: 16,
+                                  color: cs.outline,
+                                  height: 1,
+                                ),
                                 ListTile(
-                                  leading: Icon(Icons.language, color: cs.primary),
+                                  leading: Icon(
+                                    Icons.language,
+                                    color: cs.primary,
+                                  ),
                                   title: Text(l10n.settingsLanguage),
                                   subtitle: Text(
                                     _localeHelper.locale.languageCode == 'ro'
                                         ? l10n.settingsLanguageRo
                                         : l10n.settingsLanguageEn,
-                                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                                    style: tt.bodySmall?.copyWith(
+                                      color: cs.onSurfaceVariant,
+                                    ),
                                   ),
                                   trailing: OptionToggle(
-                                    selectedValue: _localeHelper.locale.languageCode,
+                                    selectedValue:
+                                        _localeHelper.locale.languageCode,
                                     items: [
-                                      OptionToggleItem(value: 'en', label: l10n.settingsLanguageEn),
-                                      OptionToggleItem(value: 'ro', label: l10n.settingsLanguageRo),
+                                      OptionToggleItem(
+                                        value: 'en',
+                                        label: l10n.settingsLanguageEn,
+                                      ),
+                                      OptionToggleItem(
+                                        value: 'ro',
+                                        label: l10n.settingsLanguageRo,
+                                      ),
                                     ],
                                     onSelect: (code) {
                                       _localeHelper.setLocale(Locale(code));
@@ -241,18 +327,34 @@ class _SettingsPageState extends State<SettingsPage> {
                               ],
                             ),
                             const SizedBox(height: 24),
-                            _SectionHeader(title: l10n.settingsActions.toUpperCase()),
+                            _SectionHeader(
+                              title: l10n.settingsActions.toUpperCase(),
+                            ),
                             SurfaceSectionCard(
                               children: [
                                 ListTile(
-                                  leading: Icon(Icons.logout, color: cs.primary),
+                                  leading: Icon(
+                                    Icons.logout,
+                                    color: cs.primary,
+                                  ),
                                   title: Text(l10n.settingsSignOut),
                                   onTap: () => _onSignOut(ctx),
                                 ),
-                                Divider(indent: 16, endIndent: 16, color: cs.outline, height: 1),
+                                Divider(
+                                  indent: 16,
+                                  endIndent: 16,
+                                  color: cs.outline,
+                                  height: 1,
+                                ),
                                 ListTile(
-                                  leading: Icon(Icons.delete_forever, color: cs.error),
-                                  title: Text(l10n.settingsDeleteAccount, style: TextStyle(color: cs.error)),
+                                  leading: Icon(
+                                    Icons.delete_forever,
+                                    color: cs.error,
+                                  ),
+                                  title: Text(
+                                    l10n.settingsDeleteAccount,
+                                    style: TextStyle(color: cs.error),
+                                  ),
                                   onTap: () => _onDeleteAccount(ctx),
                                 ),
                               ],
@@ -285,7 +387,13 @@ class _SectionHeader extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(title, style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant, letterSpacing: 1.2)),
+      child: Text(
+        title,
+        style: tt.labelSmall?.copyWith(
+          color: cs.onSurfaceVariant,
+          letterSpacing: 1.2,
+        ),
+      ),
     );
   }
 }

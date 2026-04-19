@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,30 +20,55 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  configureDependencies();
-  await getIt.allReady();
+  await runZonedGuarded<Future<void>>(
+    () async {
+      WidgetsFlutterBinding.ensureInitialized();
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+      ]);
+      configureDependencies();
+      await getIt.allReady();
 
-  // Disable reCAPTCHA app-verification in debug mode BEFORE Firebase init.
-  // firebase_auth v5+ runs a reCAPTCHA Enterprise pre-check on every
-  // email/password sign-in. On Android emulators (especially API 35+) the
-  // reCAPTCHA network call fails. This must be set before any auth operations.
+      // Disable reCAPTCHA app-verification in debug mode BEFORE Firebase init.
+      // firebase_auth v5+ runs a reCAPTCHA Enterprise pre-check on every
+      // email/password sign-in. On Android emulators (especially API 35+) the
+      // reCAPTCHA network call fails. This must be set before any auth operations.
 
-  // Register preference-backed helpers manually (they need SharedPreferences,
-  // so they cannot be marked @injectable for build_runner code generation).
-  final prefs = await SharedPreferences.getInstance();
-  getIt.registerSingleton<LocaleHelper>(LocaleHelper(prefs));
-  getIt.registerSingleton<ThemeHelper>(ThemeHelper(prefs));
-  getIt.registerSingleton<OnboardingHelper>(OnboardingHelper(prefs));
+      // Register preference-backed helpers manually (they need SharedPreferences,
+      // so they cannot be marked @injectable for build_runner code generation).
+      final prefs = await SharedPreferences.getInstance();
+      getIt.registerSingleton<LocaleHelper>(LocaleHelper(prefs));
+      getIt.registerSingleton<ThemeHelper>(ThemeHelper(prefs));
+      getIt.registerSingleton<OnboardingHelper>(OnboardingHelper(prefs));
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
 
-  if (kDebugMode) {
-    await getIt<FirebaseAuth>().setSettings(appVerificationDisabledForTesting: true);
-  }
+      // Crashlytics wiring. Collection is enabled in all builds (including
+      // debug) so crashes from the emulator and `flutter run` also show up
+      // in the Firebase Console. To filter dev noise from production data,
+      // use the Crashlytics Console's build-version / user-ID filters.
+      await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+      FlutterError.onError =
+          FirebaseCrashlytics.instance.recordFlutterFatalError;
+      PlatformDispatcher.instance.onError = (error, stack) {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        return true;
+      };
 
-  runApp(const MyApp());
+      if (kDebugMode) {
+        await getIt<FirebaseAuth>().setSettings(
+          appVerificationDisabledForTesting: true,
+        );
+      }
+
+      runApp(const MyApp());
+    },
+    (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    },
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -98,7 +126,9 @@ class _MyAppState extends State<MyApp> {
         );
       },
 
-      routerConfig: _appRouter.config(navigatorObservers: () => [AutoRouteObserver()]),
+      routerConfig: _appRouter.config(
+        navigatorObservers: () => [AutoRouteObserver()],
+      ),
     );
   }
 }

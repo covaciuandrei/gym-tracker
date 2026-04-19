@@ -140,6 +140,7 @@ Detailed UI specs for every screen live under [`docs/screens/`](docs/screens/):
 | Navigation       | `auto_route`                                    |
 | Dependency inj.  | `get_it` + `injectable`                         |
 | Backend          | Firebase Auth + Cloud Firestore                 |
+| Crash reporting  | Firebase Crashlytics                            |
 | Local storage    | `shared_preferences` + `flutter_secure_storage` |
 | Serialization    | `json_serializable` / `json_annotation`         |
 | Localization     | `flutter_localizations` + ARB files             |

@@ -41,8 +41,9 @@ Pentru că Aplicația îți permite să înregistrezi antrenamente și supliment
 - Timestamp-uri pentru creare cont, ultima autentificare și ultimul email de verificare trimis
 - Metadate de la Firebase Authentication (de ex. ora ultimei autentificări)
 - Jurnale la nivel de infrastructură păstrate de sub-împuternicitul nostru Google (de ex. adresă IP, tip de dispozitiv) pentru securitate și fiabilitate. Nu avem acces direct la aceste jurnale; acestea sunt procesate de Google pe baza propriilor condiții.
+- **Rapoarte de eroare și de blocare a aplicației** colectate de Firebase Crashlytics atunci când Aplicația întâmpină o eroare neașteptată. Rapoartele includ stiva de apeluri, modelul dispozitivului, versiunea sistemului de operare și identificatorul tău Firebase (nu adresa ta de email sau numele afișat), pentru a putea corela raportul cu contul afectat și a diagnostica problema. Crashlytics nu colectează conținutul antrenamentelor, suplimentelor sau mesajelor tale.
 
-În prezent **nu** folosim SDK-uri terțe de analiză, publicitate sau raportare a erorilor. Aplicația nu folosește cookie-uri.
+În prezent **nu** folosim SDK-uri terțe de analiză sau publicitate. Aplicația nu folosește cookie-uri.
 
 ## 3. Scopuri și temeiuri juridice
 
@@ -61,7 +62,7 @@ Prelucrăm datele tale pentru următoarele scopuri:
 
 Divulgăm datele cu caracter personal numai către furnizorii de servicii de care avem nevoie pentru operarea Aplicației. În prezent:
 
-- **Google Ireland Limited / Google LLC** — furnizează Firebase Authentication, Cloud Firestore și Firebase Hosting. Datele sunt prelucrate în baza [Google Cloud Data Processing Addendum](https://cloud.google.com/terms/data-processing-addendum) și a clauzelor contractuale standard (SCC) ale Google.
+- **Google Ireland Limited / Google LLC** — furnizează Firebase Authentication, Cloud Firestore, Firebase Hosting și Firebase Crashlytics (raportare de erori și blocări). Datele sunt prelucrate în baza [Google Cloud Data Processing Addendum](https://cloud.google.com/terms/data-processing-addendum) și a clauzelor contractuale standard (SCC) ale Google.
 
 **Nu** vindem datele tale cu caracter personal și nu le partajăm cu agenți de publicitate.
 

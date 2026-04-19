@@ -669,6 +669,10 @@ If any of these are true, the state **must** go through a cubit (emit state → 
 - **`yearMonth` format = `"YYYY-MM"`** (zero-padded month). **`date` format = `"YYYY-MM-DD"`**.
 - **yearMonth derivation:** services always derive from the date string via `date.substring(0, 7)`. Callers never pass yearMonth separately.
 - **No SQLite / Drift** — Firestore + SharedPreferences + FlutterSecureStorage only.
+- **Deploying Firebase changes — always run the matching deploy command** after touching these files, otherwise production won't reflect the repo:
+  - `firestore.rules` or `firestore.indexes.json` → `firebase deploy --only firestore:rules` (or `firestore`).
+  - Any file under `legal/` (privacy / terms / delete-account / assetlinks.json / index.html / css) → `firebase deploy --only hosting`. The hosting public root is `legal/` (see `firebase.json`), so every file in that folder is served live.
+  - Remind the user to run these commands at the end of any task that modifies the above files.
 
 ---
 

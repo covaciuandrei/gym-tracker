@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:gym_tracker/cubit/base_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/model/auth_user.dart';
@@ -22,12 +23,28 @@ class AuthCubit extends BaseCubit {
 
   /// Subscribes to [AuthService.currentUser$] and emits
   /// [AuthAuthenticatedState] or [AuthUnauthenticatedState] on every change.
+  /// Also syncs the Crashlytics user identifier so crash reports can be
+  /// correlated to a specific user (UID only — no PII).
   void watchAuthState() {
     _authSubscription?.cancel();
-    _authSubscription = _authService.currentUser$.listen(
-      (user) => safeEmit(user == null ? const AuthUnauthenticatedState() : AuthAuthenticatedState(user: user)),
-      onError: (_) => safeEmit(const SomethingWentWrongState()),
-    );
+    _authSubscription = _authService.currentUser$.listen((user) {
+      _syncCrashlyticsUser(user);
+      safeEmit(
+        user == null
+            ? const AuthUnauthenticatedState()
+            : AuthAuthenticatedState(user: user),
+      );
+    }, onError: (_) => safeEmit(const SomethingWentWrongState()));
+  }
+
+  /// Sets or clears the Crashlytics user identifier. Best-effort: failures
+  /// must never break the auth flow.
+  void _syncCrashlyticsUser(AuthUser? user) {
+    try {
+      FirebaseCrashlytics.instance.setUserIdentifier(user?.uid ?? '');
+    } catch (_) {
+      // Ignored — crash reporting must never block auth.
+    }
   }
 
   Future<void> signIn({required String email, required String password}) async {
@@ -85,10 +102,16 @@ class AuthCubit extends BaseCubit {
     }
   }
 
-  Future<void> changePassword({required String currentPassword, required String newPassword}) async {
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
     safeEmit(const PendingState());
     try {
-      await _authService.changePassword(currentPassword: currentPassword, newPassword: newPassword);
+      await _authService.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
       safeEmit(const AuthPasswordChangedState());
     } on InvalidCredentialsException {
       safeEmit(const AuthInvalidCredentialsState());
