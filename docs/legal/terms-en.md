@@ -5,7 +5,7 @@
 
 Welcome to **Gym Tracker** (the "App"). These Terms of Service ("Terms") govern your access to and use of the App. By creating an account or otherwise using the App, you agree to be bound by these Terms. If you do not agree, do not use the App.
 
-The App is operated by **Covaciu Andrei**, an individual established in Romania ("we", "us", "our"). You can reach us at **covaciuandrei21@gmail.com**.
+The App is operated by **Covaciu Andrei**, an individual established in Romania ("we", "us", "our"). You can reach us at **covaciuandreideveloper@gmail.com**.
 
 ## 1. Acceptance and Scope
 
@@ -21,7 +21,7 @@ To use most features you need to create an account with a valid email address, a
 
 - Provide accurate, current information when registering;
 - Keep your credentials confidential and not share them with anyone;
-- Notify us at covaciuandrei21@gmail.com if you suspect unauthorized access to your account.
+- Notify us at covaciuandreideveloper@gmail.com if you suspect unauthorized access to your account.
 
 You are responsible for all activity that occurs under your account.
 
@@ -80,5 +80,5 @@ These Terms are governed by **Romanian law**. Any dispute arising out of or in c
 
 If you have questions about these Terms, contact us at:
 
-- **Email:** covaciuandrei21@gmail.com
+- **Email:** covaciuandreideveloper@gmail.com
 - **Controller:** Covaciu Andrei, Bucharest, Romania

@@ -10,7 +10,7 @@ Această Politică de confidențialitate explică modul în care **Gym Tracker**
 Operatorul datelor tale cu caracter personal este:
 
 - **Covaciu Andrei** (persoană fizică), stabilit în București, România
-- **Email de contact:** covaciuandrei21@gmail.com
+- **Email de contact:** covaciuandreideveloper@gmail.com
 
 Pentru orice întrebare privind această Politică sau datele tale cu caracter personal, ne poți contacta la adresa de mai sus.
 
@@ -89,7 +89,7 @@ Sub-împuternicitul nostru Google poate prelucra și stoca date pe servere aflat
 - **Retragerea consimțământului** oricând (pentru datele privind sănătatea, art. 9) — echivalentă cu ștergerea contului;
 - **A nu fi supus** unor decizii bazate exclusiv pe prelucrare automată (nu folosim așa ceva).
 
-Pentru a-ți exercita oricare drept, scrie-ne la **covaciuandrei21@gmail.com**. Vom răspunde în termen de o lună, conform GDPR.
+Pentru a-ți exercita oricare drept, scrie-ne la **covaciuandreideveloper@gmail.com**. Vom răspunde în termen de o lună, conform GDPR.
 
 Ai, de asemenea, dreptul de a depune o plângere la autoritatea de supraveghere din România:
 
@@ -112,5 +112,5 @@ Putem actualiza această Politică de confidențialitate periodic. Când o facem
 
 ## 11. Contact
 
-- **Email:** covaciuandrei21@gmail.com
+- **Email:** covaciuandreideveloper@gmail.com
 - **Operator:** Covaciu Andrei, București, România

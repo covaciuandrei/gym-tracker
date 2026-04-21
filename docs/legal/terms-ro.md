@@ -5,7 +5,7 @@
 
 Bine ai venit la **Gym Tracker** (denumită în continuare „Aplicația"). Prezenții Termeni și Condiții („Termenii") reglementează accesul tău la Aplicație și modul în care o folosești. Prin crearea unui cont sau prin utilizarea Aplicației, ești de acord să respecți acești Termeni. Dacă nu ești de acord, te rugăm să nu folosești Aplicația.
 
-Aplicația este operată de **Covaciu Andrei**, persoană fizică cu domiciliul în România („noi"). Ne poți contacta la **covaciuandrei21@gmail.com**.
+Aplicația este operată de **Covaciu Andrei**, persoană fizică cu domiciliul în România („noi"). Ne poți contacta la **covaciuandreideveloper@gmail.com**.
 
 ## 1. Acceptare și scop
 
@@ -21,7 +21,7 @@ Pentru a folosi majoritatea funcționalităților trebuie să-ți creezi un cont
 
 - Să furnizezi informații corecte și actuale la înregistrare;
 - Să păstrezi confidențialitatea datelor de autentificare și să nu le dezvălui altcuiva;
-- Să ne anunți la covaciuandrei21@gmail.com dacă suspectezi un acces neautorizat la contul tău.
+- Să ne anunți la covaciuandreideveloper@gmail.com dacă suspectezi un acces neautorizat la contul tău.
 
 Ești responsabil pentru toate activitățile desfășurate din contul tău.
 
@@ -80,5 +80,5 @@ Acești Termeni sunt guvernați de **legea română**. Orice litigiu care decurg
 
 Pentru întrebări legate de acești Termeni, ne poți contacta la:
 
-- **Email:** covaciuandrei21@gmail.com
+- **Email:** covaciuandreideveloper@gmail.com
 - **Operator:** Covaciu Andrei, București, România

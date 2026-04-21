@@ -10,7 +10,7 @@ This Privacy Policy explains how **Gym Tracker** (the "App") collects, uses, and
 The data controller for your personal data is:
 
 - **Covaciu Andrei** (individual), established in Bucharest, Romania
-- **Contact email:** covaciuandrei21@gmail.com
+- **Contact email:** covaciuandreideveloper@gmail.com
 
 For any question about this Privacy Policy or your personal data, you can contact us at the email above.
 
@@ -92,7 +92,7 @@ Under the GDPR you have the right to:
 - **Withdraw consent** at any time (for Art. 9 health data) — this is equivalent to deleting your account;
 - **Not be subject** to solely automated decision-making (we do not perform any).
 
-To exercise any right, email **covaciuandrei21@gmail.com**. We will respond within one month, as required by the GDPR.
+To exercise any right, email **covaciuandreideveloper@gmail.com**. We will respond within one month, as required by the GDPR.
 
 You also have the right to lodge a complaint with the Romanian supervisory authority:
 
@@ -115,5 +115,5 @@ We may update this Privacy Policy from time to time. When we do, we will update 
 
 ## 11. Contact
 
-- **Email:** covaciuandrei21@gmail.com
+- **Email:** covaciuandreideveloper@gmail.com
 - **Controller:** Covaciu Andrei, Bucharest, Romania
