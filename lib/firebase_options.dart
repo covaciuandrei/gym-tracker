@@ -38,6 +38,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: '998204591368',
     projectId: 'gym-presence-tracker-16edc',
     storageBucket: 'gym-presence-tracker-16edc.firebasestorage.app',
-    iosBundleId: 'com.gymtracker.gymTracker',
+    iosBundleId: 'com.covaciu.gymtracker',
   );
 }

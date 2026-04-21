@@ -9,7 +9,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.gymtracker.gymTracker</string>
+	<string>com.covaciu.gymtracker</string>
 	<key>PROJECT_ID</key>
 	<string>gym-presence-tracker-16edc</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:998204591368:ios:3178573b39caf1a246b0bd</string>
+	<string>1:998204591368:ios:fd7f1e0128ec013c46b0bd</string>
 </dict>
 </plist>

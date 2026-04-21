@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:998204591368:android:9d493ffecd29388546b0bd",
+        "android_client_info": {
+          "package_name": "com.covaciu.gymtracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDnPr9Tr2bqRvlbcFhD_Eo1DCXF6mnKDt4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:998204591368:android:9ee8f1269864dbf646b0bd",
         "android_client_info": {
           "package_name": "com.gymtracker.gym_tracker"
