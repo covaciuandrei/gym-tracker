@@ -12,11 +12,11 @@ library;
 /// Base URL of the Firebase Hosting site that serves the legal pages.
 const String legalHostingBaseUrl = 'https://gym-presence-tracker-16edc.web.app';
 
-const String legalTermsUrlEn = '$legalHostingBaseUrl/terms-en.html';
-const String legalTermsUrlRo = '$legalHostingBaseUrl/terms-ro.html';
+const String legalTermsUrlEn = '$legalHostingBaseUrl/terms?lang=en';
+const String legalTermsUrlRo = '$legalHostingBaseUrl/terms?lang=ro';
 
-const String legalPrivacyUrlEn = '$legalHostingBaseUrl/privacy-en.html';
-const String legalPrivacyUrlRo = '$legalHostingBaseUrl/privacy-ro.html';
+const String legalPrivacyUrlEn = '$legalHostingBaseUrl/privacy?lang=en';
+const String legalPrivacyUrlRo = '$legalHostingBaseUrl/privacy?lang=ro';
 
 /// Fallback map used when `appConfig/version.termsUrls` is missing.
 const Map<String, String> legalTermsFallbackUrls = {'en': legalTermsUrlEn, 'ro': legalTermsUrlRo};

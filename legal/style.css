@@ -157,6 +157,11 @@ strong {
   text-decoration: none;
 }
 
+/* Bilingual toggle: hide inactive language blocks */
+.lang-hidden {
+  display: none !important;
+}
+
 .back-link {
   display: inline-block;
   margin-bottom: 24px;
@@ -224,6 +229,12 @@ footer p {
 @media (min-width: 520px) {
   .card-grid {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 720px) {
+  .card-grid--three {
+    grid-template-columns: 1fr 1fr 1fr;
   }
 }
 
