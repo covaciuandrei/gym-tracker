@@ -44,6 +44,7 @@
   - The callback handles its own try/catch and emits the final state (success or error).
 - **Load / stream / subscription methods do NOT use `guardedAction()`** — they manage their own subscriptions.
 - **`StatsCubit` exception:** uses its own token-based guard system with `_activeYearToken` and `StatsLoadStatus` checks. Do not refactor to `guardedAction()`.
+- **`SplashCubit.start()` exception:** one-shot bootstrap orchestration with a minimum-splash delay; called once from `initState`. Does not use `guardedAction()`.
 - **`SomethingWentWrongState` is the uniform catch-all** — all `catch (_)` blocks emit it. Specific typed exceptions are mapped to specific states before the catch-all.
 - **Never use `late` or `late final` in app code.** Prefer eagerly initialized `final` fields, nullable fields with explicit guards, or cubit-emitted state values read in `BlocBuilder`.
 - **`@factory` (not `@singleton`)** — each page gets its own fresh cubit instance.
@@ -188,7 +189,7 @@ When building or updating a page's UI, **always** follow this sequence:
 
 ## Sources & Mappers
 
-- **Every source:** `@injectable`, `const` constructor, receives mapper via injection, accesses `FirebaseFirestore.instance` directly (not injected).
+- **Every source:** `@injectable`, `const` constructor, receives mapper and `FirebaseFirestore` instance via injection.
 - **Every mapper:** `@injectable`, no state, pure mapping functions. Handles `Timestamp.toDate()` and `Timestamp.fromDate()`.
 - All sources use `.withConverter<Dto>()` on collection references. The `id` field is populated from `snap.id` inside the `fromFirestore` closure.
 

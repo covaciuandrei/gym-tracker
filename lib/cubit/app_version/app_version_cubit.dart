@@ -35,41 +35,49 @@ class AppVersionCubit extends BaseCubit {
 
   /// Runs the gate. Emits [PendingState] immediately, then a terminal state.
   Future<void> check() async {
-    safeEmit(const PendingState());
-    try {
-      final info = await packageInfo();
-      final currentVersion = info.version;
-      final config = await _configService.getAppConfig();
+    await guardedAction(() async {
+      try {
+        final info = await packageInfo();
+        final currentVersion = info.version;
+        final config = await _configService.getAppConfig();
 
-      if (config.maintenanceMode) {
-        safeEmit(AppVersionMaintenanceState(config: config));
-        return;
-      }
+        if (config.maintenanceMode) {
+          safeEmit(AppVersionMaintenanceState(config: config));
+          return;
+        }
 
-      if (VersionComparator.isBelow(currentVersion, config.minRequiredVersion)) {
+        if (VersionComparator.isBelow(
+          currentVersion,
+          config.minRequiredVersion,
+        )) {
+          safeEmit(
+            AppVersionForceUpdateState(
+              currentVersion: currentVersion,
+              requiredVersion: config.minRequiredVersion,
+              storeUrl: _storeUrlFor(config),
+            ),
+          );
+          return;
+        }
+
+        final softUpdateAvailable = VersionComparator.isBelow(
+          currentVersion,
+          config.latestVersion,
+        );
         safeEmit(
-          AppVersionForceUpdateState(
+          AppVersionOkState(
             currentVersion: currentVersion,
-            requiredVersion: config.minRequiredVersion,
+            latestVersion: config.latestVersion,
+            softUpdateAvailable: softUpdateAvailable,
             storeUrl: _storeUrlFor(config),
           ),
         );
-        return;
+      } catch (_) {
+        safeEmit(const AppVersionNetworkErrorState());
       }
-
-      final softUpdateAvailable = VersionComparator.isBelow(currentVersion, config.latestVersion);
-      safeEmit(
-        AppVersionOkState(
-          currentVersion: currentVersion,
-          latestVersion: config.latestVersion,
-          softUpdateAvailable: softUpdateAvailable,
-          storeUrl: _storeUrlFor(config),
-        ),
-      );
-    } catch (_) {
-      safeEmit(const AppVersionNetworkErrorState());
-    }
+    });
   }
 
-  String _storeUrlFor(AppConfig config) => isAndroid ? config.androidStoreUrl : config.iosStoreUrl;
+  String _storeUrlFor(AppConfig config) =>
+      isAndroid ? config.androidStoreUrl : config.iosStoreUrl;
 }

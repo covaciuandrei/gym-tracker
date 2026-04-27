@@ -27,7 +27,9 @@ class CheckingUpdateCubit extends BaseCubit {
 
   /// Runs the eligibility check and, when eligible, waits
   /// [presentationDelay] before emitting [CheckingUpdateShowSheetState].
-  Future<void> evaluate({Duration presentationDelay = defaultPresentationDelay}) async {
+  Future<void> evaluate({
+    Duration presentationDelay = defaultPresentationDelay,
+  }) async {
     try {
       final shouldShow = await _service.shouldShowBigUpdate();
       if (!shouldShow) {
@@ -35,7 +37,9 @@ class CheckingUpdateCubit extends BaseCubit {
         return;
       }
       await Future<void>.delayed(presentationDelay);
-      safeEmit(CheckingUpdateShowSheetState(latestVersion: _service.latestVersion));
+      safeEmit(
+        CheckingUpdateShowSheetState(latestVersion: _service.latestVersion),
+      );
     } catch (_) {
       safeEmit(const CheckingUpdateIdleState());
     }
@@ -44,22 +48,26 @@ class CheckingUpdateCubit extends BaseCubit {
   /// Persists the per-version dismissal so the sheet stays hidden for the
   /// 3-day cool-down.
   Future<void> remindLater() async {
-    try {
-      await _service.rememberDismissal();
-    } catch (_) {
-      // Persist failures are non-fatal; the sheet is still dismissed visually.
-    }
-    safeEmit(const CheckingUpdateDismissedState());
+    await guardedAction(() async {
+      try {
+        await _service.rememberDismissal();
+      } catch (_) {
+        // Persist failures are non-fatal; the sheet is still dismissed visually.
+      }
+      safeEmit(const CheckingUpdateDismissedState());
+    });
   }
 
   /// Launches the external store URL. Does not persist a dismissal — the
   /// user is assumed to be updating.
   Future<void> updateNow() async {
-    try {
-      await _service.launchStoreUrl();
-    } catch (_) {
-      // Swallow launcher errors; the sheet closes either way.
-    }
-    safeEmit(const CheckingUpdateDismissedState());
+    await guardedAction(() async {
+      try {
+        await _service.launchStoreUrl();
+      } catch (_) {
+        // Swallow launcher errors; the sheet closes either way.
+      }
+      safeEmit(const CheckingUpdateDismissedState());
+    });
   }
 }

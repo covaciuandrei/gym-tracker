@@ -1,9 +1,9 @@
 # Copilot Instructions — gym_tracker
 
-For now these copilot-instructions are not really up to date, but almost up to date. dont really follow exactly everything. everything you read heare must be treated more like a suggestion. if you have any question or are not sure about something, ask me. also, if you have any suggestion on how to improve the instructions, please let me know.
-
-> **Single source of truth** for AI role, reference data, architecture map,
-> and all coding rules/conventions.
+> **Reference document** — role, environment, design tokens, controls inventory, file locations,
+> feature & route map, and navigation flowcharts.
+>
+> **All coding rules live in [`.github/rules.md`](rules.md). Follow them exactly.**
 
 ## 1. Role
 
@@ -121,6 +121,7 @@ decoration: BoxDecoration(
 | `set_password_card.dart`           | Reusable password form card (current/new/confirm variants) used in auth action and change-password flows.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `big_update_bottom_sheet.dart`     | Modal bottom-sheet content announcing a "big" version bump (major jump or minor ≥2). Presented from `MainShellPage` when `CheckingUpdateCubit` emits `CheckingUpdateShowSheetState`. Exposes `latestVersion`, `onUpdate`, `onLater` callbacks; the caller pops the sheet and delegates to cubit actions (`updateNow` / `remindLater`).                                                                                                                                                                                                                                                                                                           |
 | `legal_consent_checkbox.dart`      | Mandatory GDPR-consent checkbox used above the Register submit button. Takes two parent-owned `ValueNotifier<bool>`s (`accepted`, `showError`) and renders a `Checkbox` next to a `Text.rich` "I have read and agree to the [Terms of Service] and [Privacy Policy]." with both document names as tappable links. Taps open the localized hosted URL (resolved via `LocaleHelper` + `AppVersionStatus`, with hardcoded fallback from `lib/core/constants/legal_urls.dart`) in the external browser via `url_launcher`. When `showError` is true, renders an inline required-message below the row; ticking the checkbox clears it automatically. |
+| `labeled_checkbox.dart`            | Low-level accessible checkbox with an optional `label` widget, `errorText`, and `enabled` flag. Used as the building block for `LegalConsentCheckbox` and any other checkbox rows that need a tap-to-toggle label.                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 ---
 
@@ -153,20 +154,21 @@ decoration: BoxDecoration(
 
 ```
 /                         → SplashPage (initial)
-/login          [guest]   → LoginPage          (lib/presentation/pages/auth/login_page.dart)
-/register       [guest]   → RegisterPage       (lib/presentation/pages/auth/register_page.dart)
-/forgot-password[guest]   → ForgotPasswordPage (lib/presentation/pages/auth/forgot_password_page.dart)
-/app                      → MainShellPage      (lib/presentation/pages/main_shell/main_shell_page.dart)
-  /app/calendar           → CalendarPage       (tab child)
-  /app/stats              → StatsPage          (tab child)
-  /app/health             → HealthPage         (tab child)
-  /app/profile            → ProfilePage        (tab child)
-/workout-types  [auth]    → WorkoutTypesPage   (lib/presentation/pages/workout_types/workout_types_page.dart)
-/settings       [auth]    → SettingsPage       (lib/presentation/pages/settings/settings_page.dart)
-/change-password[auth]    → ChangePasswordPage (lib/presentation/pages/change_password/change_password_page.dart)
-/maintenance    [guest]   → MaintenancePage    (lib/presentation/pages/maintenance/maintenance_page.dart)
-/force-update   [guest]   → ForceUpdatePage    (lib/presentation/pages/force_update/force_update_page.dart)
-/no-connection  [guest]   → NoConnectionPage   (lib/presentation/pages/no_connection/no_connection_page.dart)
+/onboarding     [guest]   → OnboardingPage      (lib/presentation/pages/onboarding/onboarding_page.dart)
+/login          [guest]   → LoginPage           (lib/presentation/pages/auth/login_page.dart)
+/register       [guest]   → RegisterPage        (lib/presentation/pages/auth/register_page.dart)
+/forgot-password[guest]   → ForgotPasswordPage  (lib/presentation/pages/auth/forgot_password_page.dart)
+/app                      → MainShellPage       (lib/presentation/pages/main_shell/main_shell_page.dart)
+  /app/calendar           → CalendarPage        (tab child)
+  /app/stats              → StatsPage           (tab child, maintainState: false — cubit rebuilds on every tab visit)
+  /app/health             → HealthPage          (tab child, maintainState: false — cubit rebuilds on every tab visit)
+  /app/profile            → ProfilePage         (tab child)
+/workout-types  [auth]    → WorkoutTypesPage    (lib/presentation/pages/workout_types/workout_types_page.dart)
+/settings       [auth]    → SettingsPage        (lib/presentation/pages/settings/settings_page.dart, maintainState: false)
+/change-password[auth]    → ChangePasswordPage  (lib/presentation/pages/change_password/change_password_page.dart)
+/maintenance    [guest]   → MaintenancePage     (lib/presentation/pages/maintenance/maintenance_page.dart)
+/force-update   [guest]   → ForceUpdatePage     (lib/presentation/pages/force_update/force_update_page.dart)
+/no-connection  [guest]   → NoConnectionPage    (lib/presentation/pages/no_connection/no_connection_page.dart)
 ```
 
 **Auth gating in current implementation:**
@@ -179,11 +181,13 @@ decoration: BoxDecoration(
 
 #### AUTH FEATURE
 
-| Component                   | Actions / State                                                                                                                                                                                                                    |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **LoginComponent**          | `email`, `password` fields; `isLoading`, `errorMessage`; `onSubmit()` → `authService.signIn()` → navigate `MainShell` (`/app/calendar` tab); link to `/register`, `/forgot-password`                                               |
-| **RegisterComponent**       | `email`, `password`, `confirmPassword`; validates: email format, password ≥8 chars + uppercase + lowercase + number, passwords match; `onSubmit()` → `authService.signUp()` → shows "verify email" success state; link to `/login` |
-| **ForgotPasswordComponent** | `email` field; `isLoading`, `errorMessage`, `successMessage`; `onSubmit()` → `authService.resetPassword(email)` → success message; email validation; link back to `/login`                                                         |
+| Component                   | Actions / State                                                                                                                                                                                                                                                                                                                                 |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **LoginComponent**          | `email`, `password` fields; `onSubmit()` → `AuthCubit.signIn()` → emits `AuthSignInSuccessState` → navigate `MainShell`; emits `AuthInvalidCredentialsState` or `AuthEmailNotVerifiedState` on failure; link to `/register`, `/forgot-password`                                                                                              |
+| **RegisterComponent**       | `email`, `password`, `confirmPassword`, `displayName`; GDPR consent checkbox (required); validates: email format, password ≥8 chars + uppercase + lowercase + number, passwords match; `onSubmit()` → `AuthCubit.signUp({email, password, displayName, consent})` → emits `AuthSignUpSuccessState`; link to `/login`                            |
+| **ForgotPasswordComponent** | `email` field; `onSubmit()` → `AuthCubit.resetPassword({email})` → emits `AuthPasswordResetSentState`; link back to `/login`                                                                                                                                                                                                                  |
+
+**AuthCubit states:** `AuthAuthenticatedState`, `AuthUnauthenticatedState`, `AuthSignInSuccessState`, `AuthSignUpSuccessState`, `AuthSignOutSuccessState`, `AuthPasswordResetSentState`, `AuthPasswordChangedState`, `AuthAccountDeletedState`, `AuthEmailNotVerifiedState`, `AuthInvalidCredentialsState`, `AuthEmailAlreadyInUseState`, `AuthWeakPasswordState`.
 
 #### CALENDAR FEATURE
 
@@ -286,12 +290,13 @@ firestore/
 ├── users/{userId}/
 │   ├── (profile fields)
 │   │   ├── email                        String   ← always mirrors Firebase Auth (source of truth)
-│   │   ├── displayName                  String   ← set on first-login bootstrap (nickname)
-│   │   ├── lastVerificationEmailSentAt  Timestamp? ← cooldown tracking for resend buttons; cleared on login
+│   │   ├── displayName                  String   ← set on sign-up; displayed in profile
+│   │   ├── lastVerificationEmailSentAt  Timestamp? ← cooldown tracking for resend buttons; deleted on login
 │   │   ├── theme                        String   ← 'dark' | 'light'
 │   │   ├── language                     String   ← 'en' | 'ro'
 │   │   ├── lastLoginAt                  Timestamp
 │   │   ├── createdAt                    Timestamp
+│   │   ├── consent                      Map      ← GDPR: {termsVersion, privacyVersion, termsUrl, privacyUrl, acceptedAt, ipCountry?}
 │   │   └── stats.totalAttendances       Number
 │   │
 │   ├── trainingTypes/{typeId}
@@ -318,6 +323,8 @@ appConfig/
     ├── iosStoreUrl             String
     ├── termsUrls               Map<String,String>  ← { en, ro } with 'en' fallback; used by Register consent checkbox + Settings › Legal
     ├── privacyUrls             Map<String,String>  ← { en, ro } with 'en' fallback; same surfaces
+    ├── termsVersion            String   ← semver string stored in consent record on sign-up
+    ├── privacyVersion          String   ← semver string stored in consent record on sign-up
     └── updatedAt               Timestamp?
 ```
 
@@ -325,25 +332,26 @@ appConfig/
 
 - All `UserSource` writes use `SetOptions(merge: true)` — safe for concurrent updates, preserves subcollections and existing fields.
 - `lastVerificationEmailSentAt` uses `Timestamp.now()` (device time) — avoids server/device clock skew in cooldown computation.
-- `lastVerificationEmailSentAt` is cleared on successful login via `_initializeProfileOnFirstLogin()`.
+- `lastVerificationEmailSentAt` is **deleted** (`FieldValue.delete()`) on successful login via `UserSource.recordLogin()`.
 - Reads on `appConfig/version` are **public** (anyone, including signed-out users) and happen on every cold-launch before any auth flow. Writes are blocked — only the Firebase Console can update it.
 
 ### 7.4 Service / Source Map
 
-| Domain                 | Service                                                                   | Source                                                                  |
-| ---------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Auth                   | `lib/service/auth/auth_service.dart`                                      | — (Firebase Auth SDK directly)                                          |
-| Auth (cubit)           | `lib/cubit/auth/auth_cubit.dart`                                          |                                                                         |
-| User profile           | `lib/service/user/user_service.dart`                                      | `lib/data/remote/user/user_source.dart`                                 |
-| Attendance             | `lib/service/attendance/attendance_service.dart`                          | `lib/data/remote/attendance/attendance_day_source.dart`                 |
-| Workout types          | `lib/service/workout/workout_service.dart`                                | `lib/data/remote/training_type/training_type_source.dart`               |
-| Health / Supplements   | `lib/service/health/health_service.dart`                                  | `lib/data/remote/supplement/health_source.dart`                         |
-| Stats                  | `StatsCubit` composes attendance/workout/health services                  | —                                                                       |
-| App config             | `lib/service/app_config/app_config_service.dart`                          | `lib/data/remote/app_config/app_config_source.dart`                     |
-| App version gate       | `lib/cubit/splash/splash_cubit.dart` + `lib/core/app_version_status.dart` | — (reads `AppConfigService`)                                            |
-| Checking update prompt | `lib/service/checking_update/checking_update_service.dart`                | — (uses `SharedPreferences` + `url_launcher`, reads `AppVersionStatus`) |
-| Theme                  | `lib/assets/theme/theme_helper.dart`                                      | —                                                                       |
-| Language               | `lib/presentation/helpers/locale_helper.dart`                             | —                                                                       |
+| Domain                 | Service                                                                        | Source                                                                  |
+| ---------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| Auth                   | `lib/service/auth/auth_service.dart`                                           | — (Firebase Auth SDK directly)                                          |
+| Auth (cubit)           | `lib/cubit/auth/auth_cubit.dart`                                               |                                                                         |
+| User profile           | `lib/service/user/user_service.dart`                                           | `lib/data/remote/user/user_source.dart`                                 |
+| Account cleanup        | `lib/service/account/account_cleanup_service.dart`                             | `lib/data/remote/account/` (deletes all user subcollections)            |
+| Attendance             | `lib/service/attendance/attendance_service.dart`                               | `lib/data/remote/attendance/attendance_day_source.dart`                 |
+| Workout types          | `lib/service/workout/workout_service.dart`                                     | `lib/data/remote/training_type/training_type_source.dart`               |
+| Health / Supplements   | `lib/service/health/health_service.dart`                                       | `lib/data/remote/supplement/health_source.dart`                         |
+| Stats                  | `StatsCubit` composes attendance/workout/health services                       | —                                                                       |
+| App config             | `lib/service/app_config/app_config_service.dart`                               | `lib/data/remote/app_config/app_config_source.dart`                     |
+| App version gate       | `lib/cubit/splash/splash_cubit.dart` + `lib/core/app_version_status.dart`      | — (reads `AppConfigService`; calls `AppVersionStatus.getAppVersionDetails()` + `AppVersionStatus.setLegalUrls()` on OK path) |
+| Checking update prompt | `lib/service/checking_update/checking_update_service.dart`                     | — (uses `SharedPreferences` + `url_launcher`, reads `AppVersionStatus`) |
+| Theme                  | `lib/assets/theme/theme_helper.dart`                                           | —                                                                       |
+| Language               | `lib/presentation/helpers/locale_helper.dart`                                  | —                                                                       |
 
 ---
 
@@ -440,9 +448,12 @@ Firebase email links (out-of-app):
 ```
 State: UNAUTHENTICATED
     ├── signIn(email, pwd)
-    │       ├── OK + verified   → AUTHENTICATED  (bootstrapOnSignIn writes profile)
+    │       ├── OK + verified   → AUTHENTICATED  (recordLogin writes lastLoginAt; deletes lastVerificationEmailSentAt)
     │       └── OK + unverified → UNAUTHENTICATED (auto sign-out)
-    ├── signUp(email, pwd) → sends verification email → UNAUTHENTICATED (must verify)
+    ├── signUp(email, pwd, displayName, consent)
+    │       → createUser() writes profile + consent map
+    │       → sends verification email
+    │       → UNAUTHENTICATED (must verify before next sign-in)
     └── (email verification & password reset handled by Firebase hosted page)
 
 State: AUTHENTICATED
@@ -464,22 +475,36 @@ State: AUTHENTICATED
 ### 8.1.4 First-Login Bootstrap
 
 ```
-signIn() / signUp() success
+signUp() success
     │
-    └── _initializeProfileOnFirstLogin() [best-effort]
+    └── AuthCubit._createUser() [best-effort]
             │
-            └── UserSource.bootstrapOnSignIn(userId, email, displayName?)
+            └── UserService.createUser({userId, email, displayName, consent})
                     │
-                    └── Firestore merge write:
+                    └── UserSource.create(): Firestore merge write:
                             {
-                              email: authEmail,         ← always synced from Auth
-                              displayName: nickname,    ← from signUp, or preserved on signIn
-                              theme: 'dark',            ← default (only on first create)
-                              language: 'en',           ← default (only on first create)
-                              lastLoginAt: serverTime,
-                              createdAt: serverTime,    ← only on first create
+                              email: authEmail,
+                              displayName: displayName,
+                              theme: 'dark',
+                              language: 'en',
+                              createdAt: serverTimestamp,
+                              lastLoginAt: serverTimestamp,
+                              lastVerificationEmailSentAt: Timestamp.now(),
+                              consent: { ...consentMap, acceptedAt: serverTimestamp },
                             }
                             SetOptions(merge: true) — safe for existing docs
+
+signIn() success
+    │
+    └── AuthCubit._recordLogin() [best-effort]
+            │
+            └── UserService.recordLogin({userId})
+                    │
+                    └── UserSource.recordLogin(): Firestore merge write:
+                            {
+                              lastLoginAt: serverTimestamp,
+                              lastVerificationEmailSentAt: FieldValue.delete(),
+                            }
 ```
 
 ### 8.2 Calendar Day Cell State Machine
@@ -568,216 +593,18 @@ HealthPage
 
 ---
 
-## 9. Architecture Rules
+## 9. Coding Rules
 
-- **Layering:** `Page/Control → Cubit → Service → Source → Firestore`. Never skip a layer.
-- **One cubit per page/feature** — cubits live in `lib/cubit/<feature>/`.
-- **No business logic in widgets** — all state changes go through cubit methods.
-- **Service + source pattern** — cubits call services (`lib/service/*`), services call Firestore sources (`lib/data/remote/*`). Cubits never touch Firestore directly.
-- **Services are thin orchestration layers** — they delegate to sources and add only business-rule checks (existence guards). No Firestore logic in services.
-- **auto_route** — all navigation uses `context.router.push/replace/popAndPush`.
-- **Every page implements `AutoRouteWrapper`** with `wrappedRoute` creating its `BlocProvider`.
-- **`@RoutePage()` annotation required** on every page widget.
-- **ThemeHelper / LocaleHelper usage scope**: do NOT inject into every page. Most pages read through inherited context (`Theme.of(context)`, `AppLocalizations.of(context)`). Use helpers directly only in Settings page and root app wiring.
-- **Widgets must be as stateless as possible.** If a widget only renders state and has no local UI state, it must be a `StatelessWidget`. Use `StatefulWidget` only when local UI state is truly required (e.g. `TextEditingController`, animations, focus nodes).
+**All coding rules, conventions, and patterns live in [`.github/rules.md`](rules.md). Follow them exactly.**
 
 ---
 
-## 10. Cubit Rules
-
-- Every cubit: `@injectable`, extends `BaseCubit`.
-- **Before creating a new cubit**, check whether an existing cubit already manages that domain. Reuse the existing cubit if it covers the same data/feature — do not duplicate cubit responsibilities.
-- **`BaseCubit` default state is `const InitialState()`**, not a parameterized substate.
-- **Mutation methods** (Firestore writes, auth actions) **must use `guardedAction()`** from `BaseCubit`.
-  - `guardedAction()` checks `state is PendingState` → returns immediately if true (no-op), otherwise emits `PendingState` and runs the callback.
-  - This guarantees that rapid duplicate taps, UI lag, or overlapping requests cannot produce duplicate Firestore documents or conflicting backend calls.
-  - The callback handles its own try/catch and emits the final state (success or error).
-- **Load / stream / subscription methods do NOT use `guardedAction()`** — they manage their own subscriptions.
-- **`StatsCubit` exception:** uses its own token-based guard system with `_activeYearToken` and `StatsLoadStatus` checks. Do not refactor to `guardedAction()`.
-- **`SomethingWentWrongState` is the uniform catch-all** — all `catch (_)` blocks emit it. Specific typed exceptions are mapped to specific states before the catch-all.
-- **Never use `late` or `late final` in app code.** Prefer eagerly initialized `final` fields, nullable fields with explicit guards, or cubit-emitted state values read in `BlocBuilder`.
-- **`@factory` (not `@singleton`)** — each page gets its own fresh cubit instance.
-
----
-
-## 11. State Management Rules
-
-- **Bloc/Cubit is the single source of truth** for application state.
-- **Correct pattern:** `Cubit → BlocBuilder → UI`.
-- **Incorrect pattern:** `Cubit → BlocConsumer listener → ValueNotifier → UI`.
-
-### When to use `setState`
-
-`setState` is acceptable **only** for trivial, self-contained visual state that:
-
-- Has **no data / backend involvement** — purely cosmetic.
-- Lives and dies inside a single widget — nothing else needs to know about it.
-- Does not result from a user action that triggers a side effect (API call, Firestore write, navigation).
-
-**Acceptable examples:** toggling an expand/collapse arrow, running a local animation, showing/hiding a tooltip.
-
-### When NOT to use `setState`
-
-If any of these are true, the state **must** go through a cubit (emit state → `BlocBuilder`/`BlocConsumer`):
-
-- The action calls a service or writes to Firestore.
-- The action changes data that another widget, page, or test might need.
-- The user taps a button that has a meaningful outcome (submit, delete, toggle attendance, log supplement, etc.).
-- You need loading / success / error feedback in the UI.
-- The state should survive widget rebuilds or be testable.
-
-**Rule of thumb:** if you hesitate, use a cubit. It's always safer and more testable.
-
-### ValueNotifier scope
-
-- **Do NOT use `ValueNotifier` for backend/domain data** — no `List<SupplementLog>`, no user data, no health logs in ValueNotifier.
-- **ValueNotifier IS OK for local ephemeral UI state only**: selected tab index, search query, form drafts, dropdown selections — things that exist only inside a widget, don't come from backend, don't persist.
-
-### Other state rules
-
-- **Never use `setState` to store cubit state** (errors, loading, success). Derive directly in `builder:` from the current bloc state.
-- **Use `buildWhen`** to restrict rebuilds to states that affect UI.
-- **Use `listenWhen` + `listener`** only for side effects (navigation, snackbars) not reflected in the widget tree.
-- **For local live-feedback widgets** (password strength, match indicator): use `ListenableBuilder` or `ValueListenableBuilder` on `TextEditingController` — not `setState`.
-- **For page initialization data** (app version, profile bootstrap): create an `init()` method in the cubit, call from `initState()`, emit a dedicated state, read in `BlocBuilder`.
-- **No `copyWith` on `BaseState` subclasses** — always replace entirely. Exception: `StatsLoadedState` uses `copyWith` for its multi-tab independent loading pattern.
-
----
-
-## 12. Design & Theming Rules
-
-- **No hardcoded colors** — always use `Theme.of(context).colorScheme.*`.
-- **No hardcoded text styles** — always use `Theme.of(context).textTheme.*`, with `.copyWith()` only for single-property overrides.
-- **No hex `Color(0xFF…)` values inside widgets.**
-- **`AppColors` is only used inside `CustomTheme`** — never reference `AppColors.*` directly in widget `build()` methods.
-- **M3 color scheme mappings:**
-  - `colorScheme.primary` → accent / brand
-  - `colorScheme.error` → danger / destructive
-  - `colorScheme.onSurface` → primary text
-  - `colorScheme.onSurfaceVariant` → secondary / helper text
-  - `colorScheme.outline` → muted text, borders, disabled icons
-  - `colorScheme.surface` → card / panel backgrounds
-  - `scaffoldBackgroundColor` → page background
-
----
-
-## 13. Firestore Rules
-
-- **Paths are sacred** — never flatten nested collections:
-  - Attendance: `users/{uid}/attendances/{YYYY-MM}/days/{YYYY-MM-DD}`
-  - Health logs: `users/{uid}/healthLogs/{YYYY-MM}/entries/{logId}`
-- **`yearMonth` format = `"YYYY-MM"`** (zero-padded month). **`date` format = `"YYYY-MM-DD"`**.
-- **yearMonth derivation:** services always derive from the date string via `date.substring(0, 7)`. Callers never pass yearMonth separately.
-- **No SQLite / Drift** — Firestore + SharedPreferences + FlutterSecureStorage only.
-- **Deploying Firebase changes — always run the matching deploy command** after touching these files, otherwise production won't reflect the repo:
-  - `firestore.rules` or `firestore.indexes.json` → `firebase deploy --only firestore:rules` (or `firestore`).
-  - Any file under `legal/` (privacy / terms / delete-account / assetlinks.json / index.html / css) → `firebase deploy --only hosting`. The hosting public root is `legal/` (see `firebase.json`), so every file in that folder is served live.
-  - Remind the user to run these commands at the end of any task that modifies the above files.
-
----
-
-## 14. Localization Rules
-
-- **All user-visible strings must use `AppLocalizations`** — ARB files at `lib/assets/localization/`.
-- Supported languages: English (`en`), Romanian (`ro`).
-- **Every widget and page** must use `AppLocalizations.of(context)` for all displayed text — no hardcoded English strings in `build()` methods. This includes labels, headers, placeholders, button text, and preview/mock data labels.
-- **All emoji references must use `Emojis.*` constants** from `lib/presentation/resources/emojis.dart` — never use raw Unicode escapes (`\u{...}`) or literal emoji characters in widget code.
-
----
-
-## 15. Code Quality Rules
-
-- **`dart analyze lib/` must produce zero warnings** before submitting.
-- Use `const` constructors wherever possible.
-- Prefer `final` fields in widgets.
-- **One public widget per file**, named after the file.
-- Keep `build()` methods under **~80 lines** — extract sub-widgets or helper methods when longer.
-- **Mobile-only** — project was created with `--platforms=android,ios`. Do not add web support.
-
-### Dart / Flutter Parameter Convention
-
-- Prefer **named parameters** (`{}`) for functions and methods.
-- Use `required` for all mandatory inputs.
-- Use nullable types (`Type?`) only for truly optional values.
-
-**Recommended pattern:**
-
-```dart
-Future<void> initializeProfileOnFirstLogin({
-  required String userId,
-  required String email,
-  String? displayName,
-})
-```
-
----
-
-## 16. Reusable Controls Rules
-
-- If a widget is likely reused across the app, place it in `lib/presentation/controls/` as a public widget (one per file).
-- **Always add a matching widget test** under `test/presentation/controls/`.
-- Prefer extraction into `controls/` over duplicating similar widgets across pages.
-- Expose the **inner view widget as a public class** (e.g. `RegisterView`) so tests can inject a mock cubit via `BlocProvider.value` without `getIt`.
-
----
-
-## 17. Testing Rules
-
-- **Unit tests required** for all cubit state transitions.
-- **Widget test required** for every file in `lib/presentation/controls/`.
-- Widget tests for pages go under `test/presentation/pages/<feature>/`.
-- **Test files mirror the `lib/` structure** under `test/`.
-- **Never break existing tests** — `flutter test` must stay green.
-- **Use `mocktail`** for mocking — no code generation needed.
-- **For page tests**: `BlocProvider<MyCubit>.value(value: mockCubit, child: const MyView())`.
-- **Minimum widget test coverage**: renders content, loading/spinner state, disabled/null-tap state, reactive updates if using `ListenableBuilder`.
-- **No `bloc_test`** — incompatible with `auto_route_generator ^9.x`. Use plain `mocktail` + `flutter_test` with `expectLater(sut.stream, emitsInOrder([...]))`.
-- **Run only relevant tests per task** — when working on a feature, run only the tests for that feature slice (e.g. `flutter test test/cubit/calendar/ test/presentation/pages/calendar/`). Do **not** run the full test suite unless explicitly asked.
-
----
-
-## 18. DTOs & Serialization Rules
-
-- DTOs use `@JsonSerializable()` + `json_annotation`.
-- **ID fields excluded from JSON**: `@JsonKey(includeFromJson: false, includeToJson: false)` for IDs from Firestore doc ID (not stored as field).
-- **`explicitToJson: true`** when DTO has nested lists (e.g. `SupplementProductDto`).
-- **Timestamp fields typed as `Object` or `Object?`** — allows unit tests to pass plain `String`; production uses actual `Timestamp`.
-
----
-
-## 19. Sources & Mappers Rules
-
-- **Every source:** `@injectable`, `const` constructor, receives mapper via injection, accesses `FirebaseFirestore.instance` directly (not injected).
-- **Every mapper:** `@injectable`, no state, pure mapping functions. Handles `Timestamp.toDate()` and `Timestamp.fromDate()`.
-- All sources use `.withConverter<Dto>()` on collection references. The `id` field is populated from `snap.id` inside the `fromFirestore` closure.
-
----
-
-## 20. Existence Guard Pattern
-
-Used in `WorkoutService.update` and `HealthService.updateProduct`:
-
-```dart
-final existing = await _source.getById(userId, model.id);
-if (existing == null) throw const TrainingTypeNotFoundException();
-return _source.update(userId, model);
-```
-
----
-
-## 21. Page UI Workflow
-
-When building or updating a page's UI, **always** follow this sequence:
-
-1. **Read the prep doc** → `docs/screens/<page_name>.md` (widget tree, token mappings, interaction notes).
-2. **Implement** using the prep doc as the single source of truth for layout, spacing, colours, and interactions.
-3. **Do NOT copy from external projects.** Follow only the architecture, patterns, and conventions defined in this file.
-
----
+## 10. AI Context Strategy
 
 Every AI session must start with these files loaded, regardless of feature:
 
 - `.github/copilot-instructions.md` — architecture map, design tokens, controls inventory, rules
+- `.github/rules.md` — all coding rules
 - `lib/presentation/resources/app_colors.dart` + `lib/assets/theme/custom_theme.dart` — design tokens
 - `lib/model/` — all shared domain models
 - `lib/cubit/base_cubit.dart` + `lib/cubit/base_state.dart` — base classes
@@ -790,12 +617,14 @@ For any task, load **only** the relevant vertical slice on top of the foundation
 
 | Feature          | Slice to load                                                        | ~Tokens |
 | ---------------- | -------------------------------------------------------------------- | ------- |
-| Auth             | auth pages + auth cubit/states + auth service                        | ~25k    |
-| Calendar         | calendar page + calendar cubit + attendance service/data + mappers   | ~50k    |
-| Stats            | stats page + stats cubit + relevant services                         | ~40k    |
-| Health           | health page + health cubit + health service/data + supplement models | ~35k    |
-| Workout Types    | workout_types page + workout cubit + workout service/data            | ~20k    |
-| Profile/Settings | profile + settings pages + settings cubit                            | ~15k    |
+| Auth             | auth pages + auth cubit/states + auth service                        | ~13k    |
+| Calendar         | calendar page + calendar cubit + attendance service/data + mappers   | ~36k    |
+| Stats            | stats page + stats cubit + relevant services                         | ~23k    |
+| Health           | health page + health cubit + health service/data + supplement models | ~15k    |
+| Workout Types    | workout_types page + workout cubit + workout service/data            | ~8k     |
+| Profile/Settings | profile + settings + change-password pages + settings cubit          | ~8k     |
+
+> Token estimates measured from actual file sizes (April 2026) at ~3.75 chars/token. Foundation files (models, theme, base cubit/state) add ~10k on top of every slice.
 
 This approach works within any 200k context window, leaving room for conversation and output.
 
@@ -814,12 +643,4 @@ The entire Flutter project (lib + test + docs + config, no generated files) fits
 
 ---
 
-## 23. Git Conventions
-
-- Default branch: `main`.
-- Feature branches: `feature/<phase>-<description>`.
-- Commit message style: `feat: <description>` / `chore: <description>` / `fix: <description>`.
-
----
-
-At every prompt, if there is something needed to be updated in copilot-instructions.md tell me to update it and wait for my confirmation before proceeding. Always ask if you are unsure about any aspect of the instructions or the project structure.
+At every prompt, if there is something needed to be updated in copilot-instructions.md or rules.md, tell the user and wait for confirmation before proceeding.

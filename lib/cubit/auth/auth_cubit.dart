@@ -48,18 +48,22 @@ class AuthCubit extends BaseCubit {
   }
 
   Future<void> signIn({required String email, required String password}) async {
-    safeEmit(const PendingState());
-    try {
-      final user = await _authService.signIn(email: email, password: password);
-      await _recordLogin(user: user);
-      safeEmit(AuthSignInSuccessState(user: user));
-    } on InvalidCredentialsException {
-      safeEmit(const AuthInvalidCredentialsState());
-    } on EmailNotVerifiedException {
-      safeEmit(const AuthEmailNotVerifiedState());
-    } catch (_) {
-      safeEmit(const SomethingWentWrongState());
-    }
+    await guardedAction(() async {
+      try {
+        final user = await _authService.signIn(
+          email: email,
+          password: password,
+        );
+        await _recordLogin(user: user);
+        safeEmit(AuthSignInSuccessState(user: user));
+      } on InvalidCredentialsException {
+        safeEmit(const AuthInvalidCredentialsState());
+      } on EmailNotVerifiedException {
+        safeEmit(const AuthEmailNotVerifiedState());
+      } catch (_) {
+        safeEmit(const SomethingWentWrongState());
+      }
+    });
   }
 
   Future<void> signUp({
@@ -68,56 +72,67 @@ class AuthCubit extends BaseCubit {
     required String displayName,
     required Map<String, Object?> consent,
   }) async {
-    safeEmit(const PendingState());
-    try {
-      final user = await _authService.signUp(email: email, password: password);
-      await _createUser(user: user, displayName: displayName, consent: consent);
-      safeEmit(const AuthSignUpSuccessState());
-    } on EmailAlreadyInUseException {
-      safeEmit(const AuthEmailAlreadyInUseState());
-    } on WeakPasswordException {
-      safeEmit(const AuthWeakPasswordState());
-    } catch (_) {
-      safeEmit(const SomethingWentWrongState());
-    }
+    await guardedAction(() async {
+      try {
+        final user = await _authService.signUp(
+          email: email,
+          password: password,
+        );
+        await _createUser(
+          user: user,
+          displayName: displayName,
+          consent: consent,
+        );
+        safeEmit(const AuthSignUpSuccessState());
+      } on EmailAlreadyInUseException {
+        safeEmit(const AuthEmailAlreadyInUseState());
+      } on WeakPasswordException {
+        safeEmit(const AuthWeakPasswordState());
+      } catch (_) {
+        safeEmit(const SomethingWentWrongState());
+      }
+    });
   }
 
   Future<void> signOut() async {
-    safeEmit(const PendingState());
-    try {
-      await _authService.signOut();
-      safeEmit(const AuthSignOutSuccessState());
-    } catch (_) {
-      safeEmit(const SomethingWentWrongState());
-    }
+    await guardedAction(() async {
+      try {
+        await _authService.signOut();
+        safeEmit(const AuthSignOutSuccessState());
+      } catch (_) {
+        safeEmit(const SomethingWentWrongState());
+      }
+    });
   }
 
   Future<void> resetPassword({required String email}) async {
-    safeEmit(const PendingState());
-    try {
-      await _authService.resetPassword(email);
-      safeEmit(const AuthPasswordResetSentState());
-    } catch (_) {
-      safeEmit(const SomethingWentWrongState());
-    }
+    await guardedAction(() async {
+      try {
+        await _authService.resetPassword(email);
+        safeEmit(const AuthPasswordResetSentState());
+      } catch (_) {
+        safeEmit(const SomethingWentWrongState());
+      }
+    });
   }
 
   Future<void> changePassword({
     required String currentPassword,
     required String newPassword,
   }) async {
-    safeEmit(const PendingState());
-    try {
-      await _authService.changePassword(
-        currentPassword: currentPassword,
-        newPassword: newPassword,
-      );
-      safeEmit(const AuthPasswordChangedState());
-    } on InvalidCredentialsException {
-      safeEmit(const AuthInvalidCredentialsState());
-    } catch (_) {
-      safeEmit(const SomethingWentWrongState());
-    }
+    await guardedAction(() async {
+      try {
+        await _authService.changePassword(
+          currentPassword: currentPassword,
+          newPassword: newPassword,
+        );
+        safeEmit(const AuthPasswordChangedState());
+      } on InvalidCredentialsException {
+        safeEmit(const AuthInvalidCredentialsState());
+      } catch (_) {
+        safeEmit(const SomethingWentWrongState());
+      }
+    });
   }
 
   /// Deletes all user data from Firestore, then deletes the Firebase Auth
@@ -125,23 +140,23 @@ class AuthCubit extends BaseCubit {
   ///
   /// Flow: reauthenticate → cleanup Firestore → delete Auth account.
   Future<void> deleteAccount({required String currentPassword}) async {
-    if (state is PendingState) return;
-    safeEmit(const PendingState());
-    try {
-      await _authService.reauthenticate(currentPassword: currentPassword);
+    await guardedAction(() async {
+      try {
+        await _authService.reauthenticate(currentPassword: currentPassword);
 
-      final uid = _authService.currentUserId;
-      if (uid == null) throw const AuthUserNotFoundException();
+        final uid = _authService.currentUserId;
+        if (uid == null) throw const AuthUserNotFoundException();
 
-      await _cleanupService.deleteAllUserData(userId: uid);
-      await _authService.deleteAccount();
+        await _cleanupService.deleteAllUserData(userId: uid);
+        await _authService.deleteAccount();
 
-      safeEmit(const AuthAccountDeletedState());
-    } on InvalidCredentialsException {
-      safeEmit(const AuthInvalidCredentialsState());
-    } catch (_) {
-      safeEmit(const SomethingWentWrongState());
-    }
+        safeEmit(const AuthAccountDeletedState());
+      } on InvalidCredentialsException {
+        safeEmit(const AuthInvalidCredentialsState());
+      } catch (_) {
+        safeEmit(const SomethingWentWrongState());
+      }
+    });
   }
 
   /// Best-effort profile creation after sign-up.

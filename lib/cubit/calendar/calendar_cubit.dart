@@ -236,16 +236,17 @@ class CalendarCubit extends BaseCubit {
     required String userId,
     required SupplementLog model,
   }) async {
-    safeEmit(const PendingState());
-    try {
-      final id = await _healthService.logSupplement(
-        userId: userId,
-        model: model,
-      );
-      safeEmit(CalendarSupplementLoggedState(id: id));
-    } catch (_) {
-      safeEmit(const SomethingWentWrongState());
-    }
+    await guardedAction(() async {
+      try {
+        final id = await _healthService.logSupplement(
+          userId: userId,
+          model: model,
+        );
+        safeEmit(CalendarSupplementLoggedState(id: id));
+      } catch (_) {
+        safeEmit(const SomethingWentWrongState());
+      }
+    });
   }
 
   Future<void> deleteSupplementEntry({
@@ -253,17 +254,18 @@ class CalendarCubit extends BaseCubit {
     required String date,
     required String entryId,
   }) async {
-    safeEmit(const PendingState());
-    try {
-      await _healthService.deleteEntry(
-        userId: userId,
-        date: date,
-        entryId: entryId,
-      );
-      safeEmit(const CalendarSupplementDeletedState());
-    } catch (_) {
-      safeEmit(const SomethingWentWrongState());
-    }
+    await guardedAction(() async {
+      try {
+        await _healthService.deleteEntry(
+          userId: userId,
+          date: date,
+          entryId: entryId,
+        );
+        safeEmit(const CalendarSupplementDeletedState());
+      } catch (_) {
+        safeEmit(const SomethingWentWrongState());
+      }
+    });
   }
 
   Future<void> updateDay({
@@ -272,25 +274,26 @@ class CalendarCubit extends BaseCubit {
     required String? workoutTypeId,
     required int? durationMinutes,
   }) async {
-    safeEmit(const PendingState());
-    try {
-      final existing = await _attendanceService.getDay(
-        userId: userId,
-        date: date,
-      );
-      final timestamp = existing?.timestamp ?? DateTime.now();
-      final day = AttendanceDay(
-        date: date,
-        timestamp: timestamp,
-        trainingTypeId: workoutTypeId,
-        durationMinutes: durationMinutes,
-        notes: existing?.notes,
-      );
-      await _attendanceService.upsertDay(userId: userId, model: day);
-      safeEmit(CalendarDayMarkedState(day: day));
-    } catch (_) {
-      safeEmit(const SomethingWentWrongState());
-    }
+    await guardedAction(() async {
+      try {
+        final existing = await _attendanceService.getDay(
+          userId: userId,
+          date: date,
+        );
+        final timestamp = existing?.timestamp ?? DateTime.now();
+        final day = AttendanceDay(
+          date: date,
+          timestamp: timestamp,
+          trainingTypeId: workoutTypeId,
+          durationMinutes: durationMinutes,
+          notes: existing?.notes,
+        );
+        await _attendanceService.upsertDay(userId: userId, model: day);
+        safeEmit(CalendarDayMarkedState(day: day));
+      } catch (_) {
+        safeEmit(const SomethingWentWrongState());
+      }
+    });
   }
 
   Future<void> markAttended({
@@ -339,23 +342,25 @@ class CalendarCubit extends BaseCubit {
     required String userId,
     required AttendanceDay day,
   }) async {
-    safeEmit(const PendingState());
-    try {
-      await _attendanceService.upsertDay(userId: userId, model: day);
-      safeEmit(CalendarDayMarkedState(day: day));
-    } catch (_) {
-      safeEmit(const SomethingWentWrongState());
-    }
+    await guardedAction(() async {
+      try {
+        await _attendanceService.upsertDay(userId: userId, model: day);
+        safeEmit(CalendarDayMarkedState(day: day));
+      } catch (_) {
+        safeEmit(const SomethingWentWrongState());
+      }
+    });
   }
 
   /// Deletes the attendance record for [date] ("YYYY-MM-DD").
   Future<void> clearDay({required String userId, required String date}) async {
-    safeEmit(const PendingState());
-    try {
-      await _attendanceService.deleteDay(userId: userId, date: date);
-      safeEmit(CalendarDayClearedState(date: date));
-    } catch (_) {
-      safeEmit(const SomethingWentWrongState());
-    }
+    await guardedAction(() async {
+      try {
+        await _attendanceService.deleteDay(userId: userId, date: date);
+        safeEmit(CalendarDayClearedState(date: date));
+      } catch (_) {
+        safeEmit(const SomethingWentWrongState());
+      }
+    });
   }
 }

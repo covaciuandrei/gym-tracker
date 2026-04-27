@@ -75,39 +75,41 @@ class HealthCubit extends BaseCubit {
     required SupplementProduct model,
     required bool isEdit,
   }) async {
-    safeEmit(const PendingState());
-    try {
-      if (isEdit) {
-        await _healthService.updateProduct(model);
-        safeEmit(HealthProductSavedState(id: model.id));
-        return;
-      }
+    await guardedAction(() async {
+      try {
+        if (isEdit) {
+          await _healthService.updateProduct(model);
+          safeEmit(HealthProductSavedState(id: model.id));
+          return;
+        }
 
-      final id = await _healthService.createProduct(
-        SupplementProduct(
-          id: '',
-          name: model.name,
-          brand: model.brand,
-          ingredients: model.ingredients,
-          servingsPerDayDefault: model.servingsPerDayDefault,
-          createdBy: userId,
-          verified: model.verified,
-        ),
-      );
-      safeEmit(HealthProductSavedState(id: id));
-    } catch (_) {
-      safeEmit(const SomethingWentWrongState());
-    }
+        final id = await _healthService.createProduct(
+          SupplementProduct(
+            id: '',
+            name: model.name,
+            brand: model.brand,
+            ingredients: model.ingredients,
+            servingsPerDayDefault: model.servingsPerDayDefault,
+            createdBy: userId,
+            verified: model.verified,
+          ),
+        );
+        safeEmit(HealthProductSavedState(id: id));
+      } catch (_) {
+        safeEmit(const SomethingWentWrongState());
+      }
+    });
   }
 
   Future<void> deleteProduct(String productId) async {
-    safeEmit(const PendingState());
-    try {
-      await _healthService.deleteProduct(productId);
-      safeEmit(const HealthProductDeletedState());
-    } catch (_) {
-      safeEmit(const SomethingWentWrongState());
-    }
+    await guardedAction(() async {
+      try {
+        await _healthService.deleteProduct(productId);
+        safeEmit(const HealthProductDeletedState());
+      } catch (_) {
+        safeEmit(const SomethingWentWrongState());
+      }
+    });
   }
 
   /// Logs a supplement entry and emits [HealthEntryLoggedState] with the
@@ -116,16 +118,17 @@ class HealthCubit extends BaseCubit {
     required String userId,
     required SupplementLog model,
   }) async {
-    safeEmit(const PendingState());
-    try {
-      final id = await _healthService.logSupplement(
-        userId: userId,
-        model: model,
-      );
-      safeEmit(HealthEntryLoggedState(id: id));
-    } catch (_) {
-      safeEmit(const SomethingWentWrongState());
-    }
+    await guardedAction(() async {
+      try {
+        final id = await _healthService.logSupplement(
+          userId: userId,
+          model: model,
+        );
+        safeEmit(HealthEntryLoggedState(id: id));
+      } catch (_) {
+        safeEmit(const SomethingWentWrongState());
+      }
+    });
   }
 
   /// Deletes the supplement log entry identified by [entryId] and [date].
@@ -134,17 +137,18 @@ class HealthCubit extends BaseCubit {
     required String date,
     required String entryId,
   }) async {
-    safeEmit(const PendingState());
-    try {
-      await _healthService.deleteEntry(
-        userId: userId,
-        date: date,
-        entryId: entryId,
-      );
-      safeEmit(const HealthEntryDeletedState());
-    } catch (_) {
-      safeEmit(const SomethingWentWrongState());
-    }
+    await guardedAction(() async {
+      try {
+        await _healthService.deleteEntry(
+          userId: userId,
+          date: date,
+          entryId: entryId,
+        );
+        safeEmit(const HealthEntryDeletedState());
+      } catch (_) {
+        safeEmit(const SomethingWentWrongState());
+      }
+    });
   }
 
   @override
