@@ -59,6 +59,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
         labelText: widget.label,
         hintText: widget.hint,
         errorText: widget.errorText,
+        floatingLabelBehavior: FloatingLabelBehavior.never,
         suffixIcon: widget.isPassword
             ? IconButton(
                 icon: Icon(
