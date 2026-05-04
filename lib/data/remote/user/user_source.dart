@@ -28,6 +28,7 @@ class UserSource {
             lastLoginAt: dto.lastLoginAt,
             createdAt: dto.createdAt,
             totalAttendances: dto.totalAttendances,
+            consent: dto.consent,
           );
         },
         toFirestore: (dto, _) => dto.toJson(),

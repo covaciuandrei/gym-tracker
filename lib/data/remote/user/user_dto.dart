@@ -14,6 +14,7 @@ class UserDto {
     required this.totalAttendances,
     this.id = '',
     this.lastVerificationEmailSentAt,
+    this.consent,
   });
 
   factory UserDto.fromJson(Map<String, dynamic> json) =>
@@ -48,4 +49,11 @@ class UserDto {
 
   @JsonKey(name: 'totalAttendances', defaultValue: 0)
   final int totalAttendances;
+
+  /// GDPR consent map stored verbatim at sign-up.
+  /// Typed as `Map<String, dynamic>?` to survive round-trip through
+  /// json_serializable; production values contain [Timestamp] objects for
+  /// `acceptedAt` which are preserved as-is in the DTO.
+  @JsonKey(name: 'consent')
+  final Map<String, dynamic>? consent;
 }

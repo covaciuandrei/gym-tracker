@@ -11,6 +11,7 @@ class User extends Equatable {
     required this.createdAt,
     required this.totalAttendances,
     this.lastVerificationEmailSentAt,
+    this.consent,
   });
 
   final String id;
@@ -23,6 +24,13 @@ class User extends Equatable {
   final DateTime createdAt;
   final int totalAttendances;
 
+  /// GDPR consent record stored at sign-up.
+  ///
+  /// Contains `termsVersion`, `privacyVersion`, `termsUrl`, `privacyUrl`,
+  /// `acceptedAt`, and optionally `ipCountry`. Written via [UserSource.create]
+  /// and preserved by [UserSource.recordLogin] (merge: true).
+  final Map<String, Object?>? consent;
+
   @override
   List<Object?> get props => [
     id,
@@ -34,5 +42,6 @@ class User extends Equatable {
     lastLoginAt,
     createdAt,
     totalAttendances,
+    consent,
   ];
 }

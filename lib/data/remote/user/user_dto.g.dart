@@ -15,6 +15,7 @@ UserDto _$UserDtoFromJson(Map<String, dynamic> json) => UserDto(
   createdAt: json['createdAt'],
   totalAttendances: (json['totalAttendances'] as num?)?.toInt() ?? 0,
   lastVerificationEmailSentAt: json['lastVerificationEmailSentAt'],
+  consent: json['consent'] as Map<String, dynamic>?,
 );
 
 Map<String, dynamic> _$UserDtoToJson(UserDto instance) => <String, dynamic>{
@@ -26,4 +27,5 @@ Map<String, dynamic> _$UserDtoToJson(UserDto instance) => <String, dynamic>{
   'lastLoginAt': instance.lastLoginAt,
   'createdAt': instance.createdAt,
   'totalAttendances': instance.totalAttendances,
+  'consent': instance.consent,
 };

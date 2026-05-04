@@ -209,57 +209,7 @@ return _source.update(userId, model);
 
 ## AI Context Strategy
 
-This project is ~120k tokens (hand-written lib/) or ~186k tokens (lib + test + docs + config).
-
-### Always include these foundations (~20k tokens)
-
-Every AI session must start with these files loaded, regardless of feature:
-
-- `.github/copilot-instructions.md` — architecture map, design tokens, controls inventory
-- `.github/rules.md` — this file
-- `lib/presentation/resources/app_colors.dart` + `lib/assets/theme/custom_theme.dart` — design tokens
-- `lib/model/` — all shared domain models
-- `lib/cubit/base_cubit.dart` + `lib/cubit/base_state.dart` — base classes
-- The relevant `docs/screens/<page>.md` prep doc
-- The relevant reusable controls from `lib/presentation/controls/`
-
-### Feature-slice approach (default)
-
-For any task, load **only** the relevant vertical slice on top of the foundations:
-
-| Feature | Slice to load | ~Tokens |
-|---|---|---|
-| Auth | auth pages + auth cubit/states + auth service | ~25k |
-| Calendar | calendar page + calendar cubit + attendance service/data + mappers | ~50k |
-| Stats | stats page + stats cubit + relevant services | ~40k |
-| Health | health page + health cubit + health service/data + supplement models | ~35k |
-| Workout Types | workout_types page + workout cubit + workout service/data | ~20k |
-| Profile/Settings | profile + settings pages + settings cubit | ~15k |
-
-This approach works within any 200k context window, leaving room for conversation and output.
-
-### Full-project load (complex cross-cutting tasks only)
-
-The entire Flutter project (lib + test + docs + config, no generated files) fits in ~186k tokens. Loading everything is acceptable **only** for:
-
-- Cross-cutting refactors that touch 3+ features
-- Architecture changes (DI, routing, base classes)
-- Full audit / review tasks
-
-For a 200k context window this leaves ~14k for conversation — tight but workable. For 400k windows it's comfortable.
-
-### Never load
-
-- Generated files (`.g.dart`, `.gr.dart`, `.config.dart`, generated localizations, `firebase_options.dart`) — ~29k tokens of noise
-- The Angular source (`../src/`) — archived, not needed for implementation
-- Binary assets (fonts, images)
-
----
-
-## External Project References
-
-- **Angular source (`../src/`):** Archived reference only. Do **not** read, copy from, or cross-reference during implementation. All necessary information has been captured in `docs/screens/` prep docs and `copilot-instructions.md`.
-- **Other external projects:** Do not reference or copy from any external project codebase. Follow only the architecture, patterns, and conventions defined in this file and `copilot-instructions.md`.
+Context-loading guidance (feature-slice token estimates, foundations list, never-load list) lives in **[`.github/copilot-instructions.md` § 10](copilot-instructions.md)**.
 
 ---
 

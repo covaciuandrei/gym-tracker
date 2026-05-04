@@ -19,6 +19,7 @@ class UserMapper {
     lastLoginAt: _toDateTime(dto.lastLoginAt),
     createdAt: _toDateTime(dto.createdAt),
     totalAttendances: dto.totalAttendances,
+    consent: dto.consent?.cast<String, Object?>(),
   );
 
   DateTime _toDateTime(Object? raw) =>
