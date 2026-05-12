@@ -21,7 +21,9 @@ class MainShellPage extends StatefulWidget implements AutoRouteWrapper {
     return MultiBlocProvider(
       providers: [
         BlocProvider<AuthCubit>(create: (_) => getIt<AuthCubit>()),
-        BlocProvider<CheckingUpdateCubit>(create: (_) => getIt<CheckingUpdateCubit>()),
+        BlocProvider<CheckingUpdateCubit>(
+          create: (_) => getIt<CheckingUpdateCubit>(),
+        ),
       ],
       child: this,
     );
@@ -67,7 +69,9 @@ class _MainShellPageState extends State<MainShellPage> {
     return MultiBlocListener(
       listeners: [
         BlocListener<AuthCubit, BaseState>(
-          listenWhen: (_, curr) => curr is AuthSignOutSuccessState || curr is AuthUnauthenticatedState,
+          listenWhen: (_, curr) =>
+              curr is AuthSignOutSuccessState ||
+              curr is AuthUnauthenticatedState,
           listener: (ctx, _) {
             ctx.router.replace(const LoginRoute());
           },
@@ -78,25 +82,56 @@ class _MainShellPageState extends State<MainShellPage> {
         ),
       ],
       child: AutoTabsScaffold(
-        routes: [CalendarRoute(), StatsRoute(), HealthRoute(), ProfileRoute()],
+        routes: [
+          CalendarRoute(),
+          WorkoutsRoute(),
+          StatsRoute(),
+          HealthRoute(),
+          ProfileRoute(),
+        ],
         bottomNavigationBuilder: (_, tabsRouter) {
           final cs = Theme.of(context).colorScheme;
           final destinations = [
-            (icon: Icons.calendar_month_outlined, selectedIcon: Icons.calendar_month, label: l10n.navCalendar),
-            (icon: Icons.bar_chart_outlined, selectedIcon: Icons.bar_chart, label: l10n.navStats),
-            (icon: Icons.medication_outlined, selectedIcon: Icons.medication, label: l10n.navHealth),
-            (icon: Icons.person_outline, selectedIcon: Icons.person, label: l10n.navProfile),
+            (
+              icon: Icons.calendar_month_outlined,
+              selectedIcon: Icons.calendar_month,
+              label: l10n.navCalendar,
+            ),
+            (
+              icon: Icons.fitness_center_outlined,
+              selectedIcon: Icons.fitness_center,
+              label: l10n.navWorkouts,
+            ),
+            (
+              icon: Icons.bar_chart_outlined,
+              selectedIcon: Icons.bar_chart,
+              label: l10n.navStats,
+            ),
+            (
+              icon: Icons.medication_outlined,
+              selectedIcon: Icons.medication,
+              label: l10n.navHealth,
+            ),
+            (
+              icon: Icons.person_outline,
+              selectedIcon: Icons.person,
+              label: l10n.navProfile,
+            ),
           ];
 
           return DecoratedBox(
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
-              border: Border(top: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5))),
+              border: Border(
+                top: BorderSide(
+                  color: cs.outlineVariant.withValues(alpha: 0.5),
+                ),
+              ),
             ),
             child: SafeArea(
               top: false,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 50),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: SizedBox(
                   height: 80,
                   child: Row(
@@ -106,7 +141,10 @@ class _MainShellPageState extends State<MainShellPage> {
 
                       return Expanded(
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 3,
+                            vertical: 12,
+                          ),
                           child: Material(
                             color: Colors.transparent,
                             child: InkWell(
@@ -116,25 +154,42 @@ class _MainShellPageState extends State<MainShellPage> {
                                 duration: const Duration(milliseconds: 180),
                                 curve: Curves.easeOut,
                                 decoration: BoxDecoration(
-                                  color: isSelected ? cs.primaryContainer.withValues(alpha: 0.45) : Colors.transparent,
+                                  color: isSelected
+                                      ? cs.primaryContainer.withValues(
+                                          alpha: 0.45,
+                                        )
+                                      : Colors.transparent,
                                   borderRadius: BorderRadius.circular(14),
-                                  border: Border.all(color: isSelected ? cs.primary : Colors.transparent, width: 1.6),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? cs.primary
+                                        : Colors.transparent,
+                                    width: 1.6,
+                                  ),
                                 ),
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(
-                                      isSelected ? item.selectedIcon : item.icon,
+                                      isSelected
+                                          ? item.selectedIcon
+                                          : item.icon,
                                       size: 22,
-                                      color: isSelected ? cs.primary : cs.onSurfaceVariant,
+                                      color: isSelected
+                                          ? cs.primary
+                                          : cs.onSurfaceVariant,
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
                                       item.label,
                                       style: TextStyle(
                                         fontSize: 11,
-                                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                                        color: isSelected ? cs.primary : cs.onSurfaceVariant,
+                                        fontWeight: isSelected
+                                            ? FontWeight.w600
+                                            : FontWeight.w500,
+                                        color: isSelected
+                                            ? cs.primary
+                                            : cs.onSurfaceVariant,
                                       ),
                                     ),
                                   ],

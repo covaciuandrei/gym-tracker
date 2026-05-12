@@ -1,14 +1,14 @@
 # Main Shell Page — Screen Doc
 
-> Last updated: 2026-04-18
+> Last updated: 2026-05-11
 
 ## Route
 
-`/app` (authenticated shell route — hosts bottom navigation with 4 tabs)
+`/app` (authenticated shell route — hosts bottom navigation with 5 tabs)
 
 ## Purpose
 
-Persistent bottom-navigation wrapper for the 4 main app sections.
+Persistent bottom-navigation wrapper for the 5 main app sections.
 
 Also owns two cross-cutting flows:
 
@@ -26,7 +26,7 @@ Also owns two cross-cutting flows:
 
 ```
 AutoTabsScaffold(
-  routes: [CalendarRoute(), StatsRoute(), HealthRoute(), ProfileRoute()],
+  routes: [CalendarRoute(), WorkoutsRoute(), StatsRoute(), HealthRoute(), ProfileRoute()],
   bottomNavigationBuilder: (_, tabsRouter) => custom row nav
     (Material + InkWell + AnimatedContainer per tab),
 )
@@ -34,12 +34,13 @@ AutoTabsScaffold(
 
 ## Tab Order
 
-| Index | Label    | Route           | Inactive Icon             | Active Icon      |
-| ----- | -------- | --------------- | ------------------------- | ---------------- |
-| 0     | Calendar | `CalendarRoute` | `calendar_month_outlined` | `calendar_month` |
-| 1     | Stats    | `StatsRoute`    | `bar_chart_outlined`      | `bar_chart`      |
-| 2     | Health   | `HealthRoute`   | `medication_outlined`     | `medication`     |
-| 3     | Profile  | `ProfileRoute`  | `person_outline`          | `person`         |
+| Index | Label    | Route           | Inactive Icon              | Active Icon       |
+| ----- | -------- | --------------- | -------------------------- | ----------------- |
+| 0     | Calendar | `CalendarRoute` | `calendar_month_outlined`  | `calendar_month`  |
+| 1     | Workouts | `WorkoutsRoute` | `fitness_center_outlined`  | `fitness_center`  |
+| 2     | Stats    | `StatsRoute`    | `bar_chart_outlined`       | `bar_chart`       |
+| 3     | Health   | `HealthRoute`   | `medication_outlined`      | `medication`      |
+| 4     | Profile  | `ProfileRoute`  | `person_outline`           | `person`          |
 
 ## Colors / Styles
 
@@ -55,7 +56,9 @@ AutoTabsScaffold(
 
 - IN: from `SplashPage` (`SplashNavigateMainShellState`) and `LoginPage`
 - Child routes handle their own sub-navigation
-- `WorkoutTypesRoute` and `SettingsRoute` push on top of the shell (full-screen)
+- `WorkoutTypesRoute` and `SettingsRoute` push on top of the shell (full-screen).
+  `WorkoutTypesRoute` is reached from the Workouts tab; `SettingsRoute` from
+  the Profile tab.
 
 ## Notes
 

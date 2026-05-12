@@ -21,6 +21,7 @@ class AppRouter extends RootStackRouter {
       page: MainShellRoute.page,
       children: [
         AutoRoute(path: 'calendar', page: CalendarRoute.page),
+        AutoRoute(path: 'workouts', page: WorkoutsRoute.page),
         AutoRoute(path: 'stats', page: StatsRoute.page, maintainState: false),
         AutoRoute(path: 'health', page: HealthRoute.page, maintainState: false),
         AutoRoute(path: 'profile', page: ProfileRoute.page),
@@ -28,7 +29,11 @@ class AppRouter extends RootStackRouter {
       ],
     ),
     AutoRoute(path: '/workout-types', page: WorkoutTypesRoute.page),
-    AutoRoute(path: '/settings', page: SettingsRoute.page, maintainState: false),
+    AutoRoute(
+      path: '/settings',
+      page: SettingsRoute.page,
+      maintainState: false,
+    ),
     AutoRoute(path: '/change-password', page: ChangePasswordRoute.page),
     AutoRoute(path: '/force-update', page: ForceUpdateRoute.page),
     AutoRoute(path: '/maintenance', page: MaintenanceRoute.page),

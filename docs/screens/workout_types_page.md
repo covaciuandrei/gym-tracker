@@ -1,9 +1,9 @@
 # Workout Types Page — Screen Doc
 
-> Last updated: 2026-04-08
+> Last updated: 2026-05-11
 
 ## Route
-`/workout-types` (pushed from ProfilePage, full-screen, NOT inside MainShell)
+`/workout-types` (pushed from `WorkoutsPage` via the "Manage workout types" tile, full-screen, NOT inside MainShell)
 
 ## Angular Source
 `src/app/features/workouts/workout-types/`
@@ -234,8 +234,8 @@ workoutCubit.deleteType(id);
 - Modal handle: `cs.outline`
 
 ## Navigation In/Out
-- IN: from `ProfilePage` (push)
-- OUT: back to Profile (pop / AppBar back button)
+- IN: from `WorkoutsPage` (push, via the "Manage workout types" tile)
+- OUT: back to Workouts tab (pop / AppBar back button)
 
 ## Status
 

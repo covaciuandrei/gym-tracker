@@ -1,10 +1,10 @@
 # Profile Page — Screen Doc
 
-> Last updated: 2026-04-08
+> Last updated: 2026-05-11
 
 ## Route
 
-`/profile` (child of MainShell, tab index 3)
+`/profile` (child of MainShell, tab index 4)
 
 ## Source
 
@@ -46,8 +46,6 @@ Scaffold(backgroundColor: cs.surfaceContainerLow)
           ── MANAGE section ──
           _SectionHeader("MANAGE")
           Card(surfaceContainerHigh, borderRadius: 16) [
-            ListTile(fitness_center, "Workout Types", chevron) → WorkoutTypesRoute
-            Divider
             ListTile(settings, "Settings", chevron) → SettingsRoute
           ]
 
@@ -85,8 +83,8 @@ Scaffold(backgroundColor: cs.surfaceContainerLow)
 
 ## Navigation In/Out
 
-- IN: MainShell tab 3
-- OUT: → `WorkoutTypesRoute` (push), → `SettingsRoute` (push), → `LoginRoute` (replace on sign out)
+- IN: MainShell tab 4
+- OUT: → `SettingsRoute` (push), → `LoginRoute` (replace on sign out)
 
 ## Status
 

@@ -141,6 +141,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navCalendar => 'Calendar';
 
   @override
+  String get navWorkouts => 'Workouts';
+
+  @override
   String get navStats => 'Stats';
 
   @override
@@ -148,6 +151,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navProfile => 'Profile';
+
+  @override
+  String get workoutsTitle => 'Workouts';
+
+  @override
+  String get workoutsManageTypes => 'Manage workout types';
 
   @override
   String get calendarTitle => 'Calendar';

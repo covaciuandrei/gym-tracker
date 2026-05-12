@@ -45,7 +45,6 @@ void main() {
   setUpAll(() {
     registerFallbackValue(const InitialState());
     registerFallbackValue(const LoginRoute());
-    registerFallbackValue(const WorkoutTypesRoute());
     registerFallbackValue(const SettingsRoute());
   });
 
@@ -83,7 +82,6 @@ void main() {
       expect(find.text('Profile'), findsOneWidget);
       expect(find.text('MANAGE'), findsOneWidget);
       expect(find.text('ACCOUNT'), findsOneWidget);
-      expect(find.text('Workout Types'), findsOneWidget);
       expect(find.text('Settings'), findsOneWidget);
       expect(find.text('Sign Out'), findsOneWidget);
       expect(find.text('alex@example.com'), findsOneWidget);
@@ -120,15 +118,6 @@ void main() {
       );
 
       await tester.pumpWidget(_buildApp(cubit, router));
-
-      await tester.tap(find.text('Workout Types'));
-      await tester.pump();
-      verify(
-        () => router.push(
-          const WorkoutTypesRoute(),
-          onFailure: any(named: 'onFailure'),
-        ),
-      ).called(1);
 
       await tester.tap(find.text('Settings'));
       await tester.pump();

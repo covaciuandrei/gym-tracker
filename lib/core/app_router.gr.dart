@@ -9,8 +9,8 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:auto_route/auto_route.dart' as _i17;
-import 'package:flutter/material.dart' as _i18;
+import 'package:auto_route/auto_route.dart' as _i18;
+import 'package:flutter/material.dart' as _i19;
 import 'package:gym_tracker/presentation/pages/auth/forgot_password_page.dart'
     as _i4;
 import 'package:gym_tracker/presentation/pages/auth/login_page.dart' as _i6;
@@ -38,48 +38,50 @@ import 'package:gym_tracker/presentation/pages/splash/splash_page.dart' as _i14;
 import 'package:gym_tracker/presentation/pages/stats/stats_page.dart' as _i15;
 import 'package:gym_tracker/presentation/pages/workout_types/workout_types_page.dart'
     as _i16;
+import 'package:gym_tracker/presentation/pages/workouts/workouts_page.dart'
+    as _i17;
 
 /// generated route for
 /// [_i1.CalendarPage]
-class CalendarRoute extends _i17.PageRouteInfo<void> {
-  const CalendarRoute({List<_i17.PageRouteInfo>? children})
+class CalendarRoute extends _i18.PageRouteInfo<void> {
+  const CalendarRoute({List<_i18.PageRouteInfo>? children})
     : super(CalendarRoute.name, initialChildren: children);
 
   static const String name = 'CalendarRoute';
 
-  static _i17.PageInfo page = _i17.PageInfo(
+  static _i18.PageInfo page = _i18.PageInfo(
     name,
     builder: (data) {
-      return _i17.WrappedRoute(child: const _i1.CalendarPage());
+      return _i18.WrappedRoute(child: const _i1.CalendarPage());
     },
   );
 }
 
 /// generated route for
 /// [_i2.ChangePasswordPage]
-class ChangePasswordRoute extends _i17.PageRouteInfo<void> {
-  const ChangePasswordRoute({List<_i17.PageRouteInfo>? children})
+class ChangePasswordRoute extends _i18.PageRouteInfo<void> {
+  const ChangePasswordRoute({List<_i18.PageRouteInfo>? children})
     : super(ChangePasswordRoute.name, initialChildren: children);
 
   static const String name = 'ChangePasswordRoute';
 
-  static _i17.PageInfo page = _i17.PageInfo(
+  static _i18.PageInfo page = _i18.PageInfo(
     name,
     builder: (data) {
-      return _i17.WrappedRoute(child: const _i2.ChangePasswordPage());
+      return _i18.WrappedRoute(child: const _i2.ChangePasswordPage());
     },
   );
 }
 
 /// generated route for
 /// [_i3.ForceUpdatePage]
-class ForceUpdateRoute extends _i17.PageRouteInfo<ForceUpdateRouteArgs> {
+class ForceUpdateRoute extends _i18.PageRouteInfo<ForceUpdateRouteArgs> {
   ForceUpdateRoute({
-    _i18.Key? key,
+    _i19.Key? key,
     required String currentVersion,
     required String requiredVersion,
     required String storeUrl,
-    List<_i17.PageRouteInfo>? children,
+    List<_i18.PageRouteInfo>? children,
   }) : super(
          ForceUpdateRoute.name,
          args: ForceUpdateRouteArgs(
@@ -93,7 +95,7 @@ class ForceUpdateRoute extends _i17.PageRouteInfo<ForceUpdateRouteArgs> {
 
   static const String name = 'ForceUpdateRoute';
 
-  static _i17.PageInfo page = _i17.PageInfo(
+  static _i18.PageInfo page = _i18.PageInfo(
     name,
     builder: (data) {
       final args = data.argsAs<ForceUpdateRouteArgs>();
@@ -115,7 +117,7 @@ class ForceUpdateRouteArgs {
     required this.storeUrl,
   });
 
-  final _i18.Key? key;
+  final _i19.Key? key;
 
   final String currentVersion;
 
@@ -131,27 +133,27 @@ class ForceUpdateRouteArgs {
 
 /// generated route for
 /// [_i4.ForgotPasswordPage]
-class ForgotPasswordRoute extends _i17.PageRouteInfo<void> {
-  const ForgotPasswordRoute({List<_i17.PageRouteInfo>? children})
+class ForgotPasswordRoute extends _i18.PageRouteInfo<void> {
+  const ForgotPasswordRoute({List<_i18.PageRouteInfo>? children})
     : super(ForgotPasswordRoute.name, initialChildren: children);
 
   static const String name = 'ForgotPasswordRoute';
 
-  static _i17.PageInfo page = _i17.PageInfo(
+  static _i18.PageInfo page = _i18.PageInfo(
     name,
     builder: (data) {
-      return _i17.WrappedRoute(child: const _i4.ForgotPasswordPage());
+      return _i18.WrappedRoute(child: const _i4.ForgotPasswordPage());
     },
   );
 }
 
 /// generated route for
 /// [_i5.HealthPage]
-class HealthRoute extends _i17.PageRouteInfo<HealthRouteArgs> {
+class HealthRoute extends _i18.PageRouteInfo<HealthRouteArgs> {
   HealthRoute({
-    _i18.Key? key,
+    _i19.Key? key,
     String? testUserId,
-    List<_i17.PageRouteInfo>? children,
+    List<_i18.PageRouteInfo>? children,
   }) : super(
          HealthRoute.name,
          args: HealthRouteArgs(key: key, testUserId: testUserId),
@@ -160,13 +162,13 @@ class HealthRoute extends _i17.PageRouteInfo<HealthRouteArgs> {
 
   static const String name = 'HealthRoute';
 
-  static _i17.PageInfo page = _i17.PageInfo(
+  static _i18.PageInfo page = _i18.PageInfo(
     name,
     builder: (data) {
       final args = data.argsAs<HealthRouteArgs>(
         orElse: () => const HealthRouteArgs(),
       );
-      return _i17.WrappedRoute(
+      return _i18.WrappedRoute(
         child: _i5.HealthPage(key: args.key, testUserId: args.testUserId),
       );
     },
@@ -176,7 +178,7 @@ class HealthRoute extends _i17.PageRouteInfo<HealthRouteArgs> {
 class HealthRouteArgs {
   const HealthRouteArgs({this.key, this.testUserId});
 
-  final _i18.Key? key;
+  final _i19.Key? key;
 
   final String? testUserId;
 
@@ -188,43 +190,43 @@ class HealthRouteArgs {
 
 /// generated route for
 /// [_i6.LoginPage]
-class LoginRoute extends _i17.PageRouteInfo<void> {
-  const LoginRoute({List<_i17.PageRouteInfo>? children})
+class LoginRoute extends _i18.PageRouteInfo<void> {
+  const LoginRoute({List<_i18.PageRouteInfo>? children})
     : super(LoginRoute.name, initialChildren: children);
 
   static const String name = 'LoginRoute';
 
-  static _i17.PageInfo page = _i17.PageInfo(
+  static _i18.PageInfo page = _i18.PageInfo(
     name,
     builder: (data) {
-      return _i17.WrappedRoute(child: const _i6.LoginPage());
+      return _i18.WrappedRoute(child: const _i6.LoginPage());
     },
   );
 }
 
 /// generated route for
 /// [_i7.MainShellPage]
-class MainShellRoute extends _i17.PageRouteInfo<void> {
-  const MainShellRoute({List<_i17.PageRouteInfo>? children})
+class MainShellRoute extends _i18.PageRouteInfo<void> {
+  const MainShellRoute({List<_i18.PageRouteInfo>? children})
     : super(MainShellRoute.name, initialChildren: children);
 
   static const String name = 'MainShellRoute';
 
-  static _i17.PageInfo page = _i17.PageInfo(
+  static _i18.PageInfo page = _i18.PageInfo(
     name,
     builder: (data) {
-      return _i17.WrappedRoute(child: const _i7.MainShellPage());
+      return _i18.WrappedRoute(child: const _i7.MainShellPage());
     },
   );
 }
 
 /// generated route for
 /// [_i8.MaintenancePage]
-class MaintenanceRoute extends _i17.PageRouteInfo<MaintenanceRouteArgs> {
+class MaintenanceRoute extends _i18.PageRouteInfo<MaintenanceRouteArgs> {
   MaintenanceRoute({
-    _i18.Key? key,
+    _i19.Key? key,
     required String message,
-    List<_i17.PageRouteInfo>? children,
+    List<_i18.PageRouteInfo>? children,
   }) : super(
          MaintenanceRoute.name,
          args: MaintenanceRouteArgs(key: key, message: message),
@@ -233,7 +235,7 @@ class MaintenanceRoute extends _i17.PageRouteInfo<MaintenanceRouteArgs> {
 
   static const String name = 'MaintenanceRoute';
 
-  static _i17.PageInfo page = _i17.PageInfo(
+  static _i18.PageInfo page = _i18.PageInfo(
     name,
     builder: (data) {
       final args = data.argsAs<MaintenanceRouteArgs>();
@@ -245,7 +247,7 @@ class MaintenanceRoute extends _i17.PageRouteInfo<MaintenanceRouteArgs> {
 class MaintenanceRouteArgs {
   const MaintenanceRouteArgs({this.key, required this.message});
 
-  final _i18.Key? key;
+  final _i19.Key? key;
 
   final String message;
 
@@ -257,13 +259,13 @@ class MaintenanceRouteArgs {
 
 /// generated route for
 /// [_i9.NoConnectionPage]
-class NoConnectionRoute extends _i17.PageRouteInfo<void> {
-  const NoConnectionRoute({List<_i17.PageRouteInfo>? children})
+class NoConnectionRoute extends _i18.PageRouteInfo<void> {
+  const NoConnectionRoute({List<_i18.PageRouteInfo>? children})
     : super(NoConnectionRoute.name, initialChildren: children);
 
   static const String name = 'NoConnectionRoute';
 
-  static _i17.PageInfo page = _i17.PageInfo(
+  static _i18.PageInfo page = _i18.PageInfo(
     name,
     builder: (data) {
       return const _i9.NoConnectionPage();
@@ -273,13 +275,13 @@ class NoConnectionRoute extends _i17.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i10.OnboardingPage]
-class OnboardingRoute extends _i17.PageRouteInfo<void> {
-  const OnboardingRoute({List<_i17.PageRouteInfo>? children})
+class OnboardingRoute extends _i18.PageRouteInfo<void> {
+  const OnboardingRoute({List<_i18.PageRouteInfo>? children})
     : super(OnboardingRoute.name, initialChildren: children);
 
   static const String name = 'OnboardingRoute';
 
-  static _i17.PageInfo page = _i17.PageInfo(
+  static _i18.PageInfo page = _i18.PageInfo(
     name,
     builder: (data) {
       return const _i10.OnboardingPage();
@@ -289,96 +291,112 @@ class OnboardingRoute extends _i17.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i11.ProfilePage]
-class ProfileRoute extends _i17.PageRouteInfo<void> {
-  const ProfileRoute({List<_i17.PageRouteInfo>? children})
+class ProfileRoute extends _i18.PageRouteInfo<void> {
+  const ProfileRoute({List<_i18.PageRouteInfo>? children})
     : super(ProfileRoute.name, initialChildren: children);
 
   static const String name = 'ProfileRoute';
 
-  static _i17.PageInfo page = _i17.PageInfo(
+  static _i18.PageInfo page = _i18.PageInfo(
     name,
     builder: (data) {
-      return _i17.WrappedRoute(child: const _i11.ProfilePage());
+      return _i18.WrappedRoute(child: const _i11.ProfilePage());
     },
   );
 }
 
 /// generated route for
 /// [_i12.RegisterPage]
-class RegisterRoute extends _i17.PageRouteInfo<void> {
-  const RegisterRoute({List<_i17.PageRouteInfo>? children})
+class RegisterRoute extends _i18.PageRouteInfo<void> {
+  const RegisterRoute({List<_i18.PageRouteInfo>? children})
     : super(RegisterRoute.name, initialChildren: children);
 
   static const String name = 'RegisterRoute';
 
-  static _i17.PageInfo page = _i17.PageInfo(
+  static _i18.PageInfo page = _i18.PageInfo(
     name,
     builder: (data) {
-      return _i17.WrappedRoute(child: const _i12.RegisterPage());
+      return _i18.WrappedRoute(child: const _i12.RegisterPage());
     },
   );
 }
 
 /// generated route for
 /// [_i13.SettingsPage]
-class SettingsRoute extends _i17.PageRouteInfo<void> {
-  const SettingsRoute({List<_i17.PageRouteInfo>? children})
+class SettingsRoute extends _i18.PageRouteInfo<void> {
+  const SettingsRoute({List<_i18.PageRouteInfo>? children})
     : super(SettingsRoute.name, initialChildren: children);
 
   static const String name = 'SettingsRoute';
 
-  static _i17.PageInfo page = _i17.PageInfo(
+  static _i18.PageInfo page = _i18.PageInfo(
     name,
     builder: (data) {
-      return _i17.WrappedRoute(child: const _i13.SettingsPage());
+      return _i18.WrappedRoute(child: const _i13.SettingsPage());
     },
   );
 }
 
 /// generated route for
 /// [_i14.SplashPage]
-class SplashRoute extends _i17.PageRouteInfo<void> {
-  const SplashRoute({List<_i17.PageRouteInfo>? children})
+class SplashRoute extends _i18.PageRouteInfo<void> {
+  const SplashRoute({List<_i18.PageRouteInfo>? children})
     : super(SplashRoute.name, initialChildren: children);
 
   static const String name = 'SplashRoute';
 
-  static _i17.PageInfo page = _i17.PageInfo(
+  static _i18.PageInfo page = _i18.PageInfo(
     name,
     builder: (data) {
-      return _i17.WrappedRoute(child: const _i14.SplashPage());
+      return _i18.WrappedRoute(child: const _i14.SplashPage());
     },
   );
 }
 
 /// generated route for
 /// [_i15.StatsPage]
-class StatsRoute extends _i17.PageRouteInfo<void> {
-  const StatsRoute({List<_i17.PageRouteInfo>? children})
+class StatsRoute extends _i18.PageRouteInfo<void> {
+  const StatsRoute({List<_i18.PageRouteInfo>? children})
     : super(StatsRoute.name, initialChildren: children);
 
   static const String name = 'StatsRoute';
 
-  static _i17.PageInfo page = _i17.PageInfo(
+  static _i18.PageInfo page = _i18.PageInfo(
     name,
     builder: (data) {
-      return _i17.WrappedRoute(child: const _i15.StatsPage());
+      return _i18.WrappedRoute(child: const _i15.StatsPage());
     },
   );
 }
 
 /// generated route for
 /// [_i16.WorkoutTypesPage]
-class WorkoutTypesRoute extends _i17.PageRouteInfo<void> {
-  const WorkoutTypesRoute({List<_i17.PageRouteInfo>? children})
+class WorkoutTypesRoute extends _i18.PageRouteInfo<void> {
+  const WorkoutTypesRoute({List<_i18.PageRouteInfo>? children})
     : super(WorkoutTypesRoute.name, initialChildren: children);
 
   static const String name = 'WorkoutTypesRoute';
 
-  static _i17.PageInfo page = _i17.PageInfo(
+  static _i18.PageInfo page = _i18.PageInfo(
     name,
     builder: (data) {
-      return _i17.WrappedRoute(child: const _i16.WorkoutTypesPage());
+      return _i18.WrappedRoute(child: const _i16.WorkoutTypesPage());
+    },
+  );
+}
+
+/// generated route for
+/// [_i17.WorkoutsPage]
+class WorkoutsRoute extends _i18.PageRouteInfo<void> {
+  const WorkoutsRoute({List<_i18.PageRouteInfo>? children})
+    : super(WorkoutsRoute.name, initialChildren: children);
+
+  static const String name = 'WorkoutsRoute';
+
+  static _i18.PageInfo page = _i18.PageInfo(
+    name,
+    builder: (data) {
+      return const _i17.WorkoutsPage();
     },
   );
 }

@@ -356,6 +356,12 @@ abstract class AppLocalizations {
   /// **'Calendar'**
   String get navCalendar;
 
+  /// No description provided for @navWorkouts.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts'**
+  String get navWorkouts;
+
   /// No description provided for @navStats.
   ///
   /// In en, this message translates to:
@@ -373,6 +379,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Profile'**
   String get navProfile;
+
+  /// No description provided for @workoutsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Workouts'**
+  String get workoutsTitle;
+
+  /// No description provided for @workoutsManageTypes.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage workout types'**
+  String get workoutsManageTypes;
 
   /// No description provided for @calendarTitle.
   ///

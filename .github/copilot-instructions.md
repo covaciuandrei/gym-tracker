@@ -160,10 +160,11 @@ decoration: BoxDecoration(
 /forgot-password[guest]   → ForgotPasswordPage  (lib/presentation/pages/auth/forgot_password_page.dart)
 /app                      → MainShellPage       (lib/presentation/pages/main_shell/main_shell_page.dart)
   /app/calendar           → CalendarPage        (tab child)
+  /app/workouts           → WorkoutsPage        (tab child)
   /app/stats              → StatsPage           (tab child, maintainState: false — cubit rebuilds on every tab visit)
   /app/health             → HealthPage          (tab child, maintainState: false — cubit rebuilds on every tab visit)
   /app/profile            → ProfilePage         (tab child)
-/workout-types  [auth]    → WorkoutTypesPage    (lib/presentation/pages/workout_types/workout_types_page.dart)
+/workout-types  [auth]    → WorkoutTypesPage    (lib/presentation/pages/workout_types/workout_types_page.dart, pushed from WorkoutsPage)
 /settings       [auth]    → SettingsPage        (lib/presentation/pages/settings/settings_page.dart, maintainState: false)
 /change-password[auth]    → ChangePasswordPage  (lib/presentation/pages/change_password/change_password_page.dart)
 /maintenance    [guest]   → MaintenancePage     (lib/presentation/pages/maintenance/maintenance_page.dart)
@@ -247,7 +248,15 @@ All stats tabs share:
 | **Delete**             | Confirmation dialog before delete                                                       |
 | **Predefined colours** | `#6366f1 #8b5cf6 #ec4899 #ef4444 #097853 #eab308 #22c55e #14b8a6 #0ea5e9 #3b82f6`       |
 | **Predefined icons**   | 🏋️ 🏃 🚴 🧘 🥊 🏊 ⚽ 🎾 🏀 💪 🤸 🚣 ⛹️ 🤾 🌏 🧗 🎯 🔥 ⭐ 🌟                             |
-| **Navigation**         | Accessed from profile/manage area; back button returns to previous route                |
+| **Navigation**         | Pushed from `WorkoutsPage` (tab 1) via the "Manage workout types" tile; back button returns to the Workouts tab |
+
+#### WORKOUTS FEATURE (TAB)
+
+| Aspect          | Detail                                                                                                                |
+| --------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Purpose**     | Container tab for workout-related features. Reserved for future workout features (sessions, templates, plans, etc.). |
+| **Content**     | Single "Manage workout types" tile that pushes `WorkoutTypesRoute`.                                                  |
+| **Navigation**  | Tab index 1 in MainShell bottom nav (between Calendar and Stats).                                                     |
 
 #### PROFILE FEATURE
 
@@ -256,7 +265,7 @@ All stats tabs share:
 | **Avatar**     | Circle with user's initial (first char of displayName or email) |
 | **Info shown** | displayName (or "User"), email, email-verified badge            |
 | **Actions**    | Logout button → `authService.signOut()` → navigate `/login`     |
-| **Links**      | → `/settings`, → `/workout-types`                               |
+| **Links**      | → `/settings`                                                   |
 
 #### SETTINGS FEATURE
 

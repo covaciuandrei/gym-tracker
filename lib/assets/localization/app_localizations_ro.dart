@@ -144,6 +144,9 @@ class AppLocalizationsRo extends AppLocalizations {
   String get navCalendar => 'Calendar';
 
   @override
+  String get navWorkouts => 'Antrenamente';
+
+  @override
   String get navStats => 'Statistici';
 
   @override
@@ -151,6 +154,12 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get navProfile => 'Profil';
+
+  @override
+  String get workoutsTitle => 'Antrenamente';
+
+  @override
+  String get workoutsManageTypes => 'Gestionează tipurile de antrenament';
 
   @override
   String get calendarTitle => 'Calendar';
