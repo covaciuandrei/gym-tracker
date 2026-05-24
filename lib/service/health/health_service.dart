@@ -41,6 +41,12 @@ class HealthService {
   Stream<List<SupplementLog>> watchMonthEntries({required String userId, required int year, required int month}) =>
       _source.watchMonthEntries(userId, yearMonthKey(year, month));
 
+  /// Returns all supplement log entries for [userId] in a given month as a
+  /// single one-shot read. Prefer this for background prefetch of adjacent
+  /// months that don't require live updates.
+  Future<List<SupplementLog>> getMonthEntries({required String userId, required int year, required int month}) =>
+      _source.getMonthEntries(userId, yearMonthKey(year, month));
+
   /// Streams all supplement log entries for a specific [date] ("YYYY-MM-DD").
   Stream<List<SupplementLog>> watchDayEntries({required String userId, required String date}) {
     final yearMonth = date.substring(0, 7);

@@ -1,85 +1,145 @@
 part of 'stats_cubit.dart';
 
-enum StatsLoadStatus { idle, loading, loaded, error }
-
+/// Stats tab kinds. Used by `loadTab()` to select which slice to fetch.
 enum StatsTabKind { attendances, workouts, duration, health }
 
-class StatsLoadedState extends BaseState {
-  const StatsLoadedState({
-    required this.year,
-    required this.attendancesStatus,
-    required this.workoutsStatus,
-    required this.durationStatus,
-    required this.healthStatus,
-    this.attendancesStats,
-    this.workoutsStats,
-    this.durationStats,
-    this.healthStats,
-    this.types = const [],
-  });
-
-  factory StatsLoadedState.initial(int year) {
-    return StatsLoadedState(
-      year: year,
-      attendancesStatus: StatsLoadStatus.idle,
-      workoutsStatus: StatsLoadStatus.idle,
-      durationStatus: StatsLoadStatus.idle,
-      healthStatus: StatsLoadStatus.idle,
-    );
-  }
+/// Emitted once when the active year changes, before any slice begins loading.
+/// Tab builders use this to reset to a loading skeleton when the year flips.
+class StatsYearInitializedState extends BaseState {
+  const StatsYearInitializedState({required this.year});
 
   final int year;
-  final StatsLoadStatus attendancesStatus;
-  final StatsLoadStatus workoutsStatus;
-  final StatsLoadStatus durationStatus;
-  final StatsLoadStatus healthStatus;
-  final AttendanceStats? attendancesStats;
-  final AttendanceStats? workoutsStats;
-  final AttendanceStats? durationStats;
-  final AttendanceStats? healthStats;
-  final List<TrainingType> types;
-
-  StatsLoadedState copyWith({
-    int? year,
-    StatsLoadStatus? attendancesStatus,
-    StatsLoadStatus? workoutsStatus,
-    StatsLoadStatus? durationStatus,
-    StatsLoadStatus? healthStatus,
-    AttendanceStats? attendancesStats,
-    AttendanceStats? workoutsStats,
-    AttendanceStats? durationStats,
-    AttendanceStats? healthStats,
-    List<TrainingType>? types,
-    bool clearAttendancesStats = false,
-    bool clearWorkoutsStats = false,
-    bool clearDurationStats = false,
-    bool clearHealthStats = false,
-  }) {
-    return StatsLoadedState(
-      year: year ?? this.year,
-      attendancesStatus: attendancesStatus ?? this.attendancesStatus,
-      workoutsStatus: workoutsStatus ?? this.workoutsStatus,
-      durationStatus: durationStatus ?? this.durationStatus,
-      healthStatus: healthStatus ?? this.healthStatus,
-      attendancesStats: clearAttendancesStats ? null : (attendancesStats ?? this.attendancesStats),
-      workoutsStats: clearWorkoutsStats ? null : (workoutsStats ?? this.workoutsStats),
-      durationStats: clearDurationStats ? null : (durationStats ?? this.durationStats),
-      healthStats: clearHealthStats ? null : (healthStats ?? this.healthStats),
-      types: types ?? this.types,
-    );
-  }
 
   @override
-  List<Object?> get props => [
-    year,
-    attendancesStatus,
-    workoutsStatus,
-    durationStatus,
-    healthStatus,
-    attendancesStats,
-    workoutsStats,
-    durationStats,
-    healthStats,
-    types,
-  ];
+  List<Object?> get props => [year];
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Attendances slice
+// ───────────────────────────────────────────────────────────────────────────
+
+class StatsAttendancesLoadingState extends BaseState {
+  const StatsAttendancesLoadingState({required this.year});
+
+  final int year;
+
+  @override
+  List<Object?> get props => [year];
+}
+
+class StatsAttendancesLoadedState extends BaseState {
+  const StatsAttendancesLoadedState({required this.year, required this.stats});
+
+  final int year;
+  final AttendanceStats stats;
+
+  @override
+  List<Object?> get props => [year, stats];
+}
+
+class StatsAttendancesErrorState extends BaseState {
+  const StatsAttendancesErrorState({required this.year});
+
+  final int year;
+
+  @override
+  List<Object?> get props => [year];
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Workouts slice
+// ───────────────────────────────────────────────────────────────────────────
+
+class StatsWorkoutsLoadingState extends BaseState {
+  const StatsWorkoutsLoadingState({required this.year});
+
+  final int year;
+
+  @override
+  List<Object?> get props => [year];
+}
+
+class StatsWorkoutsLoadedState extends BaseState {
+  const StatsWorkoutsLoadedState({required this.year, required this.stats, required this.types});
+
+  final int year;
+  final AttendanceStats stats;
+  final List<TrainingType> types;
+
+  @override
+  List<Object?> get props => [year, stats, types];
+}
+
+class StatsWorkoutsErrorState extends BaseState {
+  const StatsWorkoutsErrorState({required this.year});
+
+  final int year;
+
+  @override
+  List<Object?> get props => [year];
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Duration slice
+// ───────────────────────────────────────────────────────────────────────────
+
+class StatsDurationLoadingState extends BaseState {
+  const StatsDurationLoadingState({required this.year});
+
+  final int year;
+
+  @override
+  List<Object?> get props => [year];
+}
+
+class StatsDurationLoadedState extends BaseState {
+  const StatsDurationLoadedState({required this.year, required this.stats, required this.types});
+
+  final int year;
+  final AttendanceStats stats;
+  final List<TrainingType> types;
+
+  @override
+  List<Object?> get props => [year, stats, types];
+}
+
+class StatsDurationErrorState extends BaseState {
+  const StatsDurationErrorState({required this.year});
+
+  final int year;
+
+  @override
+  List<Object?> get props => [year];
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Health slice
+// ───────────────────────────────────────────────────────────────────────────
+
+class StatsHealthLoadingState extends BaseState {
+  const StatsHealthLoadingState({required this.year});
+
+  final int year;
+
+  @override
+  List<Object?> get props => [year];
+}
+
+class StatsHealthLoadedState extends BaseState {
+  const StatsHealthLoadedState({required this.year, required this.stats});
+
+  final int year;
+  final AttendanceStats stats;
+
+  @override
+  List<Object?> get props => [year, stats];
+}
+
+class StatsHealthErrorState extends BaseState {
+  const StatsHealthErrorState({required this.year});
+
+  final int year;
+
+  @override
+  List<Object?> get props => [year];
 }

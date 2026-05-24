@@ -35,14 +35,14 @@ class RegisterPage extends StatefulWidget implements AutoRouteWrapper {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
-  // final _nicknameCtrl = TextEditingController();
-  // final _emailCtrl = TextEditingController();
-  // final _passwordCtrl = TextEditingController();
-  // final _confirmCtrl = TextEditingController();
-  final _nicknameCtrl = TextEditingController(text: 'Andrei');
-  final _emailCtrl = TextEditingController(text: 'etticov@gmail.com');
-  final _passwordCtrl = TextEditingController(text: 'Test1234');
-  final _confirmCtrl = TextEditingController(text: 'Test1234');
+  final _nicknameCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
+  final _confirmCtrl = TextEditingController();
+  // final _nicknameCtrl = TextEditingController(text: 'Andrei');
+  // final _emailCtrl = TextEditingController(text: 'etticov@gmail.com');
+  // final _passwordCtrl = TextEditingController(text: 'Test1234');
+  // final _confirmCtrl = TextEditingController(text: 'Test1234');
 
   final _acceptedTerms = ValueNotifier<bool>(false);
   final _showConsentError = ValueNotifier<bool>(false);

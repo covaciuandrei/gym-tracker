@@ -20,10 +20,8 @@ class HealthSource {
       .withConverter<SupplementProductDto>(
         fromFirestore: (snap, _) {
           final raw = snap.data() ?? const <String, dynamic>{};
-          final servingsRaw =
-              raw['servings_per_day_default'] ?? raw['servingsPerDayDefault'];
-          final ingredientsRaw =
-              raw['ingredients'] as List<dynamic>? ?? const <dynamic>[];
+          final servingsRaw = raw['servings_per_day_default'] ?? raw['servingsPerDayDefault'];
+          final ingredientsRaw = raw['ingredients'] as List<dynamic>? ?? const <dynamic>[];
 
           final dto = SupplementProductDto(
             id: snap.id,
@@ -33,9 +31,7 @@ class HealthSource {
                 .whereType<Map<String, dynamic>>()
                 .map(ProductIngredientDto.fromJson)
                 .toList(growable: false),
-            servingsPerDayDefault: servingsRaw is num
-                ? servingsRaw.toDouble()
-                : 1.0,
+            servingsPerDayDefault: servingsRaw is num ? servingsRaw.toDouble() : 1.0,
             createdBy: (raw['created_by'] ?? raw['createdBy']) as String?,
             verified: raw['verified'] as bool?,
           );
@@ -56,20 +52,14 @@ class HealthSource {
   Stream<List<SupplementProduct>> watchAllProducts() => _productsRef
       .orderBy('name')
       .snapshots()
-      .map(
-        (snap) =>
-            snap.docs.map((d) => _mapper.mapProductDto(d.data())).toList(),
-      );
+      .map((snap) => snap.docs.map((d) => _mapper.mapProductDto(d.data())).toList());
 
   /// Streams supplement products created by [userId].
   Stream<List<SupplementProduct>> watchMyProducts(String userId) => _productsRef
       .where('created_by', isEqualTo: userId)
       .orderBy('name')
       .snapshots()
-      .map(
-        (snap) =>
-            snap.docs.map((d) => _mapper.mapProductDto(d.data())).toList(),
-      );
+      .map((snap) => snap.docs.map((d) => _mapper.mapProductDto(d.data())).toList());
 
   /// Returns a single supplement product by [productId].
   Future<SupplementProduct?> getProduct(String productId) async {
@@ -85,19 +75,14 @@ class HealthSource {
   }
 
   /// Overwrites the supplement product identified by [model.id].
-  Future<void> updateProduct(SupplementProduct model) =>
-      _productsRef.doc(model.id).set(_mapper.mapProductModel(model));
+  Future<void> updateProduct(SupplementProduct model) => _productsRef.doc(model.id).set(_mapper.mapProductModel(model));
 
   /// Deletes the supplement product identified by [productId].
-  Future<void> deleteProduct(String productId) =>
-      _productsRef.doc(productId).delete();
+  Future<void> deleteProduct(String productId) => _productsRef.doc(productId).delete();
 
   /// Path:  users/{userId}/healthLogs/{yearMonth}/entries
   ///   yearMonth = "YYYY-MM"
-  CollectionReference<SupplementLogDto> _entriesRef(
-    String userId,
-    String yearMonth,
-  ) => _db
+  CollectionReference<SupplementLogDto> _entriesRef(String userId, String yearMonth) => _db
       .collection('users')
       .doc(userId)
       .collection('healthLogs')
@@ -112,8 +97,7 @@ class HealthSource {
             date: (raw['date'] ?? '') as String,
             productId: (raw['product_id'] ?? raw['productId'] ?? '') as String,
             productName: (raw['product_name'] ?? raw['productName']) as String?,
-            productBrand:
-                (raw['product_brand'] ?? raw['productBrand']) as String?,
+            productBrand: (raw['product_brand'] ?? raw['productBrand']) as String?,
             servingsTaken: servingsRaw is num ? servingsRaw.toDouble() : 1.0,
             timestamp: raw['timestamp'],
           );
@@ -131,47 +115,39 @@ class HealthSource {
       );
 
   /// Streams all supplement log entries for a given [userId] and [yearMonth].
-  Stream<List<SupplementLog>> watchMonthEntries(
-    String userId,
-    String yearMonth,
-  ) => _entriesRef(userId, yearMonth)
-      .orderBy('date')
-      .snapshots()
-      .map(
-        (snap) => snap.docs.map((d) => _mapper.mapLogDto(d.data())).toList(),
-      );
+  Stream<List<SupplementLog>> watchMonthEntries(String userId, String yearMonth) => _entriesRef(
+    userId,
+    yearMonth,
+  ).orderBy('date').snapshots().map((snap) => snap.docs.map((d) => _mapper.mapLogDto(d.data())).toList());
+
+  /// Returns all supplement log entries for a given [userId] and [yearMonth]
+  /// as a single one-shot read. Use this for background prefetch of months
+  /// that don't need live updates (e.g. the prev/next months around the
+  /// active calendar month). Hits the Firestore SDK disk cache transparently.
+  Future<List<SupplementLog>> getMonthEntries(String userId, String yearMonth) async {
+    final snap = await _entriesRef(userId, yearMonth).orderBy('date').get();
+    return snap.docs.map((d) => _mapper.mapLogDto(d.data())).toList();
+  }
 
   /// Streams all supplement log entries for a specific [date] ("YYYY-MM-DD").
-  Stream<List<SupplementLog>> watchDayEntries(
-    String userId,
-    String yearMonth,
-    String date,
-  ) => _entriesRef(userId, yearMonth)
-      .where('date', isEqualTo: date)
-      .snapshots()
-      .map(
-        (snap) => snap.docs.map((d) => _mapper.mapLogDto(d.data())).toList(),
-      );
+  Stream<List<SupplementLog>> watchDayEntries(String userId, String yearMonth, String date) =>
+      _entriesRef(userId, yearMonth)
+          .where('date', isEqualTo: date)
+          .snapshots()
+          .map((snap) => snap.docs.map((d) => _mapper.mapLogDto(d.data())).toList());
 
   /// Creates a new log entry. Returns the generated document id.
   ///
   /// Also touches the month document so it exists as a real Firestore document
   /// and can be enumerated during account cleanup.
-  Future<String> createEntry(
-    String userId,
-    String yearMonth,
-    SupplementLog model,
-  ) async {
+  Future<String> createEntry(String userId, String yearMonth, SupplementLog model) async {
     await _db
         .collection('users')
         .doc(userId)
         .collection('healthLogs')
         .doc(yearMonth)
         .set(<String, dynamic>{}, SetOptions(merge: true));
-    final ref = await _entriesRef(
-      userId,
-      yearMonth,
-    ).add(_mapper.mapLogModel(model));
+    final ref = await _entriesRef(userId, yearMonth).add(_mapper.mapLogModel(model));
     return ref.id;
   }
 

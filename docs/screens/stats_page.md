@@ -3,12 +3,15 @@
 > Last updated: 2026-04-08
 
 ## Route
+
 `/stats` (child of MainShell, tab index 1)
 
 ## Angular Source
+
 `src/app/features/health/stats/` (stats sub-components)
 
 ## Top-Level Layout
+
 ```
 Scaffold
   Column
@@ -39,6 +42,7 @@ Scaffold
 ---
 
 ## Tab 0 — Attendances
+
 ```
 SingleChildScrollView → Column(padding: 16)
   ── Monthly bar chart ──
@@ -69,6 +73,7 @@ SingleChildScrollView → Column(padding: 16)
 ```
 
 ### Motivational Messages (best streak)
+
 - < 4 weeks: "Keep going!"
 - 4–7: "Great consistency!"
 - 8–12: "Impressive streak!"
@@ -77,6 +82,7 @@ SingleChildScrollView → Column(padding: 16)
 ---
 
 ## Tab 1 — Workouts
+
 ```
 SingleChildScrollView → Column(padding: 16)
   ── Breakdown by type ──
@@ -95,6 +101,7 @@ SingleChildScrollView → Column(padding: 16)
 ---
 
 ## Tab 2 — Duration
+
 ```
 SingleChildScrollView → Column(padding: 16)
   ── Average per type ──
@@ -113,6 +120,7 @@ SingleChildScrollView → Column(padding: 16)
 ---
 
 ## Tab 3 — Health
+
 ```
 SingleChildScrollView → Column(padding: 16)
   ── Consistency card ──
@@ -145,6 +153,7 @@ SingleChildScrollView → Column(padding: 16)
 ---
 
 ## Cubit Methods Used
+
 ```dart
 // StatsCubit:
 statsCubit.loadYear(year);
@@ -156,26 +165,40 @@ statsCubit.loadYear(year);
 ```
 
 ## StatsCubit States
-| State | UI Response |
-|---|---|
-| `PendingState` | show spinner in content area |
-| `StatsLoadedState(data)` | render all 4 tabs from data |
-| `SomethingWentWrongState` | show error message |
 
-## StatsLoadedState data fields (approximate)
-- `attendedPerMonth: List<int>` (12 values)
-- `currentWeekStreak: int`
-- `bestStreak: int`
-- `attendanceByWeekday: List<int>` (7 values, Mon=0)
-- `workoutTypeCounts: Map<WorkoutType, int>`
-- `workoutTypeByMonth: Map<String, Map<WorkoutType, int>>`
-- `avgDurationByType: Map<WorkoutType, double>`
-- `avgDurationByMonth: List<double>`
-- `supplementConsistencyPct: double`
-- `mostTakenSupplement: SupplementProduct?`
-- `topNutrients: List<{name, total, unit}>`
+Stats uses **per-slice state classes** — one distinct, immutable class per logical event
+per tab (no aggregate `StatsLoadedState` container, no `copyWith`, no status enums in state).
+
+| State                                                                                                                        | UI Response                                     |
+| ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `StatsYearInitializedState(year)`                                                                                            | year just changed; all 4 tabs reset to skeleton |
+| `StatsAttendancesLoadingState(year)` / `StatsWorkoutsLoadingState` / `StatsDurationLoadingState` / `StatsHealthLoadingState` | that tab shows its skeleton                     |
+| `StatsAttendancesLoadedState(year, stats)`                                                                                   | render Attendances tab                          |
+| `StatsWorkoutsLoadedState(year, stats, types)`                                                                               | render Workouts tab                             |
+| `StatsDurationLoadedState(year, stats, types)`                                                                               | render Duration tab                             |
+| `StatsHealthLoadedState(year, stats)`                                                                                        | render Health tab                               |
+| `StatsXErrorState(year)` (one per slice)                                                                                     | error widget with retry for that tab            |
+
+Each tab uses its own `BlocBuilder<StatsCubit, BaseState>` filtered to its slice's
+states plus `StatsYearInitializedState`, then checks `state.year == _selectedYear.value`
+before rendering data — stale emissions are ignored.
+
+## AttendanceStats fields (carried inside per-slice Loaded states)
+
+- `monthlyAttendanceCounts: List<int>` (12 values)
+- `currentWeekStreak: int` / `bestWeekStreak: int`
+- `currentStreakInfo` / `bestStreakInfo`
+- `weekdayAttendanceCounts: List<int>` (7 values)
+- `typeDistribution: Map<typeId, int>`
+- `monthlyTypeDistribution: Map<month, Map<typeId, int>>`
+- `perTypeDurationAverages: Map<typeId, double>`
+- `monthlyDurationAverages: Map<month, double>`
+- `healthConsistencyPct: double`
+- `mostTakenSupplementName: String?`
+- `topNutrients: List<NutrientTotal>`
 
 ## Colors / Styles
+
 - Bar chart bars: `cs.primary`
 - Line chart: `cs.secondary`
 - Streak 🔥 icon
@@ -183,6 +206,7 @@ statsCubit.loadYear(year);
 - Section titles: `tt.titleSmall` + left border accent `cs.primary`
 
 ## Navigation In/Out
+
 - IN: MainShell tab 1
 - OUT: no navigation
 

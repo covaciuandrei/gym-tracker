@@ -101,23 +101,30 @@ void main() {
 
     await tester.pumpWidget(_buildApp(cubit: cubit, router: router));
 
+    controller.add(StatsYearInitializedState(year: DateTime.now().year));
+    final year = DateTime.now().year;
+    controller.add(StatsAttendancesLoadedState(year: year, stats: sampleStats()));
     controller.add(
-      StatsLoadedState(
-        year: DateTime.now().year,
-        attendancesStatus: StatsLoadStatus.loaded,
-        workoutsStatus: StatsLoadStatus.loaded,
-        durationStatus: StatsLoadStatus.loaded,
-        healthStatus: StatsLoadStatus.loaded,
-        attendancesStats: sampleStats(),
-        workoutsStats: sampleStats(),
-        durationStats: sampleStats(),
-        healthStats: sampleStats(),
+      StatsWorkoutsLoadedState(
+        year: year,
+        stats: sampleStats(),
         types: [
           TrainingType(id: 't1', name: 'Strength', color: '#6366f1', icon: '🏋️'),
           TrainingType(id: 't2', name: 'Cardio', color: '#10b981', icon: '🏃'),
         ],
       ),
     );
+    controller.add(
+      StatsDurationLoadedState(
+        year: year,
+        stats: sampleStats(),
+        types: [
+          TrainingType(id: 't1', name: 'Strength', color: '#6366f1', icon: '🏋️'),
+          TrainingType(id: 't2', name: 'Cardio', color: '#10b981', icon: '🏃'),
+        ],
+      ),
+    );
+    controller.add(StatsHealthLoadedState(year: year, stats: sampleStats()));
     await tester.pump();
 
     expect(find.text('Attendances'), findsWidgets);

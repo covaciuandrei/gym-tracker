@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:injectable/injectable.dart';
-
 import 'package:gym_tracker/cubit/base_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/model/attendance_day.dart';
@@ -11,25 +9,22 @@ import 'package:gym_tracker/model/training_type.dart';
 import 'package:gym_tracker/service/attendance/attendance_service.dart';
 import 'package:gym_tracker/service/health/health_service.dart';
 import 'package:gym_tracker/service/workout/workout_service.dart';
+import 'package:injectable/injectable.dart';
 
 part 'calendar_states.dart';
 
 @injectable
 class CalendarCubit extends BaseCubit {
-  CalendarCubit(
-    this._attendanceService,
-    this._healthService,
-    this._workoutService,
-  );
+  CalendarCubit(this._attendanceService, this._healthService, this._workoutService);
 
   final AttendanceService _attendanceService;
   final HealthService _healthService;
   final WorkoutService _workoutService;
 
-  final List<StreamSubscription<List<AttendanceDay>>>
-  _monthAttendanceSubscriptions = <StreamSubscription<List<AttendanceDay>>>[];
-  final List<StreamSubscription<List<SupplementLog>>>
-  _monthHealthSubscriptions = <StreamSubscription<List<SupplementLog>>>[];
+  final List<StreamSubscription<List<AttendanceDay>>> _monthAttendanceSubscriptions =
+      <StreamSubscription<List<AttendanceDay>>>[];
+  final List<StreamSubscription<List<SupplementLog>>> _monthHealthSubscriptions =
+      <StreamSubscription<List<SupplementLog>>>[];
   StreamSubscription<List<SupplementProduct>>? _productsSubscription;
   StreamSubscription<List<TrainingType>>? _typesSubscription;
 
@@ -40,24 +35,22 @@ class CalendarCubit extends BaseCubit {
 
   int _activeMonthYear = 0;
   int _activeMonth = 0;
+  // Monotonic token used to discard stale prev/next prefetch results when
+  // [loadMonth] is called again before the background fetches complete.
+  int _loadToken = 0;
 
-  final Map<int, List<AttendanceDay>> _attendanceByMonthKey =
-      <int, List<AttendanceDay>>{};
-  final Map<int, List<SupplementLog>> _healthByMonthKey =
-      <int, List<SupplementLog>>{};
+  final Map<int, List<AttendanceDay>> _attendanceByMonthKey = <int, List<AttendanceDay>>{};
+  final Map<int, List<SupplementLog>> _healthByMonthKey = <int, List<SupplementLog>>{};
 
   int _monthKey(int year, int month) => year * 100 + month;
 
-  Iterable<DateTime> _surroundingMonths(int year, int month) sync* {
+  Iterable<DateTime> _neighborMonths(int year, int month) sync* {
     yield DateTime(year, month - 1, 1);
-    yield DateTime(year, month, 1);
     yield DateTime(year, month + 1, 1);
   }
 
   List<AttendanceDay> _mergedAttendance() {
-    return _attendanceByMonthKey.values
-        .expand((list) => list)
-        .toList(growable: false);
+    return _attendanceByMonthKey.values.expand((list) => list).toList(growable: false);
   }
 
   List<SupplementLog> _mergedHealthLogs() {
@@ -86,11 +79,22 @@ class CalendarCubit extends BaseCubit {
   /// Subscribes to attendance data for the given [year]/[month] and emits
   /// [CalendarMonthLoadedState] on every update. Cancels any previous
   /// subscription when called again (e.g. when the user pages to a new month).
-  void loadMonth({
-    required String userId,
-    required int year,
-    required int month,
-  }) {
+  ///
+  /// **Listener strategy** (see `docs/architecture_review_2026-05.md` —
+  /// "3 concurrent Firestore listeners per Calendar page"):
+  ///
+  /// * The **current** month opens live `snapshots()` listeners for both
+  ///   attendance and supplement logs — these need to reflect mark-attended /
+  ///   log-supplement writes in real time.
+  /// * The **prev / next** months are fetched once with `get()` in the
+  ///   background after the current-month subscription is in flight. They
+  ///   populate the surrounding cells of the calendar grid but don't need
+  ///   live updates (the user has to navigate to them before they can write).
+  ///
+  /// Net effect: first paint is bound by current-month latency only (was
+  /// `max(prev, curr, next)`), and the active listener count drops from
+  /// 6 → 2 per calendar page.
+  void loadMonth({required String userId, required int year, required int month}) {
     for (final sub in _monthAttendanceSubscriptions) {
       sub.cancel();
     }
@@ -104,6 +108,7 @@ class CalendarCubit extends BaseCubit {
 
     _activeMonthYear = year;
     _activeMonth = month;
+    final token = ++_loadToken;
 
     _monthDays = const <AttendanceDay>[];
     _monthLogs = const <SupplementLog>[];
@@ -114,43 +119,82 @@ class CalendarCubit extends BaseCubit {
 
     safeEmit(const PendingState());
 
-    for (final monthDate in _surroundingMonths(year, month)) {
-      final y = monthDate.year;
-      final m = monthDate.month;
-      final key = _monthKey(y, m);
+    // ── Current month: live snapshots (critical path) ────────────────────
+    final currentKey = _monthKey(year, month);
 
-      final attendanceSub = _attendanceService
-          .watchMonth(userId: userId, year: y, month: m)
-          .listen(
-            (days) {
+    final attendanceSub = _attendanceService
+        .watchMonth(userId: userId, year: year, month: month)
+        .listen(
+          (days) {
+            _attendanceByMonthKey[currentKey] = days;
+            _monthDays = _mergedAttendance();
+            _emitMonthLoaded();
+          },
+          onError: (_) {
+            _attendanceByMonthKey[currentKey] = const <AttendanceDay>[];
+            _monthDays = _mergedAttendance();
+            _emitMonthLoaded();
+          },
+        );
+    _monthAttendanceSubscriptions.add(attendanceSub);
+
+    final healthSub = _healthService
+        .watchMonthEntries(userId: userId, year: year, month: month)
+        .listen(
+          (logs) {
+            _healthByMonthKey[currentKey] = logs;
+            _monthLogs = _mergedHealthLogs();
+            _emitMonthLoaded();
+          },
+          onError: (_) {
+            _healthByMonthKey[currentKey] = const <SupplementLog>[];
+            _monthLogs = _mergedHealthLogs();
+            _emitMonthLoaded();
+          },
+        );
+    _monthHealthSubscriptions.add(healthSub);
+
+    // ── Prev / next months: background one-shot prefetch ─────────────────
+    // Scheduled as a microtask so the current-month subscription is in
+    // flight first. Results are merged in only if the cubit hasn't moved on
+    // to another month in the meantime (token check).
+    scheduleMicrotask(() {
+      for (final monthDate in _neighborMonths(year, month)) {
+        final y = monthDate.year;
+        final m = monthDate.month;
+        final key = _monthKey(y, m);
+
+        _attendanceService
+            .getMonth(userId: userId, year: y, month: m)
+            .then((days) {
+              if (token != _loadToken) return;
               _attendanceByMonthKey[key] = days;
               _monthDays = _mergedAttendance();
               _emitMonthLoaded();
-            },
-            onError: (_) {
+            })
+            .catchError((_) {
+              if (token != _loadToken) return;
               _attendanceByMonthKey[key] = const <AttendanceDay>[];
               _monthDays = _mergedAttendance();
               _emitMonthLoaded();
-            },
-          );
-      _monthAttendanceSubscriptions.add(attendanceSub);
+            });
 
-      final healthSub = _healthService
-          .watchMonthEntries(userId: userId, year: y, month: m)
-          .listen(
-            (logs) {
+        _healthService
+            .getMonthEntries(userId: userId, year: y, month: m)
+            .then((logs) {
+              if (token != _loadToken) return;
               _healthByMonthKey[key] = logs;
               _monthLogs = _mergedHealthLogs();
               _emitMonthLoaded();
-            },
-            onError: (_) {
+            })
+            .catchError((_) {
+              if (token != _loadToken) return;
               _healthByMonthKey[key] = const <SupplementLog>[];
               _monthLogs = _mergedHealthLogs();
               _emitMonthLoaded();
-            },
-          );
-      _monthHealthSubscriptions.add(healthSub);
-    }
+            });
+      }
+    });
 
     _productsSubscription = _healthService.watchAllProducts().listen(
       (products) {
@@ -199,10 +243,7 @@ class CalendarCubit extends BaseCubit {
       final results = await Future.wait<dynamic>([
         Future.wait(attendanceFutures),
         Future.wait(healthFutures),
-        _workoutService
-            .watchAll(userId)
-            .first
-            .catchError((_) => <TrainingType>[]),
+        _workoutService.watchAll(userId).first.catchError((_) => <TrainingType>[]),
       ]);
 
       final attendance = results[0] as List<List<AttendanceDay>>;
@@ -214,9 +255,7 @@ class CalendarCubit extends BaseCubit {
       };
       final healthByMonth = <int, List<SupplementLog>>{
         for (int month = 1; month <= 12; month++)
-          month: health[month - 1]
-              .where((log) => log.servingsTaken > 0)
-              .toList(growable: false),
+          month: health[month - 1].where((log) => log.servingsTaken > 0).toList(growable: false),
       };
 
       safeEmit(
@@ -232,16 +271,10 @@ class CalendarCubit extends BaseCubit {
     }
   }
 
-  Future<void> logSupplement({
-    required String userId,
-    required SupplementLog model,
-  }) async {
+  Future<void> logSupplement({required String userId, required SupplementLog model}) async {
     await guardedAction(() async {
       try {
-        final id = await _healthService.logSupplement(
-          userId: userId,
-          model: model,
-        );
+        final id = await _healthService.logSupplement(userId: userId, model: model);
         safeEmit(CalendarSupplementLoggedState(id: id));
       } catch (_) {
         safeEmit(const SomethingWentWrongState());
@@ -249,18 +282,10 @@ class CalendarCubit extends BaseCubit {
     });
   }
 
-  Future<void> deleteSupplementEntry({
-    required String userId,
-    required String date,
-    required String entryId,
-  }) async {
+  Future<void> deleteSupplementEntry({required String userId, required String date, required String entryId}) async {
     await guardedAction(() async {
       try {
-        await _healthService.deleteEntry(
-          userId: userId,
-          date: date,
-          entryId: entryId,
-        );
+        await _healthService.deleteEntry(userId: userId, date: date, entryId: entryId);
         safeEmit(const CalendarSupplementDeletedState());
       } catch (_) {
         safeEmit(const SomethingWentWrongState());
@@ -276,10 +301,7 @@ class CalendarCubit extends BaseCubit {
   }) async {
     await guardedAction(() async {
       try {
-        final existing = await _attendanceService.getDay(
-          userId: userId,
-          date: date,
-        );
+        final existing = await _attendanceService.getDay(userId: userId, date: date);
         final timestamp = existing?.timestamp ?? DateTime.now();
         final day = AttendanceDay(
           date: date,
@@ -338,10 +360,7 @@ class CalendarCubit extends BaseCubit {
   }
 
   /// Creates or updates the attendance record for [day.date].
-  Future<void> markDay({
-    required String userId,
-    required AttendanceDay day,
-  }) async {
+  Future<void> markDay({required String userId, required AttendanceDay day}) async {
     await guardedAction(() async {
       try {
         await _attendanceService.upsertDay(userId: userId, model: day);

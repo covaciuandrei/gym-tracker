@@ -75,24 +75,25 @@ void main() {
   tearDown(() => sut.close());
 
   group('initYear', () {
-    test('emits idle statuses for all mini-pages', () async {
+    test('emits StatsYearInitializedState with the requested year', () async {
       final emitted = <BaseState>[];
       sut.stream.listen(emitted.add);
 
       sut.initYear(_year);
       await Future<void>.delayed(Duration.zero);
 
-      final state = emitted.whereType<StatsLoadedState>().last;
-      expect(state.year, _year);
-      expect(state.attendancesStatus, StatsLoadStatus.idle);
-      expect(state.workoutsStatus, StatsLoadStatus.idle);
-      expect(state.durationStatus, StatsLoadStatus.idle);
-      expect(state.healthStatus, StatsLoadStatus.idle);
+      final init = emitted.whereType<StatsYearInitializedState>().last;
+      expect(init.year, _year);
+      // No slice-level states should have been emitted yet.
+      expect(emitted.whereType<StatsAttendancesLoadingState>(), isEmpty);
+      expect(emitted.whereType<StatsWorkoutsLoadingState>(), isEmpty);
+      expect(emitted.whereType<StatsDurationLoadingState>(), isEmpty);
+      expect(emitted.whereType<StatsHealthLoadingState>(), isEmpty);
     });
   });
 
   group('loadTab - attendances', () {
-    test('loads only attendances slice', () async {
+    test('emits Loading then Loaded for attendances slice only', () async {
       _stubMonths(mockAttendance, _userId, _year);
       when(() => mockWorkout.watchAll(_userId)).thenAnswer((_) => Stream.value([]));
 
@@ -103,18 +104,19 @@ void main() {
       await sut.loadTab(userId: _userId, year: _year, tab: StatsTabKind.attendances);
       await Future<void>.delayed(Duration.zero);
 
-      final state = emitted.whereType<StatsLoadedState>().last;
-      expect(state.attendancesStatus, StatsLoadStatus.loaded);
-      expect(state.attendancesStats?.yearlyCount, 0);
-      expect(state.workoutsStatus, StatsLoadStatus.idle);
-      expect(state.durationStatus, StatsLoadStatus.idle);
-      expect(state.healthStatus, StatsLoadStatus.idle);
+      expect(emitted.whereType<StatsAttendancesLoadingState>().length, 1);
+      final loaded = emitted.whereType<StatsAttendancesLoadedState>().last;
+      expect(loaded.year, _year);
+      expect(loaded.stats.yearlyCount, 0);
+      expect(emitted.whereType<StatsWorkoutsLoadedState>(), isEmpty);
+      expect(emitted.whereType<StatsDurationLoadedState>(), isEmpty);
+      expect(emitted.whereType<StatsHealthLoadedState>(), isEmpty);
 
       verifyNever(() => mockWorkout.watchAll(_userId));
       verifyNever(() => mockHealth.watchAllProducts());
     });
 
-    test('sets error when attendances loading fails', () async {
+    test('emits StatsAttendancesErrorState when fetch throws', () async {
       when(
         () => mockAttendance.watchMonth(
           userId: any(named: 'userId'),
@@ -130,9 +132,9 @@ void main() {
       await sut.loadTab(userId: _userId, year: _year, tab: StatsTabKind.attendances);
       await Future<void>.delayed(Duration.zero);
 
-      final state = emitted.whereType<StatsLoadedState>().last;
-      expect(state.attendancesStatus, StatsLoadStatus.error);
-      expect(state.attendancesStats, isNull);
+      final err = emitted.whereType<StatsAttendancesErrorState>().last;
+      expect(err.year, _year);
+      expect(emitted.whereType<StatsAttendancesLoadedState>(), isEmpty);
     });
   });
 
@@ -142,7 +144,7 @@ void main() {
       when(() => mockWorkout.watchAll(_userId)).thenAnswer((_) => Stream.value([_typeA, _typeB]));
     });
 
-    test('loads workouts slice and keeps duration idle', () async {
+    test('loads workouts slice and keeps other slices untouched', () async {
       final emitted = <BaseState>[];
       sut.stream.listen(emitted.add);
 
@@ -150,17 +152,17 @@ void main() {
       await sut.loadTab(userId: _userId, year: _year, tab: StatsTabKind.workouts);
       await Future<void>.delayed(Duration.zero);
 
-      final state = emitted.whereType<StatsLoadedState>().last;
-      expect(state.workoutsStatus, StatsLoadStatus.loaded);
-      expect(state.workoutsStats?.yearlyCount, 3);
-      expect(state.workoutsStats?.typeDistribution, {'type_a': 2});
-      expect(state.workoutsStats?.monthlyDurationAverages[6], 60.0);
-      expect(state.workoutsStats?.perTypeDurationAverages['type_a'], 75.0);
-      expect(state.durationStatus, StatsLoadStatus.idle);
-      expect(state.durationStats, isNull);
-      expect(state.types, [_typeA, _typeB]);
-      expect(state.attendancesStatus, StatsLoadStatus.idle);
-      expect(state.healthStatus, StatsLoadStatus.idle);
+      final loaded = emitted.whereType<StatsWorkoutsLoadedState>().last;
+      expect(loaded.year, _year);
+      expect(loaded.stats.yearlyCount, 3);
+      expect(loaded.stats.typeDistribution, {'type_a': 2});
+      expect(loaded.stats.monthlyDurationAverages[6], 60.0);
+      expect(loaded.stats.perTypeDurationAverages['type_a'], 75.0);
+      expect(loaded.types, [_typeA, _typeB]);
+
+      expect(emitted.whereType<StatsAttendancesLoadedState>(), isEmpty);
+      expect(emitted.whereType<StatsDurationLoadedState>(), isEmpty);
+      expect(emitted.whereType<StatsHealthLoadedState>(), isEmpty);
     });
 
     test('loads duration independently and reuses already fetched source data', () async {
@@ -173,10 +175,10 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       verify(() => mockWorkout.watchAll(_userId)).called(1);
-      final state = emitted.whereType<StatsLoadedState>().last;
-      expect(state.workoutsStatus, StatsLoadStatus.loaded);
-      expect(state.durationStatus, StatsLoadStatus.loaded);
-      expect(state.durationStats, isNotNull);
+      expect(emitted.whereType<StatsWorkoutsLoadedState>(), isNotEmpty);
+      final duration = emitted.whereType<StatsDurationLoadedState>().last;
+      expect(duration.year, _year);
+      expect(duration.types, [_typeA, _typeB]);
     });
   });
 
@@ -210,12 +212,11 @@ void main() {
       await sut.loadTab(userId: _userId, year: _year, tab: StatsTabKind.health);
       await Future<void>.delayed(Duration.zero);
 
-      final state = emitted.whereType<StatsLoadedState>().last;
-      expect(state.healthStatus, StatsLoadStatus.loaded);
-      expect(state.healthStats, isNotNull);
-      expect(state.attendancesStatus, StatsLoadStatus.idle);
-      expect(state.workoutsStatus, StatsLoadStatus.idle);
-      expect(state.durationStatus, StatsLoadStatus.idle);
+      final loaded = emitted.whereType<StatsHealthLoadedState>().last;
+      expect(loaded.year, _year);
+      expect(emitted.whereType<StatsAttendancesLoadedState>(), isEmpty);
+      expect(emitted.whereType<StatsWorkoutsLoadedState>(), isEmpty);
+      expect(emitted.whereType<StatsDurationLoadedState>(), isEmpty);
 
       verifyNever(() => mockWorkout.watchAll(_userId));
     });
@@ -250,9 +251,10 @@ void main() {
       year2025Completer.complete(const []);
       await Future<void>.delayed(Duration.zero);
 
-      final state = emitted.whereType<StatsLoadedState>().last;
-      expect(state.year, _year + 1);
-      expect(state.attendancesStatus, StatsLoadStatus.loaded);
+      // No Loaded state was emitted for the stale (older) year.
+      final loaded = emitted.whereType<StatsAttendancesLoadedState>().toList();
+      expect(loaded.where((s) => s.year == _year), isEmpty);
+      expect(loaded.last.year, _year + 1);
     });
   });
 }

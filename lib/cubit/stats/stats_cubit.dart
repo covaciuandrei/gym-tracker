@@ -22,6 +22,11 @@ class _WorkoutDurationSourceData {
   final List<TrainingType> types;
 }
 
+/// Private per-slice load status. Tracked in cubit fields (not in state) so
+/// that emitted states stay single-event and immutable per the project
+/// state-modelling convention.
+enum _SliceStatus { idle, loading, loaded, error }
+
 @injectable
 class StatsCubit extends BaseCubit {
   StatsCubit(this._attendanceService, this._workoutService, this._healthService);
@@ -31,11 +36,22 @@ class StatsCubit extends BaseCubit {
   final HealthService _healthService;
 
   int _activeYearToken = 0;
+  int? _activeYear;
   final Map<int, _WorkoutDurationSourceData> _workoutDurationSourceDataByYear = {};
+
+  _SliceStatus _attendancesStatus = _SliceStatus.idle;
+  _SliceStatus _workoutsStatus = _SliceStatus.idle;
+  _SliceStatus _durationStatus = _SliceStatus.idle;
+  _SliceStatus _healthStatus = _SliceStatus.idle;
 
   void initYear(int year) {
     _activeYearToken++;
-    safeEmit(StatsLoadedState.initial(year));
+    _activeYear = year;
+    _attendancesStatus = _SliceStatus.idle;
+    _workoutsStatus = _SliceStatus.idle;
+    _durationStatus = _SliceStatus.idle;
+    _healthStatus = _SliceStatus.idle;
+    safeEmit(StatsYearInitializedState(year: year));
   }
 
   Future<void> loadTab({
@@ -44,49 +60,35 @@ class StatsCubit extends BaseCubit {
     required StatsTabKind tab,
     bool force = false,
   }) async {
-    final stateForYear = _stateForYear(year);
     final token = _activeYearToken;
-
     switch (tab) {
       case StatsTabKind.attendances:
-        await _loadAttendances(userId: userId, year: year, state: stateForYear, token: token, force: force);
+        await _loadAttendances(userId: userId, year: year, token: token, force: force);
         return;
       case StatsTabKind.workouts:
-        await _loadWorkouts(userId: userId, year: year, state: stateForYear, token: token, force: force);
+        await _loadWorkouts(userId: userId, year: year, token: token, force: force);
         return;
       case StatsTabKind.duration:
-        await _loadDuration(userId: userId, year: year, state: stateForYear, token: token, force: force);
+        await _loadDuration(userId: userId, year: year, token: token, force: force);
         return;
       case StatsTabKind.health:
-        await _loadHealth(userId: userId, year: year, state: stateForYear, token: token, force: force);
+        await _loadHealth(userId: userId, year: year, token: token, force: force);
         return;
     }
-  }
-
-  StatsLoadedState _stateForYear(int year) {
-    final current = state;
-    if (current is StatsLoadedState && current.year == year) {
-      return current;
-    }
-    final next = StatsLoadedState.initial(year);
-    safeEmit(next);
-    return next;
   }
 
   Future<void> _loadAttendances({
     required String userId,
     required int year,
-    required StatsLoadedState state,
     required int token,
     required bool force,
   }) async {
-    if (!force) {
-      if (state.attendancesStatus == StatsLoadStatus.loading || state.attendancesStatus == StatsLoadStatus.loaded) {
-        return;
-      }
+    if (!force && (_attendancesStatus == _SliceStatus.loading || _attendancesStatus == _SliceStatus.loaded)) {
+      return;
     }
 
-    safeEmit(state.copyWith(attendancesStatus: StatsLoadStatus.loading, clearAttendancesStats: true));
+    _attendancesStatus = _SliceStatus.loading;
+    safeEmit(StatsAttendancesLoadingState(year: year));
     try {
       final monthResults = await Future.wait<List<AttendanceDay>>(_attendanceMonthFutures(userId: userId, year: year));
       if (!_isRequestActive(year: year, token: token)) return;
@@ -102,29 +104,27 @@ class StatsCubit extends BaseCubit {
         year: year,
       );
 
-      final latest = _stateForYear(year);
-      safeEmit(latest.copyWith(attendancesStatus: StatsLoadStatus.loaded, attendancesStats: stats));
+      _attendancesStatus = _SliceStatus.loaded;
+      safeEmit(StatsAttendancesLoadedState(year: year, stats: stats));
     } catch (_) {
       if (!_isRequestActive(year: year, token: token)) return;
-      final latest = _stateForYear(year);
-      safeEmit(latest.copyWith(attendancesStatus: StatsLoadStatus.error, clearAttendancesStats: true));
+      _attendancesStatus = _SliceStatus.error;
+      safeEmit(StatsAttendancesErrorState(year: year));
     }
   }
 
   Future<void> _loadWorkouts({
     required String userId,
     required int year,
-    required StatsLoadedState state,
     required int token,
     required bool force,
   }) async {
-    if (!force) {
-      if (state.workoutsStatus == StatsLoadStatus.loading || state.workoutsStatus == StatsLoadStatus.loaded) {
-        return;
-      }
+    if (!force && (_workoutsStatus == _SliceStatus.loading || _workoutsStatus == _SliceStatus.loaded)) {
+      return;
     }
 
-    safeEmit(state.copyWith(workoutsStatus: StatsLoadStatus.loading, clearWorkoutsStats: true));
+    _workoutsStatus = _SliceStatus.loading;
+    safeEmit(StatsWorkoutsLoadingState(year: year));
     try {
       final sourceData = await _getWorkoutDurationSourceData(userId: userId, year: year, forceRefresh: force);
       if (!_isRequestActive(year: year, token: token)) return;
@@ -138,31 +138,27 @@ class StatsCubit extends BaseCubit {
         year: year,
       );
 
-      final latest = _stateForYear(year);
-      safeEmit(latest.copyWith(workoutsStatus: StatsLoadStatus.loaded, workoutsStats: stats, types: sourceData.types));
+      _workoutsStatus = _SliceStatus.loaded;
+      safeEmit(StatsWorkoutsLoadedState(year: year, stats: stats, types: sourceData.types));
     } catch (_) {
       if (!_isRequestActive(year: year, token: token)) return;
-      final latest = _stateForYear(year);
-      safeEmit(
-        latest.copyWith(workoutsStatus: StatsLoadStatus.error, clearWorkoutsStats: true, types: const <TrainingType>[]),
-      );
+      _workoutsStatus = _SliceStatus.error;
+      safeEmit(StatsWorkoutsErrorState(year: year));
     }
   }
 
   Future<void> _loadDuration({
     required String userId,
     required int year,
-    required StatsLoadedState state,
     required int token,
     required bool force,
   }) async {
-    if (!force) {
-      if (state.durationStatus == StatsLoadStatus.loading || state.durationStatus == StatsLoadStatus.loaded) {
-        return;
-      }
+    if (!force && (_durationStatus == _SliceStatus.loading || _durationStatus == _SliceStatus.loaded)) {
+      return;
     }
 
-    safeEmit(state.copyWith(durationStatus: StatsLoadStatus.loading, clearDurationStats: true));
+    _durationStatus = _SliceStatus.loading;
+    safeEmit(StatsDurationLoadingState(year: year));
     try {
       final sourceData = await _getWorkoutDurationSourceData(userId: userId, year: year, forceRefresh: force);
       if (!_isRequestActive(year: year, token: token)) return;
@@ -176,14 +172,12 @@ class StatsCubit extends BaseCubit {
         year: year,
       );
 
-      final latest = _stateForYear(year);
-      safeEmit(latest.copyWith(durationStatus: StatsLoadStatus.loaded, durationStats: stats, types: sourceData.types));
+      _durationStatus = _SliceStatus.loaded;
+      safeEmit(StatsDurationLoadedState(year: year, stats: stats, types: sourceData.types));
     } catch (_) {
       if (!_isRequestActive(year: year, token: token)) return;
-      final latest = _stateForYear(year);
-      safeEmit(
-        latest.copyWith(durationStatus: StatsLoadStatus.error, clearDurationStats: true, types: const <TrainingType>[]),
-      );
+      _durationStatus = _SliceStatus.error;
+      safeEmit(StatsDurationErrorState(year: year));
     }
   }
 
@@ -213,20 +207,13 @@ class StatsCubit extends BaseCubit {
     return next;
   }
 
-  Future<void> _loadHealth({
-    required String userId,
-    required int year,
-    required StatsLoadedState state,
-    required int token,
-    required bool force,
-  }) async {
-    if (!force) {
-      if (state.healthStatus == StatsLoadStatus.loading || state.healthStatus == StatsLoadStatus.loaded) {
-        return;
-      }
+  Future<void> _loadHealth({required String userId, required int year, required int token, required bool force}) async {
+    if (!force && (_healthStatus == _SliceStatus.loading || _healthStatus == _SliceStatus.loaded)) {
+      return;
     }
 
-    safeEmit(state.copyWith(healthStatus: StatsLoadStatus.loading, clearHealthStats: true));
+    _healthStatus = _SliceStatus.loading;
+    safeEmit(StatsHealthLoadingState(year: year));
     try {
       final healthMonthFutures = <Future<List<SupplementLog>>>[
         for (int m = 1; m <= 12; m++)
@@ -255,19 +242,16 @@ class StatsCubit extends BaseCubit {
         year: year,
       );
 
-      final latest = _stateForYear(year);
-      safeEmit(latest.copyWith(healthStatus: StatsLoadStatus.loaded, healthStats: stats));
+      _healthStatus = _SliceStatus.loaded;
+      safeEmit(StatsHealthLoadedState(year: year, stats: stats));
     } catch (_) {
       if (!_isRequestActive(year: year, token: token)) return;
-      final latest = _stateForYear(year);
-      safeEmit(latest.copyWith(healthStatus: StatsLoadStatus.error, clearHealthStats: true));
+      _healthStatus = _SliceStatus.error;
+      safeEmit(StatsHealthErrorState(year: year));
     }
   }
 
-  bool _isRequestActive({required int year, required int token}) {
-    final current = state;
-    return token == _activeYearToken && current is StatsLoadedState && current.year == year;
-  }
+  bool _isRequestActive({required int year, required int token}) => token == _activeYearToken && _activeYear == year;
 
   List<Future<List<AttendanceDay>>> _attendanceMonthFutures({required String userId, required int year}) {
     return <Future<List<AttendanceDay>>>[

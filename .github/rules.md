@@ -43,7 +43,7 @@
   - This guarantees that rapid duplicate taps, UI lag, or overlapping requests cannot produce duplicate Firestore documents or conflicting backend calls.
   - The callback handles its own try/catch and emits the final state (success or error).
 - **Load / stream / subscription methods do NOT use `guardedAction()`** — they manage their own subscriptions.
-- **`StatsCubit` exception:** uses its own token-based guard system with `_activeYearToken` and `StatsLoadStatus` checks. Do not refactor to `guardedAction()`.
+- **`StatsCubit` exception:** uses its own token-based guard system with `_activeYearToken` plus private `_SliceStatus` fields. Do not refactor to `guardedAction()`.
 - **`SplashCubit.start()` exception:** one-shot bootstrap orchestration with a minimum-splash delay; called once from `initState`. Does not use `guardedAction()`.
 - **`SomethingWentWrongState` is the uniform catch-all** — all `catch (_)` blocks emit it. Specific typed exceptions are mapped to specific states before the catch-all.
 - **Never use `late` or `late final` in app code.** Prefer eagerly initialized `final` fields, nullable fields with explicit guards, or cubit-emitted state values read in `BlocBuilder`.
@@ -91,7 +91,7 @@ If any of these are true, the state **must** go through a cubit (emit state → 
 - **Use `listenWhen` + `listener`** only for side effects (navigation, snackbars) not reflected in the widget tree.
 - **For local live-feedback widgets** (password strength, match indicator): use `ListenableBuilder` or `ValueListenableBuilder` on `TextEditingController` — not `setState`.
 - **For page initialization data** (app version, profile bootstrap): create an `init()` method in the cubit, call from `initState()`, emit a dedicated state, read in `BlocBuilder`.
-- **No `copyWith` on `BaseState` subclasses** — always replace entirely. Exception: `StatsLoadedState` uses `copyWith` for its multi-tab independent loading pattern.
+- **No `copyWith` on `BaseState` subclasses** — always replace entirely. Each logical event must emit a distinct, immutable, `final`-only state class (no `copyWith`, no nullable result fields, no status enums embedded in state).
 
 ---
 

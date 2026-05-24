@@ -64,6 +64,24 @@ void main() {
       ),
     ).thenAnswer((_) => Stream.value([]));
 
+    // Background prefetch for prev/next months uses one-shot get*() calls.
+    when(
+      () => mockService.getMonth(
+        userId: any(named: 'userId'),
+        year: any(named: 'year'),
+        month: any(named: 'month'),
+      ),
+    ).thenAnswer((_) async => <AttendanceDay>[]);
+    when(
+      () => mockHealthService.getMonthEntries(
+        userId: any(named: 'userId'),
+        year: any(named: 'year'),
+        month: any(named: 'month'),
+      ),
+    ).thenAnswer((_) async => []);
+
+    when(() => mockHealthService.watchAllProducts()).thenAnswer((_) => Stream.value([]));
+
     when(() => mockWorkoutService.watchAll(any<String>())).thenAnswer((_) => Stream.value([]));
 
     sut = CalendarCubit(mockService, mockHealthService, mockWorkoutService);
