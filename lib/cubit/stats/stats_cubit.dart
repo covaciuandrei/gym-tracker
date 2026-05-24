@@ -44,6 +44,15 @@ class StatsCubit extends BaseCubit {
   _SliceStatus _durationStatus = _SliceStatus.idle;
   _SliceStatus _healthStatus = _SliceStatus.idle;
 
+  // Cached last-loaded states per slice. Re-emitted when the user switches
+  // back to an already-loaded tab so the BlocBuilder sees a matching state
+  // (otherwise the cubit's current state is whatever the other tab last
+  // emitted, and the tab's buildWhen filters it out → stuck on skeleton).
+  StatsAttendancesLoadedState? _lastAttendancesLoaded;
+  StatsWorkoutsLoadedState? _lastWorkoutsLoaded;
+  StatsDurationLoadedState? _lastDurationLoaded;
+  StatsHealthLoadedState? _lastHealthLoaded;
+
   void initYear(int year) {
     _activeYearToken++;
     _activeYear = year;
@@ -51,6 +60,10 @@ class StatsCubit extends BaseCubit {
     _workoutsStatus = _SliceStatus.idle;
     _durationStatus = _SliceStatus.idle;
     _healthStatus = _SliceStatus.idle;
+    _lastAttendancesLoaded = null;
+    _lastWorkoutsLoaded = null;
+    _lastDurationLoaded = null;
+    _lastHealthLoaded = null;
     safeEmit(StatsYearInitializedState(year: year));
   }
 
@@ -84,6 +97,10 @@ class StatsCubit extends BaseCubit {
     required bool force,
   }) async {
     if (!force && (_attendancesStatus == _SliceStatus.loading || _attendancesStatus == _SliceStatus.loaded)) {
+      final cached = _lastAttendancesLoaded;
+      if (_attendancesStatus == _SliceStatus.loaded && cached != null) {
+        safeEmit(cached);
+      }
       return;
     }
 
@@ -105,7 +122,9 @@ class StatsCubit extends BaseCubit {
       );
 
       _attendancesStatus = _SliceStatus.loaded;
-      safeEmit(StatsAttendancesLoadedState(year: year, stats: stats));
+      final loaded = StatsAttendancesLoadedState(year: year, stats: stats);
+      _lastAttendancesLoaded = loaded;
+      safeEmit(loaded);
     } catch (_) {
       if (!_isRequestActive(year: year, token: token)) return;
       _attendancesStatus = _SliceStatus.error;
@@ -120,6 +139,10 @@ class StatsCubit extends BaseCubit {
     required bool force,
   }) async {
     if (!force && (_workoutsStatus == _SliceStatus.loading || _workoutsStatus == _SliceStatus.loaded)) {
+      final cached = _lastWorkoutsLoaded;
+      if (_workoutsStatus == _SliceStatus.loaded && cached != null) {
+        safeEmit(cached);
+      }
       return;
     }
 
@@ -139,7 +162,9 @@ class StatsCubit extends BaseCubit {
       );
 
       _workoutsStatus = _SliceStatus.loaded;
-      safeEmit(StatsWorkoutsLoadedState(year: year, stats: stats, types: sourceData.types));
+      final loaded = StatsWorkoutsLoadedState(year: year, stats: stats, types: sourceData.types);
+      _lastWorkoutsLoaded = loaded;
+      safeEmit(loaded);
     } catch (_) {
       if (!_isRequestActive(year: year, token: token)) return;
       _workoutsStatus = _SliceStatus.error;
@@ -154,6 +179,10 @@ class StatsCubit extends BaseCubit {
     required bool force,
   }) async {
     if (!force && (_durationStatus == _SliceStatus.loading || _durationStatus == _SliceStatus.loaded)) {
+      final cached = _lastDurationLoaded;
+      if (_durationStatus == _SliceStatus.loaded && cached != null) {
+        safeEmit(cached);
+      }
       return;
     }
 
@@ -173,7 +202,9 @@ class StatsCubit extends BaseCubit {
       );
 
       _durationStatus = _SliceStatus.loaded;
-      safeEmit(StatsDurationLoadedState(year: year, stats: stats, types: sourceData.types));
+      final loaded = StatsDurationLoadedState(year: year, stats: stats, types: sourceData.types);
+      _lastDurationLoaded = loaded;
+      safeEmit(loaded);
     } catch (_) {
       if (!_isRequestActive(year: year, token: token)) return;
       _durationStatus = _SliceStatus.error;
@@ -209,6 +240,10 @@ class StatsCubit extends BaseCubit {
 
   Future<void> _loadHealth({required String userId, required int year, required int token, required bool force}) async {
     if (!force && (_healthStatus == _SliceStatus.loading || _healthStatus == _SliceStatus.loaded)) {
+      final cached = _lastHealthLoaded;
+      if (_healthStatus == _SliceStatus.loaded && cached != null) {
+        safeEmit(cached);
+      }
       return;
     }
 
@@ -243,7 +278,9 @@ class StatsCubit extends BaseCubit {
       );
 
       _healthStatus = _SliceStatus.loaded;
-      safeEmit(StatsHealthLoadedState(year: year, stats: stats));
+      final loaded = StatsHealthLoadedState(year: year, stats: stats);
+      _lastHealthLoaded = loaded;
+      safeEmit(loaded);
     } catch (_) {
       if (!_isRequestActive(year: year, token: token)) return;
       _healthStatus = _SliceStatus.error;
