@@ -3,12 +3,15 @@
 > Last updated: 2026-04-08
 
 ## Route
+
 `/calendar` (child of MainShell, tab index 0)
 
 ## Angular Source
+
 `src/app/features/calendar/`
 
 ## Top-Level Layout
+
 ```
 Scaffold
   Column
@@ -30,6 +33,7 @@ Scaffold
 ```
 
 ## Monthly View — Grid
+
 ```
 Column
   ── Weekday header row ──
@@ -56,6 +60,7 @@ Column
 ```
 
 ## Yearly View — Grid
+
 ```
 GridView(3 columns — portrait, 4 columns — landscape)
   for each month (1–12):
@@ -70,7 +75,9 @@ GridView(3 columns — portrait, 4 columns — landscape)
 ```
 
 ## Day Popup (bottom sheet / modal)
+
 Opens when user taps a day cell in monthly view.
+
 ```
 DraggableScrollableSheet or showModalBottomSheet
   Column
@@ -127,6 +134,7 @@ DraggableScrollableSheet or showModalBottomSheet
 ```
 
 ## Cubit Methods Used
+
 ```dart
 // CalendarCubit:
 calendarCubit.loadMonth(year, month);        // on init and month change
@@ -142,15 +150,18 @@ healthCubit.deleteEntry(entryId);            // delete log from health tab
 ```
 
 ## CalendarCubit States
-| State | Trigger | UI Response |
-|---|---|---|
-| `CalendarLoadedState(days, month, year)` | loadMonth | render grid |
-| `CalendarYearLoadedState(months, year)` | loadYear | render yearly grid |
-| `PendingState` | any load | show spinner |
-| `SomethingWentWrongState` | error | show error snackbar |
+
+| State                                    | Trigger   | UI Response         |
+| ---------------------------------------- | --------- | ------------------- |
+| `CalendarLoadedState(days, month, year)` | loadMonth | render grid         |
+| `CalendarYearLoadedState(months, year)`  | loadYear  | render yearly grid  |
+| `PendingState`                           | any load  | show spinner        |
+| `SomethingWentWrongState`                | error     | show error snackbar |
 
 ## Day Cell Data Model
+
 Each day cell in `CalendarLoadedState` includes:
+
 - `date: DateTime`
 - `attended: bool`
 - `workoutType: WorkoutType?` (has `icon: String`, `name: String`, `color: String`)
@@ -159,6 +170,7 @@ Each day cell in `CalendarLoadedState` includes:
 - `isCurrentMonth: bool`
 
 ## Colors / Styles
+
 - Today highlight: `cs.primaryContainer`
 - Other month text: `cs.outline`
 - Attendance dot: `cs.primary` (4×4 circle)
@@ -168,8 +180,20 @@ Each day cell in `CalendarLoadedState` includes:
 - Toggle unselected: transparent text=`cs.onSurfaceVariant`
 
 ## Navigation In/Out
+
 - IN: MainShell tab 0 (initial tab)
 - OUT: no navigation; popup is in-page modal
+
+## Pull-to-Refresh
+
+The `TabBarView` containing the monthly and yearly grids is wrapped in
+`PullToRefresh` (`lib/presentation/controls/pull_to_refresh.dart`) with
+`notificationPredicate: PullToRefresh.verticalScrollNotification` so horizontal
+tab swipes are preserved. The `onRefresh` callback reloads the active view
+(`_loadMonth` or `_loadYear`) and awaits `_minimumSkeletonDuration` so the
+existing skeleton window applies. Inner grids/lists use
+`PullToRefresh.alwaysScrollablePhysics` to keep the gesture available even when
+content does not overflow.
 
 ## Status
 

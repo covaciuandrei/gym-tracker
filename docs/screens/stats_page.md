@@ -197,6 +197,19 @@ before rendering data — stale emissions are ignored.
 - `mostTakenSupplementName: String?`
 - `topNutrients: List<NutrientTotal>`
 
+## Pull-to-Refresh
+
+Each of the four tab bodies (Attendances, Workouts, Duration, Health) — in both
+their loaded and error states — is wrapped in `PullToRefresh`
+(`lib/presentation/controls/pull_to_refresh.dart`). The `onRefresh` callback
+calls `StatsCubit.loadTab(kind, force: true)` so the active tab re-fetches even
+if its slice was already loaded; the cubit re-emits the matching
+`StatsXLoadingState` so the tab's skeleton is shown. Because the tabs live
+inside a horizontal `TabBarView`, every wrapper uses
+`notificationPredicate: PullToRefresh.verticalScrollNotification`, and each
+tab's `SingleChildScrollView` uses `PullToRefresh.alwaysScrollablePhysics` so
+the gesture stays available when content does not overflow.
+
 ## Colors / Styles
 
 - Bar chart bars: `cs.primary`

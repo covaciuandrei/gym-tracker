@@ -3,12 +3,15 @@
 > Last updated: 2026-04-08
 
 ## Route
+
 `/health` (child of MainShell, tab index 2)
 
 ## Angular Source
+
 `src/app/features/health/`
 
 ## Top-Level Layout
+
 ```
 Scaffold
   Column
@@ -33,6 +36,7 @@ Scaffold
 ---
 
 ## Tab 0 — Today
+
 Shows supplement logs recorded for today, grouped by product.
 
 ```
@@ -67,6 +71,7 @@ else:
 ---
 
 ## Tab 1 — My Supplements
+
 User's own created products. Searchable.
 
 ```
@@ -106,6 +111,7 @@ Column
 ---
 
 ## Tab 2 — All Supplements
+
 Global catalog (all users' products + seeded products). Searchable.
 Tapping logs a supplement for today.
 
@@ -122,6 +128,7 @@ Column
         onTap: () => _quickLog(product.id),   // logs for today
       )
 ```
+
 FAB on this tab: → opens `SupplementForm` to create new product.
 
 ---
@@ -129,10 +136,12 @@ FAB on this tab: → opens `SupplementForm` to create new product.
 ## SupplementForm (bottom sheet, used for create + edit)
 
 ### Title
+
 - Create: "Add Supplement"
 - Edit: "Edit Supplement"
 
 ### Layout
+
 ```
 DraggableScrollableSheet or showModalBottomSheet(isScrollControlled: true)
   Column
@@ -184,6 +193,7 @@ DraggableScrollableSheet or showModalBottomSheet(isScrollControlled: true)
 ```
 
 ### Add Ingredient Dialog
+
 ```
 AlertDialog
   title: Text(ingredient.name)
@@ -197,6 +207,7 @@ AlertDialog
 ---
 
 ## Cubit Methods Used
+
 ```dart
 // HealthCubit:
 healthCubit.loadDayEntries(date: today);         // Tab 0
@@ -209,24 +220,41 @@ healthCubit.logSupplement(productId);            // Tab 2 quick log
 ```
 
 ## HealthCubit States
-| State | Trigger | UI Response |
-|---|---|---|
-| `PendingState` | any load | spinner in tab content |
-| `HealthDayLoadedState(entries)` | loadDayEntries | render Today tab |
-| `HealthProductsLoadedState(mine, all)` | loadProducts | render tabs 1 + 2 |
-| `SomethingWentWrongState` | error | snackbar |
-| `HealthEntryLoggedState` | logSupplement | reload day entries |
-| `HealthProductSavedState` | add/update | close form, reload |
+
+| State                                  | Trigger        | UI Response            |
+| -------------------------------------- | -------------- | ---------------------- |
+| `PendingState`                         | any load       | spinner in tab content |
+| `HealthDayLoadedState(entries)`        | loadDayEntries | render Today tab       |
+| `HealthProductsLoadedState(mine, all)` | loadProducts   | render tabs 1 + 2      |
+| `SomethingWentWrongState`              | error          | snackbar               |
+| `HealthEntryLoggedState`               | logSupplement  | reload day entries     |
+| `HealthProductSavedState`              | add/update     | close form, reload     |
 
 ## Colors / Styles
+
 - CircleAvatar: `cs.primaryContainer` background, `cs.onPrimaryContainer` text
 - Delete icon: `cs.error`
 - Search field: standard `InputDecoration.filled`
 - Ingredient amount: `cs.primary`
 
 ## Navigation In/Out
+
 - IN: MainShell tab 2
 - OUT: no navigation; supplement form is in-page modal bottom sheet
+
+## Pull-to-Refresh
+
+Each tab body is individually wrapped in `PullToRefresh`
+(`lib/presentation/controls/pull_to_refresh.dart`). The Today tab refreshes via
+`_refreshToday` → `loadDayEntries`; the My/All Supplements tabs refresh via
+`_refreshProducts` → `loadProducts`. Both helpers reset the
+`_requested*Load` guards, restart the page's skeleton window, and await
+`_minimumSkeletonDuration` so the refresh shows the same skeleton UI as first
+load. The products tabs use
+`notificationPredicate: PullToRefresh.verticalScrollNotification` because they
+live inside a horizontal `TabBarView`. Empty/skeleton states use
+`PullToRefresh.alwaysScrollablePhysics` so the gesture stays available when the
+tab has no rows.
 
 ## Status
 

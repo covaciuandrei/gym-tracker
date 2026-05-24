@@ -3,14 +3,17 @@
 > Last updated: 2026-05-11
 
 ## Route
+
 `/workout-types` (pushed from `WorkoutsPage` via the "Manage workout types" tile, full-screen, NOT inside MainShell)
 
 ## Angular Source
+
 `src/app/features/workouts/workout-types/`
 
 ## Layout
 
 ### Loading state
+
 ```
 Scaffold
   AppBar(...)
@@ -21,6 +24,7 @@ Scaffold
 ```
 
 ### Empty state
+
 ```
 Scaffold
   AppBar(...)
@@ -37,6 +41,7 @@ Scaffold
 ```
 
 ### Loaded state (list)
+
 ```
 Scaffold
   AppBar(
@@ -73,6 +78,7 @@ Scaffold
 ---
 
 ## Create / Edit Modal (showModalBottomSheet)
+
 ```
 DraggableScrollableSheet(initialChildSize: 0.85, maxChildSize: 0.95)
   Column
@@ -169,6 +175,7 @@ DraggableScrollableSheet(initialChildSize: 0.85, maxChildSize: 0.95)
 ---
 
 ## Delete Confirmation Dialog
+
 ```
 showDialog → AlertDialog(
   title: Text('Delete Workout Type?', style: tt.headlineSmall),
@@ -192,22 +199,36 @@ showDialog → AlertDialog(
 
 ---
 
+## Pull-to-Refresh
+
+The page body (skeleton, empty state, and loaded list) is wrapped in
+`PullToRefresh` (`lib/presentation/controls/pull_to_refresh.dart`) with
+`notificationPredicate: PullToRefresh.verticalScrollNotification`. The
+`_refreshTypes` callback restarts the page's skeleton window, calls
+`WorkoutCubit.loadTypes`, and awaits `_minimumSkeletonDuration` so the refresh
+shows the same skeleton UI as first load. Inner scrollables use
+`PullToRefresh.alwaysScrollablePhysics` so the gesture remains available even
+when the list is short.
+
 ## Available Icons (15)
+
 `['🏋️', '🏃', '🚴', '🤸', '🥊', '⚽', '🏊', '🧘', '🏌️', '🎾', '🏀', '🏈', '⛷️', '🤼', '🚣']`
 
 ## Preset Colors
-| Label | Hex |
-|---|---|
+
+| Label  | Hex       |
+| ------ | --------- |
 | Purple | `#8B5CF6` |
-| Blue | `#3B82F6` |
-| Green | `#10B981` |
+| Blue   | `#3B82F6` |
+| Green  | `#10B981` |
 | Yellow | `#F59E0B` |
-| Red | `#EF4444` |
-| Pink | `#EC4899` |
-| Teal | `#06B6D4` |
+| Red    | `#EF4444` |
+| Pink   | `#EC4899` |
+| Teal   | `#06B6D4` |
 | Orange | `#F97316` |
 
 ## Cubit Methods Used
+
 ```dart
 // WorkoutCubit:
 workoutCubit.loadTypes();
@@ -217,16 +238,18 @@ workoutCubit.deleteType(id);
 ```
 
 ## WorkoutCubit States
-| State | UI Response |
-|---|---|
-| `PendingState` | spinner / button loading |
+
+| State                            | UI Response                |
+| -------------------------------- | -------------------------- |
+| `PendingState`                   | spinner / button loading   |
 | `WorkoutTypesLoadedState(types)` | render list or empty state |
-| `WorkoutTypeAddedState` | close modal, reload |
-| `WorkoutTypeUpdatedState` | close modal, reload |
-| `WorkoutTypeDeletedState` | reload list |
-| `SomethingWentWrongState` | error snackbar |
+| `WorkoutTypeAddedState`          | close modal, reload        |
+| `WorkoutTypeUpdatedState`        | close modal, reload        |
+| `WorkoutTypeDeletedState`        | reload list                |
+| `SomethingWentWrongState`        | error snackbar             |
 
 ## Colors / Styles
+
 - Icon tile background: `Color(hex).withOpacity(0.2)`, borderRadius: 10
 - Selected icon cell: `cs.primaryContainer`, border: `cs.primary`
 - Selected color circle: border `cs.onSurface`, width 2, checkmark white
@@ -234,6 +257,7 @@ workoutCubit.deleteType(id);
 - Modal handle: `cs.outline`
 
 ## Navigation In/Out
+
 - IN: from `WorkoutsPage` (push, via the "Manage workout types" tile)
 - OUT: back to Workouts tab (pop / AppBar back button)
 

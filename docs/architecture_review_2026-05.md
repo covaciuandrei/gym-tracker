@@ -37,9 +37,10 @@ presentation, ops, and observability.
    stream merging, supplement grouping — none unit-testable without a full BlocTest harness.
 8. **Zero `Semantics()` widgets.** App fails basic screen-reader requirements
    (also an EU EAA / App Store risk in 2025+).
-9. **No retry, no connectivity awareness, no `RefreshIndicator`, no optimistic updates.**
+9. **No retry, no connectivity awareness, no optimistic updates.**
    Stream errors are swallowed to empty lists — users see "no data" when they actually
-   have data.
+   have data. (Pull-to-refresh has since shipped on the data screens via the shared
+   `PullToRefresh` control — see Phase 3 item 18.)
 
 ### Other Notable Issues
 
@@ -98,7 +99,10 @@ presentation, ops, and observability.
   sheets, carousels all inlined.
 - **Zero `Semantics()` widgets** across `lib/presentation/`. App fails basic screen-reader
   / TalkBack / VoiceOver requirements (also a soft App-Store / EU EAA risk in 2025+).
-- **No `RefreshIndicator`** anywhere — users cannot pull-to-refresh.
+- **Pull-to-refresh shipped** on Calendar, Stats, Health, and Workout Types via the
+  shared `PullToRefresh` wrapper (`lib/presentation/controls/pull_to_refresh.dart`).
+  Refresh reuses each page's first-load path so the existing skeleton UI is shown.
+  Intentionally not wired on Profile or Settings.
 - **No optimistic updates.** Mark-attendance shows spinner, waits for Firestore
   round-trip, then updates UI. Should flip instantly.
 - **Form validators inlined** in 4+ pages. Email regex duplicated. Password rules
@@ -226,7 +230,10 @@ exponential)` for transient errors (`unavailable`, `deadline-exceeded`).
 17. **Accessibility pass.** Wrap all interactive elements in
     `Semantics(button: true, label: …)`. Verify with TalkBack / VoiceOver.
     Document WCAG-AA contrast for `AppColors`.
-18. **`RefreshIndicator`** on every scrollable data view.
+18. ~~**`RefreshIndicator`** on every scrollable data view.~~ ✅ Shipped on Calendar,
+    Stats, Health, and Workout Types via `PullToRefresh`
+    (`lib/presentation/controls/pull_to_refresh.dart`). Profile and Settings are
+    intentionally excluded.
 19. **Optimistic updates** for mark-attendance and log-supplement (repository pattern
     from Phase 1 makes this clean).
 20. **Form validators package** `lib/presentation/validators/`. Compose with value
