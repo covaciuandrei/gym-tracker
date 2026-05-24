@@ -175,6 +175,13 @@ class AuthCubit extends BaseCubit {
     } catch (_) {
       // Best-effort — do not block auth flow on profile sync failure.
     }
+    // Mirror the display name onto the Firebase Auth profile so it surfaces
+    // through `authStateChanges()` without a Firestore round-trip.
+    try {
+      await _authService.updateDisplayName(displayName);
+    } catch (_) {
+      // Best-effort — Firestore remains the source of truth.
+    }
   }
 
   /// Best-effort login timestamp update after sign-in.

@@ -191,6 +191,8 @@ decoration: BoxDecoration(
 
 **AuthCubit states:** `AuthAuthenticatedState`, `AuthUnauthenticatedState`, `AuthSignInSuccessState`, `AuthSignUpSuccessState`, `AuthSignOutSuccessState`, `AuthPasswordResetSentState`, `AuthPasswordChangedState`, `AuthAccountDeletedState`, `AuthEmailNotVerifiedState`, `AuthInvalidCredentialsState`, `AuthEmailAlreadyInUseState`, `AuthWeakPasswordState`.
 
+**`displayName` hydration:** `AuthUser.displayName` is read from the Firebase Auth profile (via `authStateChanges()`), not from Firestore. On sign-up, `AuthCubit._createUser` mirrors the entered name onto the auth profile via `AuthService.updateDisplayName`, so subsequent emissions of `currentUser$` already carry it. Firestore (`users/{uid}.displayName`) remains the source of truth; the auth profile is just a cache so the profile page doesn't need a Firestore read on every emission.
+
 #### CALENDAR FEATURE
 
 | Aspect                     | Detail                                                                                                                                      |
@@ -300,7 +302,7 @@ firestore/
 ├── users/{userId}/
 │   ├── (profile fields)
 │   │   ├── email                        String   ← always mirrors Firebase Auth (source of truth)
-│   │   ├── displayName                  String   ← set on sign-up; displayed in profile
+│   │   ├── displayName                  String   ← set on sign-up; mirrored onto Firebase Auth `User.displayName`; displayed in profile
 │   │   ├── lastVerificationEmailSentAt  Timestamp? ← cooldown tracking for resend buttons; deleted on login
 │   │   ├── theme                        String   ← 'dark' | 'light'
 │   │   ├── language                     String   ← 'en' | 'ro'
@@ -462,6 +464,7 @@ State: UNAUTHENTICATED
     │       └── OK + unverified → UNAUTHENTICATED (auto sign-out)
     ├── signUp(email, pwd, displayName, consent)
     │       → createUser() writes profile + consent map
+    │       → mirrors displayName onto the Firebase Auth profile
     │       → sends verification email
     │       → UNAUTHENTICATED (must verify before next sign-in)
     └── (email verification & password reset handled by Firebase hosted page)
@@ -488,21 +491,24 @@ State: AUTHENTICATED
 signUp() success
     │
     └── AuthCubit._createUser() [best-effort]
+            ├── UserService.createUser({userId, email, displayName, consent})
+            │       └── UserSource.create(): Firestore merge write:
+            │               {
+            │                 email: authEmail,
+            │                 displayName: displayName,
+            │                 theme: 'dark',
+            │                 language: 'en',
+            │                 createdAt: serverTimestamp,
+            │                 lastLoginAt: serverTimestamp,
+            │                 lastVerificationEmailSentAt: Timestamp.now(),
+            │                 consent: { ...consentMap, acceptedAt: serverTimestamp },
+            │               }
+            │               SetOptions(merge: true) — safe for existing docs
             │
-            └── UserService.createUser({userId, email, displayName, consent})
-                    │
-                    └── UserSource.create(): Firestore merge write:
-                            {
-                              email: authEmail,
-                              displayName: displayName,
-                              theme: 'dark',
-                              language: 'en',
-                              createdAt: serverTimestamp,
-                              lastLoginAt: serverTimestamp,
-                              lastVerificationEmailSentAt: Timestamp.now(),
-                              consent: { ...consentMap, acceptedAt: serverTimestamp },
-                            }
-                            SetOptions(merge: true) — safe for existing docs
+            └── AuthService.updateDisplayName(displayName)
+                    → mirrors the name onto the Firebase Auth profile so
+                      `AuthUser.displayName` is populated from
+                      `authStateChanges()` without a Firestore round-trip.
 
 signIn() success
     │

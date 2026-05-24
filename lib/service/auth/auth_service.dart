@@ -130,6 +130,23 @@ class AuthService {
     }
   }
 
+  /// Updates the Firebase Auth profile [displayName] for the currently
+  /// signed-in user. No-op if there is no signed-in user.
+  ///
+  /// Firestore (`users/{uid}.displayName`) is the source of truth, but
+  /// mirroring it onto the Firebase Auth profile lets `AuthUser.displayName`
+  /// be populated directly from `authStateChanges()` without a Firestore
+  /// round-trip on every emission.
+  Future<void> updateDisplayName(String displayName) async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+    try {
+      await user.updateDisplayName(displayName);
+    } on FirebaseAuthException catch (e) {
+      throw _mapFirebaseException(e);
+    }
+  }
+
   AuthUser _mapUser(User user) => AuthUser(
     uid: user.uid,
     email: user.email,
