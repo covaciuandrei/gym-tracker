@@ -45,7 +45,6 @@ presentation, ops, and observability.
 
 - **Anemic models** — no value objects for `Email` / `Password` / `Duration`, no invariants.
 - **Sources & mappers are 0% tested** — the highest-bug-density layer.
-- **Manual `if (currentUser == null)` checks in pages** instead of `auto_route` guards.
 - **No App Check** — backend reachable from any client running the app's API key.
 - **`ingredients` Firestore rule too permissive** — any signed-in user can write.
 - **`maintainState: false` on Stats / Health** forces full recomputation on every tab visit.
@@ -126,8 +125,6 @@ presentation, ops, and observability.
 - **Lint rules minimal** (`flutter_lints` defaults only). Missing:
   `prefer_const_constructors`, `avoid_dynamic_calls`, `use_build_context_synchronously`,
   `unawaited_futures`, `require_trailing_commas`, `no_logic_in_create_state`, …
-- **Manual auth checks in pages.** No `auto_route` guards — each page re-implements
-  "if user == null go to login". DRY violation and easy to forget on a new page.
 - **No deep-link handling** for password-reset / email-verification return-from-browser.
   Users have to manually re-open the app.
 
@@ -179,37 +176,35 @@ presentation, ops, and observability.
    `sealed class Failure` (`NetworkFailure`, `AuthFailure`, `NotFoundFailure`,
    `ValidationFailure`, `UnknownFailure`). `fpdart` or hand-rolled. Eliminates
    `SomethingWentWrongState`.
-9. **`auto_route` guards.** Add `AuthGuard` and `OnboardingGuard`. Delete the manual
-   `if (FirebaseAuth.currentUser == null) navigate` checks scattered in pages.
-10. **Value objects for primitives.** `Email`, `Password`, `WorkoutDuration`.
-    Validators live on the type, not in form widgets. Reuse in cubits + form widgets.
+9. **Value objects for primitives.** `Email`, `Password`, `WorkoutDuration`.
+   Validators live on the type, not in form widgets. Reuse in cubits + form widgets.
 
 ### Phase 2 — Data Scalability (P1)
 
-11. **Local persistence with Isar or Drift.** Cache: attendances by month, training
+10. **Local persistence with Isar or Drift.** Cache: attendances by month, training
     types, user's products, last user profile. Repository pattern reads cache first,
     then refreshes from Firestore (stale-while-revalidate). Offline-first becomes
     possible.
-12. **Explicit Firestore offline config.** Call
+11. **Explicit Firestore offline config.** Call
     `FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: true,
 cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED)` in `FirebaseModule` and document it.
-13. **Pagination.** `supplementProducts` infinite-scroll with `startAfterDocument`
+12. **Pagination.** `supplementProducts` infinite-scroll with `startAfterDocument`
     cursors and a `SearchProductsUseCase` indexed on lowercased name.
     (`trainingTypes`, `attendances`, and `healthLogs` don't need this — they're either
     per-user bounded or already scoped by the `{yearMonth}` subcollection window.)
-14. **Connectivity awareness.** Add `connectivity_plus`. Show a global offline banner
+13. **Connectivity awareness.** Add `connectivity_plus`. Show a global offline banner
     (single widget mounted in `MainShellPage`). Repositories degrade to cache-only
     when offline; queue mutations.
-15. **Retry with backoff.** Wrap remote calls in `Retry(attempts: 3, backoff:
+14. **Retry with backoff.** Wrap remote calls in `Retry(attempts: 3, backoff:
 exponential)` for transient errors (`unavailable`, `deadline-exceeded`).
     Do NOT retry permission / not-found.
-16. **Source-layer tests** using `fake_cloud_firestore` (or Firestore emulator).
+15. **Source-layer tests** using `fake_cloud_firestore` (or Firestore emulator).
     Cover every `*_source.dart` and every mapper. Highest-bug-density layer with
     0% test coverage today.
 
 ### Phase 3 — Presentation Polish (P2)
 
-17. **Split God-pages.** Calendar / Stats / Health → break into
+16. **Split God-pages.** Calendar / Stats / Health → break into
     `pages/<feature>/widgets/*.dart`. Target: no file > 500 LOC.
     Suggested calendar layout:
 
@@ -228,39 +223,39 @@ exponential)` for transient errors (`unavailable`, `deadline-exceeded`).
           └── calendar_year_skeleton.dart
     ```
 
-18. **Accessibility pass.** Wrap all interactive elements in
+17. **Accessibility pass.** Wrap all interactive elements in
     `Semantics(button: true, label: …)`. Verify with TalkBack / VoiceOver.
     Document WCAG-AA contrast for `AppColors`.
-19. **`RefreshIndicator`** on every scrollable data view.
-20. **Optimistic updates** for mark-attendance and log-supplement (repository pattern
+18. **`RefreshIndicator`** on every scrollable data view.
+19. **Optimistic updates** for mark-attendance and log-supplement (repository pattern
     from Phase 1 makes this clean).
-21. **Form validators package** `lib/presentation/validators/`. Compose with value
+20. **Form validators package** `lib/presentation/validators/`. Compose with value
     objects from Phase 1.
-22. **Widgetbook** for the 27 controls — visual regression catch + onboarding for new
+21. **Widgetbook** for the 27 controls — visual regression catch + onboarding for new
     devs.
 
 ### Phase 4 — Observability & Release Engineering (P2)
 
-23. **Firebase Remote Config** for feature flags
+22. **Firebase Remote Config** for feature flags
     (`feature_new_dashboard`, `feature_meal_planner`). Replace ad-hoc
     `appConfig/version` extensions.
-24. **Firebase Performance Monitoring** + custom traces around cold-start, splash
+23. **Firebase Performance Monitoring** + custom traces around cold-start, splash
     gate, calendar month load.
-25. **Crashlytics breadcrumbs.** Log every `Cubit` state transition as a breadcrumb.
+24. **Crashlytics breadcrumbs.** Log every `Cubit` state transition as a breadcrumb.
     Crash reports become useful.
-26. **Code coverage in CI.** Codecov badge in README. Target: 70% line coverage on
+25. **Code coverage in CI.** Codecov badge in README. Target: 70% line coverage on
     `domain/` and `data/`.
-27. **Fastlane / `flutter_distributor`** for `android beta` and `ios beta` lanes →
+26. **Fastlane / `flutter_distributor`** for `android beta` and `ios beta` lanes →
     Firebase App Distribution. (`docs/release/` exists but seems doc-only.)
-28. **Integration tests** with `integration_test` + `patrol` for golden flows:
+27. **Integration tests** with `integration_test` + `patrol` for golden flows:
     sign-up → mark attendance → view stats.
 
 ### Phase 5 — Security (P2)
 
-29. Lock `ingredients` write to `request.auth.token.admin == true` after initial seed.
-30. Verify reCAPTCHA NOT disabled in release builds (compile-time assertion or a
+28. Lock `ingredients` write to `request.auth.token.admin == true` after initial seed.
+29. Verify reCAPTCHA NOT disabled in release builds (compile-time assertion or a
     launch-time check).
-31. Add **Sign in with Apple** (Apple requires it if any 3rd-party social sign-in is
+30. Add **Sign in with Apple** (Apple requires it if any 3rd-party social sign-in is
     added later) — preempts an iOS review block.
 
 ---
@@ -289,7 +284,6 @@ Everything else is a follow-up sprint.
 | [lib/presentation/pages/stats/stats_page.dart](../lib/presentation/pages/stats/stats_page.dart)             | 1,700 LOC — split.                                                                                                                                                                |
 | [lib/presentation/pages/health/health_page.dart](../lib/presentation/pages/health/health_page.dart)         | 1,078 LOC — split.                                                                                                                                                                |
 | [lib/core/firebase_module.dart](../lib/core/firebase_module.dart)                                           | Add explicit offline `Settings` + App Check.                                                                                                                                      |
-| [lib/core/app_router.dart](../lib/core/app_router.dart)                                                     | Add `AuthGuard` / `OnboardingGuard`.                                                                                                                                              |
 | [firestore.rules](../firestore.rules)                                                                       | Tighten `ingredients` writes.                                                                                                                                                     |
 | [analysis_options.yaml](../analysis_options.yaml)                                                           | Extend lint set.                                                                                                                                                                  |
 | [pubspec.yaml](../pubspec.yaml)                                                                             | Add `firebase_analytics`, `firebase_app_check`, `firebase_remote_config`, `firebase_performance`, `connectivity_plus`, `logger`, `isar` / `drift`, `fpdart` (optional), `patrol`. |

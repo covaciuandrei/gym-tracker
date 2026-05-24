@@ -174,9 +174,10 @@ decoration: BoxDecoration(
 
 **Auth gating in current implementation:**
 
-- No `auto_route` guard classes are registered.
 - `SplashPage` runs the `SplashCubit` version gate **before** evaluating auth; it then `replaceAll`s with one of the terminal routes: `MaintenanceRoute`, `ForceUpdateRoute`, `NoConnectionRoute`, `OnboardingRoute`, `MainShellRoute`, or `LoginRoute`.
-- Feature pages also self-check auth and redirect to `LoginRoute` when user is missing.
+- `AuthGuard` (`lib/core/guards/auth_guard.dart`) is attached to `MainShellRoute`, `WorkoutTypesRoute`, `SettingsRoute`, and `ChangePasswordRoute`. It redirects to `LoginRoute` whenever `FirebaseAuth.instance.currentUser == null`. Authenticated-only pages can safely use `getIt<FirebaseAuth>().currentUser!.uid` in `build()`.
+- `OnboardingGuard` (`lib/core/guards/onboarding_guard.dart`) is attached to `MainShellRoute` and redirects to `OnboardingRoute` when `OnboardingHelper.isFirstLaunch` is true (defense-in-depth on top of the Splash gate).
+- Pages still listen to `AuthCubit` (`AuthSignOutSuccessState`, `AuthUnauthenticatedState`) to handle **runtime** sign-out — that's a separate concern from entry guards.
 
 ### 7.2 Feature Inventory
 

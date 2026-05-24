@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
-import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/cubit/stats/stats_cubit.dart';
@@ -27,16 +26,9 @@ class StatsPage extends StatelessWidget implements AutoRouteWrapper {
 
   @override
   Widget build(BuildContext context) {
-    final userId = getIt<FirebaseAuth>().currentUser?.uid;
-    if (userId == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) {
-          context.router.replace(const LoginRoute());
-        }
-      });
-      return const Scaffold(body: SizedBox.shrink());
-    }
-
+    // AuthGuard (see lib/core/guards/auth_guard.dart) ensures a signed-in
+    // user is present before this route is built.
+    final userId = getIt<FirebaseAuth>().currentUser!.uid;
     return StatsView(userId: userId);
   }
 }

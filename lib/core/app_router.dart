@@ -2,6 +2,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:injectable/injectable.dart';
 
 import 'app_router.gr.dart';
+import 'guards/auth_guard.dart';
+import 'guards/onboarding_guard.dart';
 
 @lazySingleton
 @AutoRouterConfig(replaceInRouteName: 'Page,Route')
@@ -19,6 +21,7 @@ class AppRouter extends RootStackRouter {
     AutoRoute(
       path: '/app',
       page: MainShellRoute.page,
+      guards: [AuthGuard(), OnboardingGuard()],
       children: [
         AutoRoute(path: 'calendar', page: CalendarRoute.page),
         AutoRoute(path: 'workouts', page: WorkoutsRoute.page),
@@ -28,13 +31,22 @@ class AppRouter extends RootStackRouter {
         RedirectRoute(path: '', redirectTo: 'calendar'),
       ],
     ),
-    AutoRoute(path: '/workout-types', page: WorkoutTypesRoute.page),
+    AutoRoute(
+      path: '/workout-types',
+      page: WorkoutTypesRoute.page,
+      guards: [AuthGuard()],
+    ),
     AutoRoute(
       path: '/settings',
       page: SettingsRoute.page,
       maintainState: false,
+      guards: [AuthGuard()],
     ),
-    AutoRoute(path: '/change-password', page: ChangePasswordRoute.page),
+    AutoRoute(
+      path: '/change-password',
+      page: ChangePasswordRoute.page,
+      guards: [AuthGuard()],
+    ),
     AutoRoute(path: '/force-update', page: ForceUpdateRoute.page),
     AutoRoute(path: '/maintenance', page: MaintenanceRoute.page),
     AutoRoute(path: '/no-connection', page: NoConnectionRoute.page),

@@ -100,27 +100,32 @@ This roadmap prioritizes feature growth while improving quality, reliability, an
 ## Preferred Options
 
 1. Connected health rollout:
+
 - Option A: iOS only first
 - Option B: iOS + Android Health Connect in same release
 - Option C: iOS first, Android in next minor
 - Preferred: Option B if capacity allows, otherwise Option C
 
 2. Health data ownership:
+
 - Option A: read-only import from platform health stores
 - Option B: read + write-back
 - Preferred: Option A for v1
 
 3. Social scope:
+
 - Option A: coordination only (friends, invites, schedule board, optional 24h story)
 - Option B: full social feed
 - Preferred: Option A for v1
 
 4. Social privacy defaults:
+
 - Option A: private by default, explicit opt-in to share
 - Option B: friends-visible by default
 - Preferred: Option A
 
 5. Safety baseline:
+
 - Option A: minimal profile + block/report + invite throttling in v1
 - Option B: postpone safety tooling
 - Preferred: Option A
@@ -128,25 +133,31 @@ This roadmap prioritizes feature growth while improving quality, reliability, an
 ## Verification
 
 1. Architecture sync verification:
+
 - Ensure rule-to-code parity for BaseCubit and mutation/state handling before feature work.
 
 2. Static quality gate per milestone:
+
 - Keep dart analyze output clean.
 
 3. Feature-slice testing per milestone:
+
 - Run relevant cubit/page/control test slices for changed features.
 
 4. Connected health verification:
+
 - Validate HealthKit permission prompts and sync correctness on iOS.
 - Validate Health Connect permissions and parity behavior on Android-supported devices.
 
 5. Social verification:
+
 - Validate friend request lifecycle.
 - Validate invite RSVP transitions.
 - Validate visibility controls (private/friends/public where enabled).
 - Validate story expiry behavior.
 
 6. Manual product QA:
+
 - auth
 - calendar log/edit/remove
 - stats tab/year switching
@@ -155,9 +166,11 @@ This roadmap prioritizes feature growth while improving quality, reliability, an
 - app-version prompts
 
 7. KPI verification:
+
 - Confirm event capture and compare retention/adoption metrics after each phase.
 
 8. Security and release verification:
+
 - Validate rules behavior and release checklist at phase boundaries.
 
 ## Primary File Targets

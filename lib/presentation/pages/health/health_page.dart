@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
-import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/cubit/health/health_cubit.dart';
@@ -414,15 +413,10 @@ class _HealthPageState extends State<HealthPage>
 
   @override
   Widget build(BuildContext context) {
-    final userId = _userId;
-    if (userId == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) {
-          context.router.replace(const LoginRoute());
-        }
-      });
-      return const Scaffold(body: SizedBox.shrink());
-    }
+    // AuthGuard (see lib/core/guards/auth_guard.dart) ensures a signed-in
+    // user is present before this route is built. [widget.testUserId] is an
+    // opt-in override for widget tests that don't sign in via Firebase Auth.
+    final userId = _userId!;
 
     final l10n = AppLocalizations.of(context);
     final cs = Theme.of(context).colorScheme;
