@@ -12,6 +12,7 @@ import 'package:gym_tracker/presentation/controls/emoji_text.dart';
 import 'package:gym_tracker/presentation/controls/error_state.dart';
 import 'package:gym_tracker/presentation/controls/gym_app_bar.dart';
 import 'package:gym_tracker/presentation/controls/gym_tab_bar.dart';
+import 'package:gym_tracker/presentation/controls/pull_to_refresh.dart';
 import 'package:gym_tracker/presentation/resources/app_colors.dart';
 import 'package:gym_tracker/presentation/resources/emojis.dart';
 
@@ -111,6 +112,29 @@ class _StatsViewState extends State<StatsView> with SingleTickerProviderStateMix
     );
   }
 
+  Future<void> _refreshTab(StatsTabKind tab) {
+    return context.read<StatsCubit>().loadTab(userId: widget.userId, year: _selectedYear.value, tab: tab, force: true);
+  }
+
+  Widget _refreshableTab({required StatsTabKind tab, required Widget child}) {
+    return PullToRefresh(onRefresh: () => _refreshTab(tab), child: child);
+  }
+
+  Widget _refreshableCenteredTab({required StatsTabKind tab, required Widget child}) {
+    return PullToRefresh(
+      onRefresh: () => _refreshTab(tab),
+      notificationPredicate: PullToRefresh.verticalScrollNotification,
+      child: LayoutBuilder(
+        builder: (_, constraints) {
+          return ListView(
+            physics: PullToRefresh.alwaysScrollablePhysics,
+            children: [SizedBox(height: constraints.maxHeight, child: child)],
+          );
+        },
+      ),
+    );
+  }
+
   void _changeYear(int delta) {
     final nextYear = _selectedYear.value + delta;
     _selectedYear.value = nextYear;
@@ -175,20 +199,26 @@ class _StatsViewState extends State<StatsView> with SingleTickerProviderStateMix
       builder: (ctx, state) {
         final currentYear = _selectedYear.value;
         if (state is StatsAttendancesLoadedState && state.year == currentYear) {
-          return _AttendancesTab(stats: state.stats);
+          return _refreshableTab(
+            tab: StatsTabKind.attendances,
+            child: _AttendancesTab(stats: state.stats),
+          );
         }
         if (state is StatsAttendancesErrorState && state.year == currentYear) {
-          return ErrorStateWidget(
-            message: AppLocalizations.of(context).errorsUnknown,
-            onRetry: () => context.read<StatsCubit>().loadTab(
-              userId: widget.userId,
-              year: _selectedYear.value,
-              tab: StatsTabKind.attendances,
-              force: true,
+          return _refreshableCenteredTab(
+            tab: StatsTabKind.attendances,
+            child: ErrorStateWidget(
+              message: AppLocalizations.of(context).errorsUnknown,
+              onRetry: () => context.read<StatsCubit>().loadTab(
+                userId: widget.userId,
+                year: _selectedYear.value,
+                tab: StatsTabKind.attendances,
+                force: true,
+              ),
             ),
           );
         }
-        return const _AttendancesTabSkeleton();
+        return _refreshableTab(tab: StatsTabKind.attendances, child: const _AttendancesTabSkeleton());
       },
     );
   }
@@ -203,20 +233,26 @@ class _StatsViewState extends State<StatsView> with SingleTickerProviderStateMix
       builder: (ctx, state) {
         final currentYear = _selectedYear.value;
         if (state is StatsWorkoutsLoadedState && state.year == currentYear) {
-          return _WorkoutsTab(stats: state.stats, types: state.types, selectedMonth: _selectedWorkoutMonth);
+          return _refreshableTab(
+            tab: StatsTabKind.workouts,
+            child: _WorkoutsTab(stats: state.stats, types: state.types, selectedMonth: _selectedWorkoutMonth),
+          );
         }
         if (state is StatsWorkoutsErrorState && state.year == currentYear) {
-          return ErrorStateWidget(
-            message: AppLocalizations.of(context).errorsUnknown,
-            onRetry: () => context.read<StatsCubit>().loadTab(
-              userId: widget.userId,
-              year: _selectedYear.value,
-              tab: StatsTabKind.workouts,
-              force: true,
+          return _refreshableCenteredTab(
+            tab: StatsTabKind.workouts,
+            child: ErrorStateWidget(
+              message: AppLocalizations.of(context).errorsUnknown,
+              onRetry: () => context.read<StatsCubit>().loadTab(
+                userId: widget.userId,
+                year: _selectedYear.value,
+                tab: StatsTabKind.workouts,
+                force: true,
+              ),
             ),
           );
         }
-        return const _WorkoutsTabSkeleton();
+        return _refreshableTab(tab: StatsTabKind.workouts, child: const _WorkoutsTabSkeleton());
       },
     );
   }
@@ -231,20 +267,26 @@ class _StatsViewState extends State<StatsView> with SingleTickerProviderStateMix
       builder: (ctx, state) {
         final currentYear = _selectedYear.value;
         if (state is StatsDurationLoadedState && state.year == currentYear) {
-          return _DurationTab(stats: state.stats, types: state.types, selectedMonth: _selectedDurationMonth);
+          return _refreshableTab(
+            tab: StatsTabKind.duration,
+            child: _DurationTab(stats: state.stats, types: state.types, selectedMonth: _selectedDurationMonth),
+          );
         }
         if (state is StatsDurationErrorState && state.year == currentYear) {
-          return ErrorStateWidget(
-            message: AppLocalizations.of(context).errorsUnknown,
-            onRetry: () => context.read<StatsCubit>().loadTab(
-              userId: widget.userId,
-              year: _selectedYear.value,
-              tab: StatsTabKind.duration,
-              force: true,
+          return _refreshableCenteredTab(
+            tab: StatsTabKind.duration,
+            child: ErrorStateWidget(
+              message: AppLocalizations.of(context).errorsUnknown,
+              onRetry: () => context.read<StatsCubit>().loadTab(
+                userId: widget.userId,
+                year: _selectedYear.value,
+                tab: StatsTabKind.duration,
+                force: true,
+              ),
             ),
           );
         }
-        return const _DurationTabSkeleton();
+        return _refreshableTab(tab: StatsTabKind.duration, child: const _DurationTabSkeleton());
       },
     );
   }
@@ -259,20 +301,26 @@ class _StatsViewState extends State<StatsView> with SingleTickerProviderStateMix
       builder: (ctx, state) {
         final currentYear = _selectedYear.value;
         if (state is StatsHealthLoadedState && state.year == currentYear) {
-          return _HealthTab(stats: state.stats, selectedMonth: _selectedHealthMonth);
+          return _refreshableTab(
+            tab: StatsTabKind.health,
+            child: _HealthTab(stats: state.stats, selectedMonth: _selectedHealthMonth),
+          );
         }
         if (state is StatsHealthErrorState && state.year == currentYear) {
-          return ErrorStateWidget(
-            message: AppLocalizations.of(context).errorsUnknown,
-            onRetry: () => context.read<StatsCubit>().loadTab(
-              userId: widget.userId,
-              year: _selectedYear.value,
-              tab: StatsTabKind.health,
-              force: true,
+          return _refreshableCenteredTab(
+            tab: StatsTabKind.health,
+            child: ErrorStateWidget(
+              message: AppLocalizations.of(context).errorsUnknown,
+              onRetry: () => context.read<StatsCubit>().loadTab(
+                userId: widget.userId,
+                year: _selectedYear.value,
+                tab: StatsTabKind.health,
+                force: true,
+              ),
             ),
           );
         }
-        return const _HealthTabSkeleton();
+        return _refreshableTab(tab: StatsTabKind.health, child: const _HealthTabSkeleton());
       },
     );
   }
@@ -391,6 +439,7 @@ class _AttendancesTabState extends State<_AttendancesTab> {
     final monthMax = _maxOrOne(widget.stats.monthlyAttendanceCounts);
 
     return SingleChildScrollView(
+      physics: PullToRefresh.alwaysScrollablePhysics,
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
         children: [
@@ -571,6 +620,7 @@ class _WorkoutsTab extends StatelessWidget {
     final totalTracked = sortedTypes.fold(0, (sum, e) => sum + e.value);
 
     return SingleChildScrollView(
+      physics: PullToRefresh.alwaysScrollablePhysics,
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
         children: [
@@ -684,6 +734,7 @@ class _DurationTab extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return SingleChildScrollView(
+      physics: PullToRefresh.alwaysScrollablePhysics,
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
         children: [
@@ -813,6 +864,7 @@ class _HealthTab extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return SingleChildScrollView(
+      physics: PullToRefresh.alwaysScrollablePhysics,
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
         children: [
@@ -928,6 +980,7 @@ class _AttendancesTabSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      physics: PullToRefresh.alwaysScrollablePhysics,
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
         children: const [
@@ -952,6 +1005,7 @@ class _WorkoutsTabSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      physics: PullToRefresh.alwaysScrollablePhysics,
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
         children: const [
@@ -972,6 +1026,7 @@ class _DurationTabSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      physics: PullToRefresh.alwaysScrollablePhysics,
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
         children: const [
@@ -992,6 +1047,7 @@ class _HealthTabSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      physics: PullToRefresh.alwaysScrollablePhysics,
       padding: const EdgeInsets.only(bottom: 20),
       child: Column(
         children: const [

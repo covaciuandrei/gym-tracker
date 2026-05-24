@@ -18,10 +18,7 @@ class ProfilePage extends StatefulWidget implements AutoRouteWrapper {
 
   @override
   Widget wrappedRoute(BuildContext context) {
-    return BlocProvider<AuthCubit>(
-      create: (_) => getIt<AuthCubit>(),
-      child: this,
-    );
+    return BlocProvider<AuthCubit>(create: (_) => getIt<AuthCubit>(), child: this);
   }
 }
 
@@ -40,19 +37,14 @@ class _ProfilePageState extends State<ProfilePage> {
 
     return BlocConsumer<AuthCubit, BaseState>(
       listenWhen: (_, curr) =>
-          curr is AuthSignOutSuccessState ||
-          curr is AuthUnauthenticatedState ||
-          curr is SomethingWentWrongState,
+          curr is AuthSignOutSuccessState || curr is AuthUnauthenticatedState || curr is SomethingWentWrongState,
       listener: (ctx, state) {
-        if (state is AuthSignOutSuccessState ||
-            state is AuthUnauthenticatedState) {
+        if (state is AuthSignOutSuccessState || state is AuthUnauthenticatedState) {
           ctx.router.replace(const LoginRoute());
           return;
         }
         if (state is SomethingWentWrongState) {
-          ScaffoldMessenger.of(
-            ctx,
-          ).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
+          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
         }
       },
       builder: (ctx, state) {
@@ -78,20 +70,14 @@ class _ProfilePageState extends State<ProfilePage> {
                         margin: EdgeInsets.zero,
                         elevation: 0,
                         color: cs.surfaceContainerHigh,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         child: Column(
                           children: [
                             ListTile(
                               leading: Icon(Icons.settings, color: cs.primary),
                               title: Text(l10n.profileSettings),
-                              trailing: Icon(
-                                Icons.chevron_right,
-                                color: cs.onSurfaceVariant,
-                              ),
-                              onTap: () =>
-                                  ctx.router.push(const SettingsRoute()),
+                              trailing: Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
+                              onTap: () => ctx.router.push(const SettingsRoute()),
                             ),
                           ],
                         ),
@@ -102,35 +88,20 @@ class _ProfilePageState extends State<ProfilePage> {
                         margin: EdgeInsets.zero,
                         elevation: 0,
                         color: cs.surfaceContainerHigh,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         child: Column(
                           children: [
                             ListTile(
                               leading: Icon(Icons.logout, color: cs.error),
-                              title: Text(
-                                l10n.profileSignOut,
-                                style: tt.titleMedium?.copyWith(
-                                  color: cs.error,
-                                ),
-                              ),
+                              title: Text(l10n.profileSignOut, style: tt.titleMedium?.copyWith(color: cs.error)),
                               trailing: isSigningOut
                                   ? SizedBox(
                                       width: 16,
                                       height: 16,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        color: cs.primary,
-                                      ),
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: cs.primary),
                                     )
-                                  : Icon(
-                                      Icons.chevron_right,
-                                      color: cs.onSurfaceVariant,
-                                    ),
-                              onTap: isSigningOut
-                                  ? null
-                                  : () => ctx.read<AuthCubit>().signOut(),
+                                  : Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
+                              onTap: isSigningOut ? null : () => ctx.read<AuthCubit>().signOut(),
                             ),
                           ],
                         ),
@@ -159,13 +130,7 @@ class _SectionHeader extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        title,
-        style: tt.labelSmall?.copyWith(
-          color: cs.onSurfaceVariant,
-          letterSpacing: 1.2,
-        ),
-      ),
+      child: Text(title, style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant, letterSpacing: 1.2)),
     );
   }
 }
@@ -181,15 +146,11 @@ class _UserCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    final displayName =
-        (user?.displayName != null && user!.displayName!.trim().isNotEmpty)
+    final displayName = (user?.displayName != null && user!.displayName!.trim().isNotEmpty)
         ? user!.displayName!.trim()
         : l10n.profileDefaultUserName;
-    final email = (user?.email != null && user!.email!.trim().isNotEmpty)
-        ? user!.email!.trim()
-        : '-';
-    final initialSource =
-        (user?.displayName != null && user!.displayName!.isNotEmpty)
+    final email = (user?.email != null && user!.email!.trim().isNotEmpty) ? user!.email!.trim() : '-';
+    final initialSource = (user?.displayName != null && user!.displayName!.isNotEmpty)
         ? user!.displayName!
         : (user?.email ?? '?');
     final initial = initialSource.characters.first.toUpperCase();
@@ -208,10 +169,7 @@ class _UserCard extends StatelessWidget {
               backgroundColor: cs.primaryContainer,
               child: Text(
                 initial,
-                style: tt.headlineSmall?.copyWith(
-                  color: cs.onPrimaryContainer,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: tt.headlineSmall?.copyWith(color: cs.onPrimaryContainer, fontWeight: FontWeight.w700),
               ),
             ),
             const SizedBox(width: 16),
@@ -241,10 +199,7 @@ class _UserCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           l10n.profileEmailVerified,
-                          style: tt.labelSmall?.copyWith(
-                            color: cs.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: tt.labelSmall?.copyWith(color: cs.primary, fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),

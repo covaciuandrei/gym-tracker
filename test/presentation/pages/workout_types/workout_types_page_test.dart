@@ -1,35 +1,47 @@
 import 'dart:async';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/cubit/workout/workout_cubit.dart';
 import 'package:gym_tracker/model/training_type.dart';
+import 'package:gym_tracker/presentation/controls/pull_to_refresh.dart';
 import 'package:gym_tracker/presentation/pages/workout_types/workout_types_page.dart';
+import 'package:mocktail/mocktail.dart';
 
 class MockWorkoutCubit extends Mock implements WorkoutCubit {}
 
+class MockStackRouter extends Mock implements StackRouter {}
+
 Widget _buildApp(WorkoutCubit cubit) {
-  return MaterialApp(
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
-    supportedLocales: AppLocalizations.supportedLocales,
-    home: BlocProvider<WorkoutCubit>.value(
-      value: cubit,
-      child: const WorkoutTypesView(userId: 'user-1'),
+  final router = MockStackRouter();
+  when(() => router.canPop()).thenReturn(true);
+
+  return StackRouterScope(
+    controller: router,
+    stateHash: 0,
+    child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: BlocProvider<WorkoutCubit>.value(
+        value: cubit,
+        child: const WorkoutTypesView(userId: 'user-1'),
+      ),
     ),
   );
+}
+
+Future<void> _pumpSkeletonWindow(WidgetTester tester) {
+  return tester.pump(const Duration(milliseconds: 320));
 }
 
 void main() {
   setUpAll(() {
     registerFallbackValue(const InitialState());
-    registerFallbackValue(
-      const TrainingType(id: 'id', name: 'Type', color: '#6366f1', icon: '🏋️'),
-    );
+    registerFallbackValue(const TrainingType(id: 'id', name: 'Type', color: '#6366f1', icon: '🏋️'));
   });
 
   group('WorkoutTypesView', () {
@@ -66,7 +78,8 @@ void main() {
       await tester.pumpWidget(_buildApp(cubit));
       await tester.pump();
 
-      expect(find.text('Loading workout types...'), findsOneWidget);
+      expect(find.byType(PullToRefresh), findsOneWidget);
+      expect(find.byType(ListView), findsOneWidget);
     });
 
     testWidgets('shows empty state after loaded empty list', (tester) async {
@@ -86,14 +99,13 @@ void main() {
 
       controller.add(const WorkoutTypesLoadedState(types: []));
       await tester.pump();
+      await _pumpSkeletonWindow(tester);
 
       expect(find.text('No workout types yet'), findsOneWidget);
       expect(find.text('Create First Type'), findsOneWidget);
     });
 
-    testWidgets('shows list item and deletes after confirmation', (
-      tester,
-    ) async {
+    testWidgets('shows list item and deletes after confirmation', (tester) async {
       final controller = StreamController<BaseState>.broadcast(sync: true);
       addTearDown(controller.close);
 
@@ -110,17 +122,11 @@ void main() {
 
       controller.add(
         const WorkoutTypesLoadedState(
-          types: [
-            TrainingType(
-              id: 't1',
-              name: 'Strength',
-              color: '#6366f1',
-              icon: '🏋️',
-            ),
-          ],
+          types: [TrainingType(id: 't1', name: 'Strength', color: '#6366f1', icon: '🏋️')],
         ),
       );
       await tester.pump();
+      await _pumpSkeletonWindow(tester);
 
       expect(find.text('Strength'), findsOneWidget);
 
