@@ -2,7 +2,7 @@ name: gym_tracker
 description: "Gym Tracker - A personal gym attendance and supplement tracking app."
 publish_to: "none"
 
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: ^3.11.0
