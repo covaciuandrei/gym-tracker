@@ -11,6 +11,14 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
 
+    // Canonical product writes use `created_by`; older records may still use
+    // `createdBy`. Resolve either shape so owners can migrate legacy records.
+    function supplementProductOwner(data) {
+      return 'created_by' in data
+        ? data.created_by
+        : ('createdBy' in data ? data.createdBy : null);
+    }
+
     // App config: public read (the version/maintenance gate runs before auth).
     // Writes only via Firebase Console / admin SDK.
     match /appConfig/{doc} {
@@ -23,21 +31,26 @@ service cloud.firestore {
       allow read, write: if isSignedIn() && isOwner(userId);
     }
 
-    // Global Ingredients: readable by all, writable by all (for seeding)
-    // Ideally should be locked down to admin only after seeding
+    // Global Ingredients: reserved for a future shared catalog. Client writes
+    // are blocked; seed/manage it through the Firebase Console or Admin SDK.
     match /ingredients/{ingredientId} {
       allow read: if isSignedIn();
-      allow write: if isSignedIn(); 
+      allow write: if false;
     }
 
     // Supplement Products:
     // Read: All authenticated users
-    // Create: All authenticated users
-    // Update/Delete: Only the creator
+    // Create: authenticated users may create only records owned by themselves.
+    // Update/Delete: only the existing owner; ownership cannot be transferred.
     match /supplementProducts/{productId} {
       allow read: if isSignedIn();
-      allow create: if isSignedIn();
-      allow update, delete: if isSignedIn() && resource.data.createdBy == request.auth.uid;
+      allow create: if isSignedIn()
+        && supplementProductOwner(request.resource.data) == request.auth.uid;
+      allow update: if isSignedIn()
+        && supplementProductOwner(resource.data) == request.auth.uid
+        && supplementProductOwner(request.resource.data) == request.auth.uid;
+      allow delete: if isSignedIn()
+        && supplementProductOwner(resource.data) == request.auth.uid;
     }
   }
 }
