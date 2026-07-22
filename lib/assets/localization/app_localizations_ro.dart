@@ -801,6 +801,12 @@ class AppLocalizationsRo extends AppLocalizations {
   String get settingsLanguageRo => 'Română';
 
   @override
+  String get settingsCurrency => 'Monedă implicită';
+
+  @override
+  String get settingsCurrencyUpdated => 'Moneda implicită a fost actualizată.';
+
+  @override
   String get settingsChangePassword => 'Schimbă Parola';
 
   @override

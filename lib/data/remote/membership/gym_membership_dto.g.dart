@@ -13,7 +13,7 @@ GymMembershipDto _$GymMembershipDtoFromJson(Map<String, dynamic> json) =>
       durationMonths: (json['duration_months'] as num?)?.toInt() ?? 1,
       validUntil: json['valid_until'] as String? ?? '',
       priceMinor: (json['price_minor'] as num?)?.toInt() ?? 0,
-      currency: json['currency'] as String? ?? 'RON',
+      currency: json['currency'] as String? ?? 'EUR',
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
     );

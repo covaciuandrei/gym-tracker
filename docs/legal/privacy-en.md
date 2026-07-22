@@ -1,7 +1,7 @@
 # Privacy Policy
 
-**Last Updated:** 21 July 2026
-**Effective Date:** 21 July 2026
+**Last Updated:** 22 July 2026
+**Effective Date:** 22 July 2026
 
 This Privacy Policy explains how **Gym Tracker** (the "App") collects, uses, and shares your personal data, and what rights you have. It is written to comply with the EU General Data Protection Regulation ("**GDPR**") and Romanian Law No. 190/2018.
 
@@ -46,6 +46,7 @@ The App does **not** process gym payments and does not collect payment-card, ban
 
 - Theme (dark / light)
 - Language (English / Romanian)
+- Default currency (EUR / GBP / RON / USD)
 
 ### e. Technical data
 

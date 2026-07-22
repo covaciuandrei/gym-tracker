@@ -1,7 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
+import 'package:gym_tracker/core/constants/currencies.dart';
 
-const Set<String> supportedMembershipCurrencies = <String>{'EUR', 'GBP', 'RON', 'USD'};
+const Set<String> supportedMembershipCurrencies = supportedCurrencyCodes;
 
 enum MembershipDuration {
   oneMonth(months: 1),

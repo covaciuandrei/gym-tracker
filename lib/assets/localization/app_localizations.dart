@@ -1532,6 +1532,18 @@ abstract class AppLocalizations {
   /// **'Romanian'**
   String get settingsLanguageRo;
 
+  /// No description provided for @settingsCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Default currency'**
+  String get settingsCurrency;
+
+  /// No description provided for @settingsCurrencyUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Default currency updated.'**
+  String get settingsCurrencyUpdated;
+
   /// No description provided for @settingsChangePassword.
   ///
   /// In en, this message translates to:

@@ -61,7 +61,6 @@ _i174.GetIt $initGetIt(
 }) {
   final gh = _i526.GetItHelper(getIt, environment, environmentFilter);
   final firebaseModule = _$FirebaseModule();
-  gh.factory<_i411.SettingsCubit>(() => _i411.SettingsCubit());
   gh.factory<_i660.TrainingTypeMapper>(() => _i660.TrainingTypeMapper());
   gh.factory<_i604.AttendanceDayMapper>(() => _i604.AttendanceDayMapper());
   gh.factory<_i455.UserMapper>(() => _i455.UserMapper());
@@ -172,14 +171,20 @@ _i174.GetIt $initGetIt(
       gh<_i477.AppVersionStatus>(),
     ),
   );
-  gh.factory<_i231.MembershipCubit>(
-    () => _i231.MembershipCubit(gh<_i874.GymMembershipService>()),
-  );
   gh.factory<_i502.AccountCleanupService>(
     () => _i502.AccountCleanupService(gh<_i243.AccountCleanupSource>()),
   );
+  gh.factory<_i231.MembershipCubit>(
+    () => _i231.MembershipCubit(
+      gh<_i874.GymMembershipService>(),
+      gh<_i729.UserService>(),
+    ),
+  );
   gh.factory<_i800.WorkoutCubit>(
     () => _i800.WorkoutCubit(gh<_i425.WorkoutService>()),
+  );
+  gh.factory<_i411.SettingsCubit>(
+    () => _i411.SettingsCubit(gh<_i637.AuthService>(), gh<_i729.UserService>()),
   );
   gh.factory<_i548.AuthCubit>(
     () => _i548.AuthCubit(

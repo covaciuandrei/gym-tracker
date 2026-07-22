@@ -7,6 +7,7 @@ class User extends Equatable {
     required this.displayName,
     required this.theme,
     required this.language,
+    required this.currency,
     required this.lastLoginAt,
     required this.createdAt,
     required this.totalAttendances,
@@ -20,6 +21,7 @@ class User extends Equatable {
   final DateTime? lastVerificationEmailSentAt;
   final String theme;
   final String language;
+  final String currency;
   final DateTime lastLoginAt;
   final DateTime createdAt;
   final int totalAttendances;
@@ -39,6 +41,7 @@ class User extends Equatable {
     lastVerificationEmailSentAt,
     theme,
     language,
+    currency,
     lastLoginAt,
     createdAt,
     totalAttendances,

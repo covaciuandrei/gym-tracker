@@ -31,16 +31,16 @@ MembershipHistoryPage / MembershipHistoryView
 
 ## Stored fields
 
-| Field | Type | Notes |
-| --- | --- | --- |
-| `gym_name` | String | Gym or club display name |
-| `start_date` | `YYYY-MM-DD` String | Purchase/start date, timezone-safe |
-| `duration_months` | Number | One of 1, 3, 6, or 12 |
-| `valid_until` | `YYYY-MM-DD` String | Duration-rule result snapshotted at save time |
-| `price_minor` | Number | Integer minor units; never a floating-point price |
-| `currency` | String | EUR, GBP, RON, or USD |
-| `created_at` | Timestamp | Set by the source |
-| `updated_at` | Timestamp | Set on every write |
+| Field             | Type                | Notes                                             |
+| ----------------- | ------------------- | ------------------------------------------------- |
+| `gym_name`        | String              | Gym or club display name                          |
+| `start_date`      | `YYYY-MM-DD` String | Purchase/start date, timezone-safe                |
+| `duration_months` | Number              | One of 1, 3, 6, or 12                             |
+| `valid_until`     | `YYYY-MM-DD` String | Duration-rule result snapshotted at save time     |
+| `price_minor`     | Number              | Integer minor units; never a floating-point price |
+| `currency`        | String              | EUR, GBP, RON, or USD                             |
+| `created_at`      | Timestamp           | Set by the source                                 |
+| `updated_at`      | Timestamp           | Set on every write                                |
 
 Active/upcoming/expired status is derived at render time and is not persisted.
 `valid_until` is inclusive. The 1-month option adds exactly 30 date-only days,
@@ -87,7 +87,8 @@ Tap FAB or arrive with `startAddFlow: true`
         │     gym, duration, price, currency copied
         │     start date reset to today
         └── Start fresh
-              blank form, start date today, 1 month, RON
+              blank form, start date today, 1 month,
+              users/{uid}.currency (EUR fallback)
 ```
 
 Tapping **Renew** on a specific card skips the choice dialog and copies that card directly. Saving always creates a new document; it never rewrites the source record.

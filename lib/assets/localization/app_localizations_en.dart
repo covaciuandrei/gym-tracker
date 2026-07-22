@@ -788,6 +788,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLanguageRo => 'Romanian';
 
   @override
+  String get settingsCurrency => 'Default currency';
+
+  @override
+  String get settingsCurrencyUpdated => 'Default currency updated.';
+
+  @override
   String get settingsChangePassword => 'Change Password';
 
   @override

@@ -55,6 +55,9 @@ MockSettingsCubit _stubSettingsCubit(BaseState state) {
   when(() => cubit.state).thenReturn(state);
   when(() => cubit.stream).thenAnswer((_) => const Stream.empty());
   when(() => cubit.init()).thenAnswer((_) async {});
+  when(() => cubit.appVersion).thenReturn(state is SettingsDataState ? state.appVersion : '-');
+  when(() => cubit.currency).thenReturn(state is SettingsDataState ? state.currency : 'EUR');
+  when(() => cubit.setCurrency(currency: any(named: 'currency'))).thenAnswer((_) async {});
   return cubit;
 }
 
@@ -90,7 +93,7 @@ void main() {
     registerFallbackValue(const InitialState());
     registerFallbackValue(const ChangePasswordRoute());
     registerFallbackValue(const LoginRoute());
-    registerFallbackValue(const SettingsReadyState(appVersion: '-'));
+    registerFallbackValue(const SettingsReadyState(appVersion: '-', currency: 'EUR'));
   });
 
   tearDown(() {
@@ -111,7 +114,7 @@ void main() {
 
       final router = _stubRouter();
       final authCubit = _stubAuthCubit(const InitialState(), const Stream.empty());
-      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0', currency: 'EUR'));
 
       await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
       await tester.pump();
@@ -124,6 +127,7 @@ void main() {
       expect(find.text('App Version'), findsOneWidget);
       expect(find.text('Theme'), findsOneWidget);
       expect(find.text('Language'), findsOneWidget);
+      expect(find.text('Default currency'), findsOneWidget);
       expect(find.text('Change Password'), findsWidgets);
       verify(() => settingsCubit.init()).called(1);
     });
@@ -133,7 +137,7 @@ void main() {
 
       final router = _stubRouter();
       final authCubit = _stubAuthCubit(const InitialState(), const Stream.empty());
-      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0', currency: 'EUR'));
 
       await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
       await tester.pump();
@@ -152,7 +156,7 @@ void main() {
 
       final router = _stubRouter();
       final authCubit = _stubAuthCubit(const InitialState(), const Stream.empty());
-      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0', currency: 'EUR'));
 
       await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
       await tester.pump();
@@ -168,7 +172,7 @@ void main() {
 
       final router = _stubRouter();
       final authCubit = _stubAuthCubit(const InitialState(), const Stream.empty());
-      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0', currency: 'EUR'));
 
       await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
       await tester.pump();
@@ -188,7 +192,7 @@ void main() {
       addTearDown(controller.close);
 
       final authCubit = _stubAuthCubit(const InitialState(), controller.stream);
-      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0', currency: 'EUR'));
 
       await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
       await tester.pump();
@@ -207,7 +211,7 @@ void main() {
       addTearDown(controller.close);
 
       final authCubit = _stubAuthCubit(const InitialState(), controller.stream);
-      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0', currency: 'EUR'));
 
       await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
       await tester.pump();
@@ -223,7 +227,7 @@ void main() {
 
       final router = _stubRouter();
       final authCubit = _stubAuthCubit(const InitialState(), const Stream.empty());
-      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0', currency: 'EUR'));
 
       await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
       await tester.pump();
@@ -253,7 +257,7 @@ void main() {
       addTearDown(controller.close);
 
       final authCubit = _stubAuthCubit(const InitialState(), controller.stream);
-      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0', currency: 'EUR'));
 
       await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
       await tester.pump();
@@ -272,7 +276,7 @@ void main() {
       addTearDown(controller.close);
 
       final authCubit = _stubAuthCubit(const InitialState(), controller.stream);
-      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0', currency: 'EUR'));
 
       await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
       await tester.pump();
@@ -288,7 +292,7 @@ void main() {
 
       final router = _stubRouter();
       final authCubit = _stubAuthCubit(const InitialState(), const Stream.empty());
-      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0', currency: 'EUR'));
 
       await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
       await tester.pump();
@@ -325,7 +329,7 @@ void main() {
 
       final router = _stubRouter();
       final authCubit = _stubAuthCubit(const InitialState(), const Stream.empty());
-      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0'));
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0', currency: 'EUR'));
 
       await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
       await tester.pump();
@@ -340,6 +344,25 @@ void main() {
       await tester.pumpAndSettle();
 
       verifyNever(() => authCubit.deleteAccount(currentPassword: any(named: 'currentPassword')));
+    });
+
+    testWidgets('changes the account default currency', (tester) async {
+      await _registerHelpers();
+
+      final router = _stubRouter();
+      final authCubit = _stubAuthCubit(const InitialState(), const Stream.empty());
+      final settingsCubit = _stubSettingsCubit(const SettingsReadyState(appVersion: '1.0.0', currency: 'EUR'));
+
+      await tester.pumpWidget(_buildApp(authCubit, settingsCubit, router));
+      await tester.pump();
+
+      await tester.ensureVisible(find.text('Default currency'));
+      await tester.tap(find.text('EUR').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('RON').last);
+      await tester.pump();
+
+      verify(() => settingsCubit.setCurrency(currency: 'RON')).called(1);
     });
   });
 }

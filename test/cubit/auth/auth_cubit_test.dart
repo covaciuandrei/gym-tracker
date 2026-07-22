@@ -65,6 +65,8 @@ void main() {
         userId: any(named: 'userId'),
         email: any(named: 'email'),
         displayName: any(named: 'displayName'),
+        language: any(named: 'language'),
+        currency: any(named: 'currency'),
         consent: any(named: 'consent'),
       ),
     ).thenAnswer((_) async {});
@@ -141,9 +143,44 @@ void main() {
         email: _email,
         password: _password,
         displayName: _displayName,
+        language: 'en',
         consent: const <String, Object?>{'termsAccepted': true},
       );
       await future;
+
+      verify(
+        () => mockUserService.createUser(
+          userId: _fakeUser.uid,
+          email: _email,
+          displayName: _displayName,
+          language: 'en',
+          currency: 'EUR',
+          consent: const <String, Object?>{'termsAccepted': true},
+        ),
+      ).called(1);
+    });
+
+    test('seeds RON when a Romanian account is created', () async {
+      when(() => mockService.signUp(email: _email, password: _password)).thenAnswer((_) async => _fakeUser);
+
+      await sut.signUp(
+        email: _email,
+        password: _password,
+        displayName: _displayName,
+        language: 'ro',
+        consent: const <String, Object?>{'termsAccepted': true},
+      );
+
+      verify(
+        () => mockUserService.createUser(
+          userId: _fakeUser.uid,
+          email: _email,
+          displayName: _displayName,
+          language: 'ro',
+          currency: 'RON',
+          consent: const <String, Object?>{'termsAccepted': true},
+        ),
+      ).called(1);
     });
 
     test('emits emailAlreadyInUse', () async {
@@ -154,6 +191,7 @@ void main() {
         email: _email,
         password: _password,
         displayName: _displayName,
+        language: 'en',
         consent: const <String, Object?>{'termsAccepted': true},
       );
       await future;
@@ -167,6 +205,7 @@ void main() {
         email: _email,
         password: _password,
         displayName: _displayName,
+        language: 'en',
         consent: const <String, Object?>{'termsAccepted': true},
       );
       await future;

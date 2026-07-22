@@ -1,6 +1,6 @@
 # Settings Page — Screen Doc
 
-> Last updated: 2026-07-21
+> Last updated: 2026-07-22
 
 ## Route
 
@@ -15,7 +15,7 @@
 - `@RoutePage()` annotation
 - `implements AutoRouteWrapper` → `BlocProvider<SettingsCubit>`
 - `StatefulWidget`
-- `initState` → `settingsCubit.init()` (loads app version)
+- `initState` → `settingsCubit.init()` (loads app version and account currency)
 - Direct helper access: `_themeHelper = getIt<ThemeHelper>()`, `_localeHelper = getIt<LocaleHelper>()`, `_versionStatus = getIt<AppVersionStatus>()`
 
 ## Visual Layout
@@ -66,6 +66,11 @@ Scaffold(backgroundColor: cs.surfaceContainerLow)
             ListTile(language, "Language")
               subtitle: "English" / "Romanian"
               trailing: OptionToggle([EN, RO], onSelect: localeHelper.setLocale)
+            Divider
+            ListTile(currency_exchange, "Default currency")
+              subtitle: current account currency
+              trailing: DropdownButton([EUR, GBP, RON, USD])
+              → SettingsCubit.setCurrency() → users/{uid}.currency
           ]
           SizedBox(height: 16)
 ```
@@ -80,10 +85,12 @@ Scaffold(backgroundColor: cs.surfaceContainerLow)
 
 ### SettingsCubit (BlocBuilder)
 
-| State                            | UI                    |
-| -------------------------------- | --------------------- |
-| `SettingsReadyState(appVersion)` | Shows version string  |
-| `PendingState`                   | Shows "-" for version |
+| State                                      | UI                                                    |
+| ------------------------------------------ | ----------------------------------------------------- |
+| `SettingsReadyState(appVersion, currency)` | Shows version and account currency                    |
+| `SettingsCurrencyUpdatedState`             | Updates the selector and shows success feedback       |
+| `PendingState`                             | Disables the currency selector while loading/saving   |
+| `SomethingWentWrongState`                  | Preserves the last values and shows an error snackbar |
 
 ## Controls Used
 
@@ -91,6 +98,7 @@ Scaffold(backgroundColor: cs.surfaceContainerLow)
 - `SurfaceSectionCard`
 - `LabeledValueTile` (app version)
 - `OptionToggle` (language selector)
+- `DropdownButton` (account currency selector)
 
 ## Navigation In/Out
 

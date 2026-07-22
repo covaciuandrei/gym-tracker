@@ -106,6 +106,7 @@ class _RegisterPageState extends State<RegisterPage> {
       email: _emailCtrl.text.trim(),
       password: _passwordCtrl.text,
       displayName: _nicknameCtrl.text.trim(),
+      language: lang,
       consent: consent,
     );
   }

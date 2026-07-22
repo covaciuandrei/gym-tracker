@@ -194,6 +194,7 @@ void main() {
           email: any(named: 'email'),
           password: any(named: 'password'),
           displayName: any(named: 'displayName'),
+          language: any(named: 'language'),
           consent: any(named: 'consent'),
         ),
       ).thenAnswer((_) async {});
@@ -223,6 +224,7 @@ void main() {
           email: 'user@test.com',
           password: 'SecurePass1',
           displayName: 'Andrei',
+          language: 'en',
           consent: any(named: 'consent'),
         ),
       ).called(1);
@@ -235,6 +237,7 @@ void main() {
           email: any(named: 'email'),
           password: any(named: 'password'),
           displayName: any(named: 'displayName'),
+          language: any(named: 'language'),
           consent: any(named: 'consent'),
         ),
       ).thenAnswer((_) async {});
@@ -261,6 +264,7 @@ void main() {
           email: any(named: 'email'),
           password: any(named: 'password'),
           displayName: any(named: 'displayName'),
+          language: any(named: 'language'),
           consent: any(named: 'consent'),
         ),
       );
@@ -274,6 +278,7 @@ void main() {
           email: any(named: 'email'),
           password: any(named: 'password'),
           displayName: any(named: 'displayName'),
+          language: any(named: 'language'),
           consent: any(named: 'consent'),
         ),
       ).thenAnswer((_) async {});
@@ -300,6 +305,7 @@ void main() {
           email: any(named: 'email'),
           password: any(named: 'password'),
           displayName: any(named: 'displayName'),
+          language: any(named: 'language'),
           consent: any(named: 'consent'),
         ),
       );
@@ -313,6 +319,7 @@ void main() {
           email: any(named: 'email'),
           password: any(named: 'password'),
           displayName: any(named: 'displayName'),
+          language: any(named: 'language'),
           consent: any(named: 'consent'),
         ),
       ).thenAnswer((_) async {});
@@ -346,6 +353,7 @@ void main() {
           email: any(named: 'email'),
           password: any(named: 'password'),
           displayName: any(named: 'displayName'),
+          language: any(named: 'language'),
           consent: any(named: 'consent'),
         ),
       ).thenAnswer((_) async {});
@@ -366,6 +374,7 @@ void main() {
           email: any(named: 'email'),
           password: any(named: 'password'),
           displayName: any(named: 'displayName'),
+          language: any(named: 'language'),
           consent: any(named: 'consent'),
         ),
       );

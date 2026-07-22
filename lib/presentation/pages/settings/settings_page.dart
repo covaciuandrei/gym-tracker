@@ -5,6 +5,7 @@ import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/assets/theme/theme_helper.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/core/app_version_status.dart';
+import 'package:gym_tracker/core/constants/currencies.dart';
 import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/core/utils/legal_url_launcher.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
@@ -101,44 +102,58 @@ class _SettingsPageState extends State<SettingsPage> {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return BlocListener<AuthCubit, BaseState>(
-      listenWhen: (_, curr) =>
-          curr is PendingState ||
-          curr is AuthSignOutSuccessState ||
-          curr is AuthAccountDeletedState ||
-          curr is AuthInvalidCredentialsState ||
-          curr is SomethingWentWrongState,
-      listener: (ctx, state) {
-        if (state is PendingState) {
-          showDialog<void>(
-            context: ctx,
-            barrierDismissible: false,
-            builder: (_) => const PopScope(canPop: false, child: Center(child: CircularProgressIndicator())),
-          );
-          return;
-        }
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<SettingsCubit, BaseState>(
+          listenWhen: (_, curr) => curr is SettingsCurrencyUpdatedState || curr is SomethingWentWrongState,
+          listener: (ctx, state) {
+            final message = state is SettingsCurrencyUpdatedState ? l10n.settingsCurrencyUpdated : l10n.errorsUnknown;
+            ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(message)));
+          },
+        ),
+        BlocListener<AuthCubit, BaseState>(
+          listenWhen: (_, curr) =>
+              curr is PendingState ||
+              curr is AuthSignOutSuccessState ||
+              curr is AuthAccountDeletedState ||
+              curr is AuthInvalidCredentialsState ||
+              curr is SomethingWentWrongState,
+          listener: (ctx, state) {
+            if (state is PendingState) {
+              showDialog<void>(
+                context: ctx,
+                barrierDismissible: false,
+                builder: (_) => const PopScope(canPop: false, child: Center(child: CircularProgressIndicator())),
+              );
+              return;
+            }
 
-        // Dismiss loading dialog if one is showing.
-        if (Navigator.of(ctx).canPop()) {
-          Navigator.of(ctx).pop();
-        }
+            // Dismiss loading dialog if one is showing.
+            if (Navigator.of(ctx).canPop()) {
+              Navigator.of(ctx).pop();
+            }
 
-        if (state is AuthSignOutSuccessState || state is AuthAccountDeletedState) {
-          ctx.router.replace(const LoginRoute());
-          return;
-        }
-        if (state is AuthInvalidCredentialsState) {
-          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.errorsInvalidCredentials)));
-          return;
-        }
-        if (state is SomethingWentWrongState) {
-          ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
-        }
-      },
+            if (state is AuthSignOutSuccessState || state is AuthAccountDeletedState) {
+              ctx.router.replace(const LoginRoute());
+              return;
+            }
+            if (state is AuthInvalidCredentialsState) {
+              ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.errorsInvalidCredentials)));
+              return;
+            }
+            if (state is SomethingWentWrongState) {
+              ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.errorsUnknown)));
+            }
+          },
+        ),
+      ],
       child: BlocBuilder<SettingsCubit, BaseState>(
-        buildWhen: (_, curr) => curr is PendingState || curr is SettingsReadyState,
+        buildWhen: (_, curr) => curr is PendingState || curr is SettingsDataState || curr is SomethingWentWrongState,
         builder: (ctx, settingsState) {
-          final version = settingsState is SettingsReadyState ? settingsState.appVersion : '-';
+          final settingsCubit = ctx.read<SettingsCubit>();
+          final version = settingsState is SettingsDataState ? settingsState.appVersion : settingsCubit.appVersion;
+          final currency = settingsState is SettingsDataState ? settingsState.currency : settingsCubit.currency;
+          final isSettingsPending = settingsState is PendingState;
 
           return ListenableBuilder(
             listenable: Listenable.merge([_themeHelper, _localeHelper]),
@@ -236,6 +251,27 @@ class _SettingsPageState extends State<SettingsPage> {
                                     onSelect: (code) {
                                       _localeHelper.setLocale(Locale(code));
                                     },
+                                  ),
+                                ),
+                                Divider(indent: 16, endIndent: 16, color: cs.outline, height: 1),
+                                ListTile(
+                                  leading: Icon(Icons.currency_exchange, color: cs.primary),
+                                  title: Text(l10n.settingsCurrency),
+                                  subtitle: Text(currency, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                                  trailing: DropdownButtonHideUnderline(
+                                    child: DropdownButton<String>(
+                                      value: currency,
+                                      items: supportedCurrencyCodes
+                                          .map((code) => DropdownMenuItem<String>(value: code, child: Text(code)))
+                                          .toList(growable: false),
+                                      onChanged: isSettingsPending
+                                          ? null
+                                          : (value) {
+                                              if (value != null) {
+                                                ctx.read<SettingsCubit>().setCurrency(currency: value);
+                                              }
+                                            },
+                                    ),
                                   ),
                                 ),
                               ],

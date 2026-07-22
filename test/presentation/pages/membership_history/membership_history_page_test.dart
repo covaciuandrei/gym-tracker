@@ -7,9 +7,18 @@ import 'package:gym_tracker/cubit/membership/membership_cubit.dart';
 import 'package:gym_tracker/model/gym_membership.dart';
 import 'package:gym_tracker/presentation/pages/membership_history/membership_history_page.dart';
 import 'package:gym_tracker/service/membership/gym_membership_service.dart';
+import 'package:gym_tracker/service/user/user_service.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockGymMembershipService extends Mock implements GymMembershipService {}
+
+class MockUserService extends Mock implements UserService {}
+
+MembershipCubit _buildCubit(MockGymMembershipService service) {
+  final userService = MockUserService();
+  when(() => userService.getById(userId: any(named: 'userId'))).thenAnswer((_) async => null);
+  return MembershipCubit(service, userService);
+}
 
 void main() {
   Widget buildSubject({required MembershipCubit cubit, bool startAddFlow = false}) {
@@ -42,7 +51,7 @@ void main() {
     );
     final service = MockGymMembershipService();
     when(() => service.getAll(userId: userId)).thenAnswer((_) async => [membership]);
-    final cubit = MembershipCubit(service);
+    final cubit = _buildCubit(service);
     addTearDown(cubit.close);
 
     await tester.pumpWidget(buildSubject(cubit: cubit));
@@ -66,7 +75,7 @@ void main() {
     const userId = 'user_1';
     final service = MockGymMembershipService();
     when(() => service.getAll(userId: userId)).thenAnswer((_) async => []);
-    final cubit = MembershipCubit(service);
+    final cubit = _buildCubit(service);
     addTearDown(cubit.close);
 
     await tester.pumpWidget(buildSubject(cubit: cubit));
@@ -80,7 +89,7 @@ void main() {
     const userId = 'user_1';
     final service = MockGymMembershipService();
     when(() => service.getAll(userId: userId)).thenAnswer((_) async => []);
-    final cubit = MembershipCubit(service);
+    final cubit = _buildCubit(service);
     addTearDown(cubit.close);
 
     await tester.pumpWidget(buildSubject(cubit: cubit, startAddFlow: true));

@@ -1,7 +1,7 @@
 # Politica de confidențialitate
 
-**Ultima actualizare:** 21 iulie 2026
-**Data intrării în vigoare:** 21 iulie 2026
+**Ultima actualizare:** 22 iulie 2026
+**Data intrării în vigoare:** 22 iulie 2026
 
 Această Politică de confidențialitate explică modul în care **Gym Tracker** (denumită în continuare „Aplicația") colectează, utilizează și partajează datele tale cu caracter personal, precum și drepturile pe care le ai. Este redactată pentru a respecta Regulamentul General privind Protecția Datelor al UE („**GDPR**") și Legea nr. 190/2018.
 
@@ -19,6 +19,7 @@ Pentru orice întrebare privind această Politică sau datele tale cu caracter p
 Colectăm următoarele categorii de date cu caracter personal:
 
 ### a. Date de cont
+
 - Adresa de email
 - Numele afișat (poreclă pe care o alegi)
 - O parolă stocată în mod securizat, sub formă de hash (prin Firebase Authentication; noi nu vedem niciodată parola în clar)
@@ -34,6 +35,7 @@ Pentru că Aplicația îți permite să înregistrezi antrenamente și supliment
 - Statisticile derivate din cele de mai sus
 
 ### c. Detalii despre abonamentul la sală
+
 - Numele sălii sau clubului
 - Data plății/începerii și perioada de valabilitate
 - Prețul și moneda pe care le introduci manual
@@ -41,10 +43,13 @@ Pentru că Aplicația îți permite să înregistrezi antrenamente și supliment
 Aplicația **nu** procesează plăți către săli și nu colectează date de card, cont bancar sau alte credențiale de plată.
 
 ### d. Preferințe
+
 - Temă (închisă / deschisă)
 - Limbă (engleză / română)
+- Monedă implicită (EUR / GBP / RON / USD)
 
 ### e. Date tehnice
+
 - Timestamp-uri pentru creare cont, ultima autentificare și ultimul email de verificare trimis
 - Metadate de la Firebase Authentication (de ex. ora ultimei autentificări)
 - Jurnale la nivel de infrastructură păstrate de sub-împuternicitul nostru Google (de ex. adresă IP, tip de dispozitiv) pentru securitate și fiabilitate. Nu avem acces direct la aceste jurnale; acestea sunt procesate de Google pe baza propriilor condiții.
@@ -56,13 +61,13 @@ Aplicația **nu** procesează plăți către săli și nu colectează date de ca
 
 Prelucrăm datele tale pentru următoarele scopuri:
 
-| Scop | Date utilizate | Temei juridic |
-|---|---|---|
-| Crearea și menținerea contului, furnizarea funcționalităților esențiale | Date de cont, preferințe | Art. 6 alin. (1) lit. b) GDPR — executarea unui contract |
-| Stocarea și afișarea istoricului abonamentelor la sală introdus de tine | Detalii despre abonamentul la sală | Art. 6 alin. (1) lit. b) GDPR — executarea unui contract |
-| Înregistrarea și afișarea antrenamentelor, prezențelor și a aportului de suplimente | Date privind sănătatea | **Art. 9 alin. (2) lit. a) GDPR — consimțământul tău explicit** (colectat prin bifa de la înregistrare) |
-| Menținerea securității și funcționării serviciului | Date tehnice | Art. 6 alin. (1) lit. f) GDPR — interes legitim în prevenirea abuzului și asigurarea fiabilității |
-| Respectarea obligațiilor legale | După caz | Art. 6 alin. (1) lit. c) GDPR — obligație legală |
+| Scop                                                                                | Date utilizate                     | Temei juridic                                                                                           |
+| ----------------------------------------------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Crearea și menținerea contului, furnizarea funcționalităților esențiale             | Date de cont, preferințe           | Art. 6 alin. (1) lit. b) GDPR — executarea unui contract                                                |
+| Stocarea și afișarea istoricului abonamentelor la sală introdus de tine             | Detalii despre abonamentul la sală | Art. 6 alin. (1) lit. b) GDPR — executarea unui contract                                                |
+| Înregistrarea și afișarea antrenamentelor, prezențelor și a aportului de suplimente | Date privind sănătatea             | **Art. 9 alin. (2) lit. a) GDPR — consimțământul tău explicit** (colectat prin bifa de la înregistrare) |
+| Menținerea securității și funcționării serviciului                                  | Date tehnice                       | Art. 6 alin. (1) lit. f) GDPR — interes legitim în prevenirea abuzului și asigurarea fiabilității       |
+| Respectarea obligațiilor legale                                                     | După caz                           | Art. 6 alin. (1) lit. c) GDPR — obligație legală                                                        |
 
 Îți poți retrage oricând consimțământul pentru prelucrarea datelor privind sănătatea, ștergându-ți contul din **Setări → Ștergere cont**. Retragerea consimțământului nu afectează legalitatea prelucrărilor efectuate anterior.
 

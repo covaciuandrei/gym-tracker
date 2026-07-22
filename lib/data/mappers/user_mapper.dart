@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:injectable/injectable.dart';
-
+import 'package:gym_tracker/core/constants/currencies.dart';
 import 'package:gym_tracker/data/remote/user/user_dto.dart';
 import 'package:gym_tracker/model/user.dart';
+import 'package:injectable/injectable.dart';
 
 @injectable
 class UserMapper {
@@ -11,19 +11,17 @@ class UserMapper {
     id: dto.id,
     email: dto.email,
     displayName: dto.displayName,
-    lastVerificationEmailSentAt: _toNullableDateTime(
-      dto.lastVerificationEmailSentAt,
-    ),
+    lastVerificationEmailSentAt: _toNullableDateTime(dto.lastVerificationEmailSentAt),
     theme: dto.theme,
     language: dto.language,
+    currency: normalizeCurrencyCode(dto.currency),
     lastLoginAt: _toDateTime(dto.lastLoginAt),
     createdAt: _toDateTime(dto.createdAt),
     totalAttendances: dto.totalAttendances,
     consent: dto.consent?.cast<String, Object?>(),
   );
 
-  DateTime _toDateTime(Object? raw) =>
-      _toNullableDateTime(raw) ?? DateTime.now();
+  DateTime _toDateTime(Object? raw) => _toNullableDateTime(raw) ?? DateTime.now();
 
   DateTime? _toNullableDateTime(Object? raw) {
     if (raw == null) return null;

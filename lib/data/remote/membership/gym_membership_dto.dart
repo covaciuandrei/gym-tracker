@@ -38,7 +38,7 @@ class GymMembershipDto {
   @JsonKey(name: 'price_minor', defaultValue: 0)
   final int priceMinor;
 
-  @JsonKey(name: 'currency', defaultValue: 'RON')
+  @JsonKey(name: 'currency', defaultValue: 'EUR')
   final String currency;
 
   @JsonKey(name: 'created_at')

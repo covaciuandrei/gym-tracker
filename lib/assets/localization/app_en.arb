@@ -299,6 +299,8 @@
   "settingsLanguage": "Language",
   "settingsLanguageEn": "English",
   "settingsLanguageRo": "Romanian",
+  "settingsCurrency": "Default currency",
+  "settingsCurrencyUpdated": "Default currency updated.",
   "settingsChangePassword": "Change Password",
   "settingsCurrentPassword": "Current Password",
   "settingsNewPassword": "New Password",

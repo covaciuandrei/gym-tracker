@@ -229,6 +229,8 @@
   "settingsLanguage": "Limbă",
   "settingsLanguageEn": "Engleză",
   "settingsLanguageRo": "Română",
+  "settingsCurrency": "Monedă implicită",
+  "settingsCurrencyUpdated": "Moneda implicită a fost actualizată.",
   "settingsChangePassword": "Schimbă Parola",
   "settingsCurrentPassword": "Parola Actuală",
   "settingsNewPassword": "Parola Nouă",

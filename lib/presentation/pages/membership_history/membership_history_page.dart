@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
+import 'package:gym_tracker/core/constants/currencies.dart';
 import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/cubit/membership/membership_cubit.dart';
@@ -60,12 +61,16 @@ class _MembershipHistoryViewState extends State<MembershipHistoryView> {
       _initialAddFlowHandled = true;
       final state = context.read<MembershipCubit>().state;
       if (state is MembershipsReadyState) {
-        await _startCreateFlow(state.memberships);
+        await _startCreateFlow(state.memberships, defaultCurrency: state.defaultCurrency);
       }
     });
   }
 
-  Future<void> _startCreateFlow(List<GymMembership> memberships, {GymMembership? copyFrom}) async {
+  Future<void> _startCreateFlow(
+    List<GymMembership> memberships, {
+    required String defaultCurrency,
+    GymMembership? copyFrom,
+  }) async {
     GymMembership? source = copyFrom;
     if (source == null && memberships.isNotEmpty) {
       final shouldCopy = await _askHowToCreate();
@@ -80,7 +85,7 @@ class _MembershipHistoryViewState extends State<MembershipHistoryView> {
             startDate: today,
             duration: MembershipDuration.oneMonth,
             priceMinor: 0,
-            currency: 'RON',
+            currency: normalizeCurrencyCode(defaultCurrency),
           )
         : GymMembershipDraft.fromMembership(source, startDate: today);
 
@@ -154,19 +159,23 @@ class _MembershipHistoryViewState extends State<MembershipHistoryView> {
       },
       builder: (context, state) {
         final memberships = state is MembershipsReadyState ? state.memberships : null;
+        final defaultCurrency = state is MembershipsReadyState ? state.defaultCurrency : fallbackCurrencyCode;
         return Scaffold(
           backgroundColor: colorScheme.surfaceContainerLow,
           appBar: GymAppBar(title: l10n.membershipHistoryTitle, showBackButton: widget.showBackButton),
           floatingActionButton: memberships == null || memberships.isEmpty
               ? null
-              : PrimaryFab(tooltip: l10n.membershipAdd, onPressed: () => _startCreateFlow(memberships)),
-          body: SafeArea(child: _buildBody(context, state, memberships)),
+              : PrimaryFab(
+                  tooltip: l10n.membershipAdd,
+                  onPressed: () => _startCreateFlow(memberships, defaultCurrency: defaultCurrency),
+                ),
+          body: SafeArea(child: _buildBody(context, state, memberships, defaultCurrency)),
         );
       },
     );
   }
 
-  Widget _buildBody(BuildContext context, BaseState state, List<GymMembership>? memberships) {
+  Widget _buildBody(BuildContext context, BaseState state, List<GymMembership>? memberships, String defaultCurrency) {
     final l10n = AppLocalizations.of(context);
     if (state is SomethingWentWrongState) {
       return ErrorStateWidget(
@@ -181,7 +190,7 @@ class _MembershipHistoryViewState extends State<MembershipHistoryView> {
         title: l10n.membershipEmptyTitle,
         message: l10n.membershipEmptyMessage,
         actionLabel: l10n.membershipAddFirst,
-        onAction: () => _startCreateFlow(memberships),
+        onAction: () => _startCreateFlow(memberships, defaultCurrency: defaultCurrency),
       );
     }
 
@@ -196,7 +205,7 @@ class _MembershipHistoryViewState extends State<MembershipHistoryView> {
           final membership = memberships[index];
           return MembershipHistoryCard(
             membership: membership,
-            onRenew: () => _startCreateFlow(memberships, copyFrom: membership),
+            onRenew: () => _startCreateFlow(memberships, defaultCurrency: defaultCurrency, copyFrom: membership),
             onEdit: () => _edit(membership),
             onDelete: () => _delete(membership),
           );

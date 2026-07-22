@@ -2,10 +2,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/cubit/membership/membership_cubit.dart';
 import 'package:gym_tracker/model/gym_membership.dart';
+import 'package:gym_tracker/model/user.dart';
 import 'package:gym_tracker/service/membership/gym_membership_service.dart';
+import 'package:gym_tracker/service/user/user_service.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockGymMembershipService extends Mock implements GymMembershipService {}
+
+class MockUserService extends Mock implements UserService {}
 
 class FakeGymMembership extends Fake implements GymMembership {}
 
@@ -31,11 +35,14 @@ void main() {
   setUpAll(() => registerFallbackValue(FakeGymMembership()));
 
   late MockGymMembershipService service;
+  late MockUserService userService;
   late MembershipCubit cubit;
 
   setUp(() {
     service = MockGymMembershipService();
-    cubit = MembershipCubit(service);
+    userService = MockUserService();
+    when(() => userService.getById(userId: any(named: 'userId'))).thenAnswer((_) async => null);
+    cubit = MembershipCubit(service, userService);
   });
 
   tearDown(() => cubit.close());
@@ -47,9 +54,39 @@ void main() {
       cubit.stream,
       emitsInOrder([
         const PendingState(),
-        isA<MembershipsLoadedState>().having((state) => state.memberships, 'memberships', [membership]),
+        isA<MembershipsLoadedState>()
+            .having((state) => state.memberships, 'memberships', [membership])
+            .having((state) => state.defaultCurrency, 'defaultCurrency', 'EUR'),
       ]),
     );
+    await cubit.load(userId: userId);
+    await expectation;
+  });
+
+  test('load exposes the account currency for blank drafts', () async {
+    when(() => service.getAll(userId: userId)).thenAnswer((_) async => []);
+    when(() => userService.getById(userId: userId)).thenAnswer(
+      (_) async => User(
+        id: userId,
+        email: 'user@test.com',
+        displayName: 'User',
+        theme: 'dark',
+        language: 'ro',
+        currency: 'RON',
+        lastLoginAt: DateTime(2026),
+        createdAt: DateTime(2026),
+        totalAttendances: 0,
+      ),
+    );
+
+    final expectation = expectLater(
+      cubit.stream,
+      emitsInOrder([
+        const PendingState(),
+        isA<MembershipsLoadedState>().having((state) => state.defaultCurrency, 'defaultCurrency', 'RON'),
+      ]),
+    );
+
     await cubit.load(userId: userId);
     await expectation;
   });

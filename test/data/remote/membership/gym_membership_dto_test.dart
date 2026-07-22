@@ -40,4 +40,10 @@ void main() {
     expect(json['price_minor'], 15000);
     expect(json.containsKey('id'), isFalse);
   });
+
+  test('missing currency falls back to EUR', () {
+    final dto = GymMembershipDto.fromJson(const <String, dynamic>{});
+
+    expect(dto.currency, 'EUR');
+  });
 }

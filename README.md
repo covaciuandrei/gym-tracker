@@ -101,6 +101,7 @@ All tabs share unified loading skeletons and "no data" empty states.
 
 - **Appearance** — toggle between **dark and light** Material 3 themes.
 - **Language** — switch between **English** and **Romanian** at runtime.
+- **Default currency** — choose EUR, GBP, RON, or USD for new membership entries. New Romanian accounts start with RON; all other and legacy accounts fall back to EUR.
 - **Legal** — quick links to the hosted **Terms of Service** and **Privacy Policy** (localized per-language, opened in the external browser).
 - **Account** — open the dedicated **Change Password** screen (current password + new + confirm, with strength indicator and live match feedback).
 - **Account deletion** — re-authenticates and performs a cascading cleanup of all your Firestore data before deleting your auth account.
@@ -210,6 +211,7 @@ lib/
 └── service/                     # One folder per domain
 test/                            # Mirrors lib/ structure
 docs/screens/                    # Per-screen UI prep docs
+docs/features/                  # End-to-end feature behavior and code-flow maps
 android/  ios/                   # Platform projects
 firestore.rules                  # Firestore security rules
 ```
@@ -253,7 +255,7 @@ This repo does **not** ship with usable Firebase credentials. To run the app you
    ```bash
    flutterfire configure
    ```
-  This generates `lib/firebase_options.dart` and the platform config files (`android/app/google-services.json`, `ios/Runner/GoogleService-Info.plist`, and `ios/firebase_app_id_file.json` for Crashlytics symbol uploads).
+   This generates `lib/firebase_options.dart` and the platform config files (`android/app/google-services.json`, `ios/Runner/GoogleService-Info.plist`, and `ios/firebase_app_id_file.json` for Crashlytics symbol uploads).
 5. Deploy the included Firestore security rules:
    ```bash
    firebase deploy --only firestore:rules
@@ -399,7 +401,7 @@ After reaching `MainShellPage`, `CheckingUpdateCubit` may also surface a soft `B
 
 ```
 users/{userId}/
-├── (profile fields)
+├── (profile fields, including account-level default currency)
 ├── trainingTypes/{typeId}
 ├── attendances/{YYYY-MM}/days/{YYYY-MM-DD}
 ├── healthLogs/{YYYY-MM}/entries/{logId}

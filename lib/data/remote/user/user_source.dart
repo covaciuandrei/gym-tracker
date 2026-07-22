@@ -25,6 +25,7 @@ class UserSource {
             lastVerificationEmailSentAt: dto.lastVerificationEmailSentAt,
             theme: dto.theme,
             language: dto.language,
+            currency: dto.currency,
             lastLoginAt: dto.lastLoginAt,
             createdAt: dto.createdAt,
             totalAttendances: dto.totalAttendances,
@@ -54,17 +55,25 @@ class UserSource {
     required String userId,
     required String email,
     required String displayName,
+    required String language,
+    required String currency,
     required Map<String, Object?> consent,
   }) => _db.collection('users').doc(userId).set({
     'email': email,
     'displayName': displayName,
     'theme': 'dark',
-    'language': 'en',
+    'language': language,
+    'currency': currency,
     'createdAt': FieldValue.serverTimestamp(),
     'lastLoginAt': FieldValue.serverTimestamp(),
     'lastVerificationEmailSentAt': Timestamp.now(),
     'consent': {...consent, 'acceptedAt': FieldValue.serverTimestamp()},
   }, SetOptions(merge: true));
+
+  /// Updates the user's account-level default currency without touching any
+  /// other profile fields.
+  Future<void> updateCurrency({required String userId, required String currency}) =>
+      _db.collection('users').doc(userId).set({'currency': currency}, SetOptions(merge: true));
 
   /// Records a returning login timestamp and clears the verification email cooldown.
   ///

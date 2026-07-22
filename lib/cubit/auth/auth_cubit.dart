@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:gym_tracker/core/constants/currencies.dart';
 import 'package:gym_tracker/cubit/base_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/model/auth_user.dart';
@@ -29,11 +30,7 @@ class AuthCubit extends BaseCubit {
     _authSubscription?.cancel();
     _authSubscription = _authService.currentUser$.listen((user) {
       _syncCrashlyticsUser(user);
-      safeEmit(
-        user == null
-            ? const AuthUnauthenticatedState()
-            : AuthAuthenticatedState(user: user),
-      );
+      safeEmit(user == null ? const AuthUnauthenticatedState() : AuthAuthenticatedState(user: user));
     }, onError: (_) => safeEmit(const SomethingWentWrongState()));
   }
 
@@ -50,10 +47,7 @@ class AuthCubit extends BaseCubit {
   Future<void> signIn({required String email, required String password}) async {
     await guardedAction(() async {
       try {
-        final user = await _authService.signIn(
-          email: email,
-          password: password,
-        );
+        final user = await _authService.signIn(email: email, password: password);
         await _recordLogin(user: user);
         safeEmit(AuthSignInSuccessState(user: user));
       } on InvalidCredentialsException {
@@ -70,19 +64,13 @@ class AuthCubit extends BaseCubit {
     required String email,
     required String password,
     required String displayName,
+    required String language,
     required Map<String, Object?> consent,
   }) async {
     await guardedAction(() async {
       try {
-        final user = await _authService.signUp(
-          email: email,
-          password: password,
-        );
-        await _createUser(
-          user: user,
-          displayName: displayName,
-          consent: consent,
-        );
+        final user = await _authService.signUp(email: email, password: password);
+        await _createUser(user: user, displayName: displayName, language: language, consent: consent);
         safeEmit(const AuthSignUpSuccessState());
       } on EmailAlreadyInUseException {
         safeEmit(const AuthEmailAlreadyInUseState());
@@ -116,16 +104,10 @@ class AuthCubit extends BaseCubit {
     });
   }
 
-  Future<void> changePassword({
-    required String currentPassword,
-    required String newPassword,
-  }) async {
+  Future<void> changePassword({required String currentPassword, required String newPassword}) async {
     await guardedAction(() async {
       try {
-        await _authService.changePassword(
-          currentPassword: currentPassword,
-          newPassword: newPassword,
-        );
+        await _authService.changePassword(currentPassword: currentPassword, newPassword: newPassword);
         safeEmit(const AuthPasswordChangedState());
       } on InvalidCredentialsException {
         safeEmit(const AuthInvalidCredentialsState());
@@ -163,6 +145,7 @@ class AuthCubit extends BaseCubit {
   Future<void> _createUser({
     required AuthUser user,
     required String displayName,
+    required String language,
     required Map<String, Object?> consent,
   }) async {
     try {
@@ -170,6 +153,8 @@ class AuthCubit extends BaseCubit {
         userId: user.uid,
         email: user.email ?? '',
         displayName: displayName,
+        language: language,
+        currency: defaultCurrencyForLanguage(language),
         consent: consent,
       );
     } catch (_) {

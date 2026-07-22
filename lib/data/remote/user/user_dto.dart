@@ -9,6 +9,7 @@ class UserDto {
     required this.displayName,
     required this.theme,
     required this.language,
+    required this.currency,
     required this.lastLoginAt,
     required this.createdAt,
     required this.totalAttendances,
@@ -17,8 +18,7 @@ class UserDto {
     this.consent,
   });
 
-  factory UserDto.fromJson(Map<String, dynamic> json) =>
-      _$UserDtoFromJson(json);
+  factory UserDto.fromJson(Map<String, dynamic> json) => _$UserDtoFromJson(json);
 
   Map<String, dynamic> toJson() => _$UserDtoToJson(this);
 
@@ -40,6 +40,9 @@ class UserDto {
 
   @JsonKey(name: 'language', defaultValue: 'en')
   final String language;
+
+  @JsonKey(name: 'currency', defaultValue: 'EUR')
+  final String currency;
 
   @JsonKey(name: 'lastLoginAt')
   final Object? lastLoginAt;

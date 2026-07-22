@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
+import 'package:gym_tracker/core/constants/currencies.dart';
 import 'package:gym_tracker/core/utils/app_date_formatter.dart';
 import 'package:gym_tracker/core/utils/currency_formatter.dart';
 import 'package:gym_tracker/model/gym_membership.dart';
@@ -23,7 +24,7 @@ class _MembershipFormSheetState extends State<MembershipFormSheet> {
   final TextEditingController _priceController = TextEditingController();
   final ValueNotifier<DateTime> _startDate = ValueNotifier<DateTime>(DateTime.now());
   final ValueNotifier<MembershipDuration> _duration = ValueNotifier<MembershipDuration>(MembershipDuration.oneMonth);
-  final ValueNotifier<String> _currency = ValueNotifier<String>('RON');
+  final ValueNotifier<String> _currency = ValueNotifier<String>(fallbackCurrencyCode);
 
   @override
   void initState() {
@@ -33,7 +34,7 @@ class _MembershipFormSheetState extends State<MembershipFormSheet> {
     _priceController.text = initial.priceMinor <= 0 ? '' : CurrencyFormatter.toInputValue(initial.priceMinor);
     _startDate.value = DateTime(initial.startDate.year, initial.startDate.month, initial.startDate.day);
     _duration.value = initial.duration;
-    _currency.value = supportedMembershipCurrencies.contains(initial.currency) ? initial.currency : 'RON';
+    _currency.value = normalizeCurrencyCode(initial.currency);
   }
 
   @override
