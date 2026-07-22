@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/injection.dart';
+import 'package:gym_tracker/core/utils/app_date_formatter.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/cubit/stats/stats_cubit.dart';
 import 'package:gym_tracker/model/attendance_stats.dart';
@@ -408,7 +409,8 @@ class _AttendancesTabState extends State<_AttendancesTab> {
     final streakInfo = isCurrentStreak ? widget.stats.currentStreakInfo : widget.stats.bestStreakInfo;
     if (streakInfo.count == 0 || streakInfo.startDate.isEmpty || streakInfo.endDate.isEmpty) return;
 
-    final dateRange = _formatDateRange(context, streakInfo.startDate, streakInfo.endDate);
+    final dateRange = _formatDateRange(streakInfo.startDate, streakInfo.endDate);
+    if (dateRange.isEmpty) return;
     final l10n = AppLocalizations.of(context);
 
     setState(() {
@@ -1567,12 +1569,10 @@ String _getConsistencyPercentage(AttendanceStats stats) {
   return '$consistencyPercentage%';
 }
 
-String _formatDateRange(BuildContext context, String start, String end) {
+String _formatDateRange(String start, String end) {
   if (start.isEmpty || end.isEmpty) return '';
-  String fmt(d) {
-    final date = DateTime.parse(d);
-    return '${date.day} ${_monthShort(context, date.month)} ${date.year}';
-  }
-
-  return '${fmt(start)} → ${fmt(end)}';
+  final formattedStart = AppDateFormatter.tryFormatIsoDate(start);
+  final formattedEnd = AppDateFormatter.tryFormatIsoDate(end);
+  if (formattedStart == null || formattedEnd == null) return '';
+  return '$formattedStart → $formattedEnd';
 }

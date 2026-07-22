@@ -1,7 +1,7 @@
 # Privacy Policy
 
-**Last Updated:** 18 April 2026
-**Effective Date:** 18 April 2026
+**Last Updated:** 21 July 2026
+**Effective Date:** 21 July 2026
 
 This Privacy Policy explains how **Gym Tracker** (the "App") collects, uses, and shares your personal data, and what rights you have. It is written to comply with the EU General Data Protection Regulation ("**GDPR**") and Romanian Law No. 190/2018.
 
@@ -34,17 +34,25 @@ Because the App lets you log workouts and supplements, the following data may re
 - Supplement products you record (name, brand, ingredients) and servings taken per day
 - Derived statistics based on the above
 
-### c. Preferences
+### c. Gym membership details
+
+- Gym or club name
+- Membership purchase/start date and validity period
+- Price and currency that you enter manually
+
+The App does **not** process gym payments and does not collect payment-card, bank-account, or billing credentials.
+
+### d. Preferences
 
 - Theme (dark / light)
 - Language (English / Romanian)
 
-### d. Technical data
+### e. Technical data
 
 - Timestamps for account creation, last login, and last verification email
 - Firebase Authentication metadata (e.g. last sign-in time)
 - Infrastructure-level logs kept by our sub-processor Google (e.g. IP address, device type) for security and service reliability. We do not have direct access to these logs; they are processed by Google under its own terms.
-- **Crash and error reports** collected by Firebase Crashlytics when the App encounters an unexpected error. Reports include a stack trace, device model, operating-system version, and your Firebase user identifier (not your email or display name), so we can correlate reports to the affected account and diagnose issues. Crashlytics does not collect the contents of your workouts, supplements, or messages.
+- **Crash and error reports** collected by Firebase Crashlytics when the App encounters an unexpected error. Reports include a stack trace, device model, operating-system version, and your Firebase user identifier (not your email or display name), so we can correlate reports to the affected account and diagnose issues. Crashlytics does not collect the contents of your workouts, supplements, gym memberships, or messages.
 
 We do **not** currently use any third-party analytics or advertising SDKs. The App does not use cookies.
 
@@ -55,6 +63,7 @@ We process your personal data for the following purposes:
 | Purpose                                                           | Data used                 | Legal basis                                                                           |
 | ----------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------- |
 | Create and maintain your account, provide the App's core features | Account data, preferences | Art. 6(1)(b) GDPR — performance of a contract                                         |
+| Store and display the gym membership history you enter            | Gym membership details    | Art. 6(1)(b) GDPR — performance of a contract                                         |
 | Log and display your workouts, attendances, and supplement intake | Health-related data       | **Art. 9(2)(a) GDPR — your explicit consent** (collected via the checkbox at sign-up) |
 | Keep the service secure and operational                           | Technical data            | Art. 6(1)(f) GDPR — legitimate interest in preventing abuse and ensuring reliability  |
 | Comply with legal obligations                                     | As needed                 | Art. 6(1)(c) GDPR — legal obligation                                                  |
@@ -76,7 +85,7 @@ Our sub-processor Google may process and store data on servers located outside t
 ## 6. How Long We Keep Your Data
 
 - **Account data and all content you create** are kept for as long as your account exists.
-- When you delete your account from **Settings → Delete Account**, we delete your Firestore data (attendances, workouts, supplement logs, products you created) and your Firebase Authentication account.
+- When you delete your account from **Settings → Delete Account**, we delete your Firestore data (attendances, workouts, supplement logs, gym memberships, and products you created) and your Firebase Authentication account.
 - Some residual metadata (e.g. Firebase Authentication last-sign-in timestamps) may persist for a short operational window, typically up to 30 days, before being purged by Google.
 - We may retain minimal data longer only where required by law.
 

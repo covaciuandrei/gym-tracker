@@ -23,9 +23,7 @@ void main() async {
   await runZonedGuarded<Future<void>>(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
-      await SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-      ]);
+      await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
       configureDependencies();
       await getIt.allReady();
 
@@ -41,26 +39,21 @@ void main() async {
       getIt.registerSingleton<ThemeHelper>(ThemeHelper(prefs));
       getIt.registerSingleton<OnboardingHelper>(OnboardingHelper(prefs));
 
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
+      await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
       // Crashlytics wiring. Collection is enabled in all builds (including
       // debug) so crashes from the emulator and `flutter run` also show up
       // in the Firebase Console. To filter dev noise from production data,
       // use the Crashlytics Console's build-version / user-ID filters.
       await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
-      FlutterError.onError =
-          FirebaseCrashlytics.instance.recordFlutterFatalError;
+      FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
       PlatformDispatcher.instance.onError = (error, stack) {
         FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
         return true;
       };
 
       if (kDebugMode) {
-        await getIt<FirebaseAuth>().setSettings(
-          appVerificationDisabledForTesting: true,
-        );
+        await getIt<FirebaseAuth>().setSettings(appVerificationDisabledForTesting: true);
       }
 
       runApp(const MyApp());
@@ -126,9 +119,7 @@ class _MyAppState extends State<MyApp> {
         );
       },
 
-      routerConfig: _appRouter.config(
-        navigatorObservers: () => [AutoRouteObserver()],
-      ),
+      routerConfig: _appRouter.config(navigatorObservers: () => [AutoRouteObserver()]),
     );
   }
 }

@@ -1046,6 +1046,18 @@ abstract class AppLocalizations {
   /// **'Workout Types'**
   String get profileWorkoutTypes;
 
+  /// No description provided for @profileMembershipHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Membership history'**
+  String get profileMembershipHistory;
+
+  /// No description provided for @profileMembershipHistorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track purchases and validity'**
+  String get profileMembershipHistorySubtitle;
+
   /// No description provided for @profileSettings.
   ///
   /// In en, this message translates to:
@@ -1673,7 +1685,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsDeleteAccountMessage.
   ///
   /// In en, this message translates to:
-  /// **'This will permanently delete your account and all your data (workouts, supplements logs, training types). This action cannot be undone.'**
+  /// **'This will permanently delete your account and all your data (workouts, supplement logs, training types, and gym memberships). This action cannot be undone.'**
   String get settingsDeleteAccountMessage;
 
   /// No description provided for @settingsDeleteAccountConfirm.
@@ -1843,6 +1855,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remind me later'**
   String get bigUpdateLater;
+
+  /// No description provided for @membershipHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Membership history'**
+  String get membershipHistoryTitle;
+
+  /// No description provided for @membershipAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add membership'**
+  String get membershipAdd;
+
+  /// No description provided for @membershipAddFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Add first membership'**
+  String get membershipAddFirst;
+
+  /// No description provided for @membershipEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit membership'**
+  String get membershipEdit;
+
+  /// No description provided for @membershipRenew.
+  ///
+  /// In en, this message translates to:
+  /// **'Renew membership'**
+  String get membershipRenew;
+
+  /// No description provided for @membershipDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get membershipDelete;
+
+  /// No description provided for @membershipDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete membership'**
+  String get membershipDeleteTitle;
+
+  /// No description provided for @membershipDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the membership for {gymName}? This cannot be undone.'**
+  String membershipDeleteConfirm(String gymName);
+
+  /// No description provided for @membershipEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No memberships yet'**
+  String get membershipEmptyTitle;
+
+  /// No description provided for @membershipEmptyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a paid gym membership to keep its validity close to your workout calendar.'**
+  String get membershipEmptyMessage;
+
+  /// No description provided for @membershipGymName.
+  ///
+  /// In en, this message translates to:
+  /// **'Gym name'**
+  String get membershipGymName;
+
+  /// No description provided for @membershipGymNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Downtown Fitness'**
+  String get membershipGymNameHint;
+
+  /// No description provided for @membershipStartDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase / start date'**
+  String get membershipStartDate;
+
+  /// No description provided for @membershipDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Validity'**
+  String get membershipDuration;
+
+  /// No description provided for @membershipDurationOneMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'1 month'**
+  String get membershipDurationOneMonth;
+
+  /// No description provided for @membershipDurationThreeMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'3 months'**
+  String get membershipDurationThreeMonths;
+
+  /// No description provided for @membershipDurationSixMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'6 months'**
+  String get membershipDurationSixMonths;
+
+  /// No description provided for @membershipDurationTwelveMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'12 months'**
+  String get membershipDurationTwelveMonths;
+
+  /// No description provided for @membershipValidUntilValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid until {date}'**
+  String membershipValidUntilValue(String date);
+
+  /// No description provided for @membershipPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Price'**
+  String get membershipPrice;
+
+  /// No description provided for @membershipPriceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 150.00'**
+  String get membershipPriceHint;
+
+  /// No description provided for @membershipCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get membershipCurrency;
+
+  /// No description provided for @membershipStatusUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get membershipStatusUpcoming;
+
+  /// No description provided for @membershipStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get membershipStatusExpired;
+
+  /// No description provided for @membershipDaysRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Expires today} =1{1 day left} other{{count} days left}}'**
+  String membershipDaysRemaining(int count);
+
+  /// No description provided for @membershipMoreActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Membership actions'**
+  String get membershipMoreActions;
+
+  /// No description provided for @membershipCopyPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reuse your last membership details?'**
+  String get membershipCopyPromptTitle;
+
+  /// No description provided for @membershipCopyPromptMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the gym, validity, price, and currency from your latest membership. The start date will reset to today.'**
+  String get membershipCopyPromptMessage;
+
+  /// No description provided for @membershipCopyLast.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy last details'**
+  String get membershipCopyLast;
+
+  /// No description provided for @membershipStartFresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Start fresh'**
+  String get membershipStartFresh;
+
+  /// No description provided for @membershipCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Membership added.'**
+  String get membershipCreated;
+
+  /// No description provided for @membershipUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Membership updated.'**
+  String get membershipUpdated;
+
+  /// No description provided for @membershipDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Membership deleted.'**
+  String get membershipDeleted;
+
+  /// No description provided for @membershipCalendarExpiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Membership expired'**
+  String get membershipCalendarExpiredTitle;
+
+  /// No description provided for @membershipCalendarExpiredMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{gymName} expired on {date}. Add the new paid period when you renew.'**
+  String membershipCalendarExpiredMessage(String gymName, String date);
+
+  /// No description provided for @membershipCalendarMissingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No membership recorded'**
+  String get membershipCalendarMissingTitle;
+
+  /// No description provided for @membershipCalendarMissingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add one to track its validity alongside your workouts.'**
+  String get membershipCalendarMissingMessage;
+
+  /// No description provided for @membershipCalendarDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss membership reminder'**
+  String get membershipCalendarDismiss;
 }
 
 class _AppLocalizationsDelegate

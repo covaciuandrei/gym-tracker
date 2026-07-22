@@ -527,6 +527,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileWorkoutTypes => 'Workout Types';
 
   @override
+  String get profileMembershipHistory => 'Membership history';
+
+  @override
+  String get profileMembershipHistorySubtitle => 'Track purchases and validity';
+
+  @override
   String get profileSettings => 'Settings';
 
   @override
@@ -861,7 +867,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsDeleteAccountMessage =>
-      'This will permanently delete your account and all your data (workouts, supplements logs, training types). This action cannot be undone.';
+      'This will permanently delete your account and all your data (workouts, supplement logs, training types, and gym memberships). This action cannot be undone.';
 
   @override
   String get settingsDeleteAccountConfirm => 'Delete My Account';
@@ -954,4 +960,136 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bigUpdateLater => 'Remind me later';
+
+  @override
+  String get membershipHistoryTitle => 'Membership history';
+
+  @override
+  String get membershipAdd => 'Add membership';
+
+  @override
+  String get membershipAddFirst => 'Add first membership';
+
+  @override
+  String get membershipEdit => 'Edit membership';
+
+  @override
+  String get membershipRenew => 'Renew membership';
+
+  @override
+  String get membershipDelete => 'Delete';
+
+  @override
+  String get membershipDeleteTitle => 'Delete membership';
+
+  @override
+  String membershipDeleteConfirm(String gymName) {
+    return 'Delete the membership for $gymName? This cannot be undone.';
+  }
+
+  @override
+  String get membershipEmptyTitle => 'No memberships yet';
+
+  @override
+  String get membershipEmptyMessage =>
+      'Add a paid gym membership to keep its validity close to your workout calendar.';
+
+  @override
+  String get membershipGymName => 'Gym name';
+
+  @override
+  String get membershipGymNameHint => 'e.g. Downtown Fitness';
+
+  @override
+  String get membershipStartDate => 'Purchase / start date';
+
+  @override
+  String get membershipDuration => 'Validity';
+
+  @override
+  String get membershipDurationOneMonth => '1 month';
+
+  @override
+  String get membershipDurationThreeMonths => '3 months';
+
+  @override
+  String get membershipDurationSixMonths => '6 months';
+
+  @override
+  String get membershipDurationTwelveMonths => '12 months';
+
+  @override
+  String membershipValidUntilValue(String date) {
+    return 'Valid until $date';
+  }
+
+  @override
+  String get membershipPrice => 'Price';
+
+  @override
+  String get membershipPriceHint => 'e.g. 150.00';
+
+  @override
+  String get membershipCurrency => 'Currency';
+
+  @override
+  String get membershipStatusUpcoming => 'Upcoming';
+
+  @override
+  String get membershipStatusExpired => 'Expired';
+
+  @override
+  String membershipDaysRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days left',
+      one: '1 day left',
+      zero: 'Expires today',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get membershipMoreActions => 'Membership actions';
+
+  @override
+  String get membershipCopyPromptTitle => 'Reuse your last membership details?';
+
+  @override
+  String get membershipCopyPromptMessage =>
+      'Copy the gym, validity, price, and currency from your latest membership. The start date will reset to today.';
+
+  @override
+  String get membershipCopyLast => 'Copy last details';
+
+  @override
+  String get membershipStartFresh => 'Start fresh';
+
+  @override
+  String get membershipCreated => 'Membership added.';
+
+  @override
+  String get membershipUpdated => 'Membership updated.';
+
+  @override
+  String get membershipDeleted => 'Membership deleted.';
+
+  @override
+  String get membershipCalendarExpiredTitle => 'Membership expired';
+
+  @override
+  String membershipCalendarExpiredMessage(String gymName, String date) {
+    return '$gymName expired on $date. Add the new paid period when you renew.';
+  }
+
+  @override
+  String get membershipCalendarMissingTitle => 'No membership recorded';
+
+  @override
+  String get membershipCalendarMissingMessage =>
+      'Add one to track its validity alongside your workouts.';
+
+  @override
+  String get membershipCalendarDismiss => 'Dismiss membership reminder';
 }

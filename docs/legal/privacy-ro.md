@@ -1,7 +1,7 @@
 # Politica de confidențialitate
 
-**Ultima actualizare:** 18 aprilie 2026
-**Data intrării în vigoare:** 18 aprilie 2026
+**Ultima actualizare:** 21 iulie 2026
+**Data intrării în vigoare:** 21 iulie 2026
 
 Această Politică de confidențialitate explică modul în care **Gym Tracker** (denumită în continuare „Aplicația") colectează, utilizează și partajează datele tale cu caracter personal, precum și drepturile pe care le ai. Este redactată pentru a respecta Regulamentul General privind Protecția Datelor al UE („**GDPR**") și Legea nr. 190/2018.
 
@@ -33,15 +33,22 @@ Pentru că Aplicația îți permite să înregistrezi antrenamente și supliment
 - Produsele de suplimente înregistrate (nume, marcă, ingrediente) și porțiile luate zilnic
 - Statisticile derivate din cele de mai sus
 
-### c. Preferințe
+### c. Detalii despre abonamentul la sală
+- Numele sălii sau clubului
+- Data plății/începerii și perioada de valabilitate
+- Prețul și moneda pe care le introduci manual
+
+Aplicația **nu** procesează plăți către săli și nu colectează date de card, cont bancar sau alte credențiale de plată.
+
+### d. Preferințe
 - Temă (închisă / deschisă)
 - Limbă (engleză / română)
 
-### d. Date tehnice
+### e. Date tehnice
 - Timestamp-uri pentru creare cont, ultima autentificare și ultimul email de verificare trimis
 - Metadate de la Firebase Authentication (de ex. ora ultimei autentificări)
 - Jurnale la nivel de infrastructură păstrate de sub-împuternicitul nostru Google (de ex. adresă IP, tip de dispozitiv) pentru securitate și fiabilitate. Nu avem acces direct la aceste jurnale; acestea sunt procesate de Google pe baza propriilor condiții.
-- **Rapoarte de eroare și de blocare a aplicației** colectate de Firebase Crashlytics atunci când Aplicația întâmpină o eroare neașteptată. Rapoartele includ stiva de apeluri, modelul dispozitivului, versiunea sistemului de operare și identificatorul tău Firebase (nu adresa ta de email sau numele afișat), pentru a putea corela raportul cu contul afectat și a diagnostica problema. Crashlytics nu colectează conținutul antrenamentelor, suplimentelor sau mesajelor tale.
+- **Rapoarte de eroare și de blocare a aplicației** colectate de Firebase Crashlytics atunci când Aplicația întâmpină o eroare neașteptată. Rapoartele includ stiva de apeluri, modelul dispozitivului, versiunea sistemului de operare și identificatorul tău Firebase (nu adresa ta de email sau numele afișat), pentru a putea corela raportul cu contul afectat și a diagnostica problema. Crashlytics nu colectează conținutul antrenamentelor, suplimentelor, abonamentelor la sală sau mesajelor tale.
 
 În prezent **nu** folosim SDK-uri terțe de analiză sau publicitate. Aplicația nu folosește cookie-uri.
 
@@ -52,6 +59,7 @@ Prelucrăm datele tale pentru următoarele scopuri:
 | Scop | Date utilizate | Temei juridic |
 |---|---|---|
 | Crearea și menținerea contului, furnizarea funcționalităților esențiale | Date de cont, preferințe | Art. 6 alin. (1) lit. b) GDPR — executarea unui contract |
+| Stocarea și afișarea istoricului abonamentelor la sală introdus de tine | Detalii despre abonamentul la sală | Art. 6 alin. (1) lit. b) GDPR — executarea unui contract |
 | Înregistrarea și afișarea antrenamentelor, prezențelor și a aportului de suplimente | Date privind sănătatea | **Art. 9 alin. (2) lit. a) GDPR — consimțământul tău explicit** (colectat prin bifa de la înregistrare) |
 | Menținerea securității și funcționării serviciului | Date tehnice | Art. 6 alin. (1) lit. f) GDPR — interes legitim în prevenirea abuzului și asigurarea fiabilității |
 | Respectarea obligațiilor legale | După caz | Art. 6 alin. (1) lit. c) GDPR — obligație legală |
@@ -73,7 +81,7 @@ Sub-împuternicitul nostru Google poate prelucra și stoca date pe servere aflat
 ## 6. Cât timp păstrăm datele
 
 - **Datele contului și tot conținutul pe care îl creezi** sunt păstrate atât timp cât contul tău există.
-- Când îți ștergi contul din **Setări → Ștergere cont**, ștergem datele tale din Firestore (prezențe, antrenamente, înregistrări de suplimente, produse create de tine) și contul tău din Firebase Authentication.
+- Când îți ștergi contul din **Setări → Ștergere cont**, ștergem datele tale din Firestore (prezențe, antrenamente, înregistrări de suplimente, abonamente la sală și produse create de tine) și contul tău din Firebase Authentication.
 - Unele metadate reziduale (de ex. timestamp-urile de ultimă autentificare din Firebase Authentication) pot persista pentru o scurtă perioadă operațională, de regulă până la 30 de zile, înainte de a fi șterse de Google.
 - Putem păstra date minime pentru mai mult timp doar dacă legea ne obligă.
 

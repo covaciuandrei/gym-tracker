@@ -6,7 +6,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
+import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/core/injection.dart';
+import 'package:gym_tracker/core/utils/app_date_formatter.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/cubit/calendar/calendar_cubit.dart';
 import 'package:gym_tracker/model/attendance_day.dart';
@@ -17,6 +19,7 @@ import 'package:gym_tracker/presentation/controls/emoji_text.dart';
 import 'package:gym_tracker/presentation/controls/gym_app_bar.dart';
 import 'package:gym_tracker/presentation/controls/gym_tab_bar.dart';
 import 'package:gym_tracker/presentation/controls/pull_to_refresh.dart';
+import 'package:gym_tracker/presentation/pages/calendar/widgets/membership_reminder_banner.dart';
 import 'package:gym_tracker/presentation/resources/emojis.dart';
 import 'package:gym_tracker/presentation/validators/number_validator.dart';
 import 'package:gym_tracker/service/health/health_service.dart';
@@ -51,6 +54,7 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
   Timer? _yearSkeletonTimer;
 
   String? get _userId => getIt<FirebaseAuth>().currentUser?.uid;
+  DateTime? get _accountCreatedAt => getIt<FirebaseAuth>().currentUser?.metadata.creationTime;
 
   @override
   void initState() {
@@ -62,6 +66,7 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
       final userId = _userId;
       if (userId == null) return;
       _loadMonth(userId);
+      context.read<CalendarCubit>().loadMembershipOverview(userId: userId, accountCreatedAt: _accountCreatedAt);
     });
   }
 
@@ -229,7 +234,18 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
       _loadMonth(userId);
     }
 
-    await Future<void>.delayed(_minimumSkeletonDuration);
+    await Future.wait<void>([
+      context.read<CalendarCubit>().loadMembershipOverview(userId: userId, accountCreatedAt: _accountCreatedAt),
+      Future<void>.delayed(_minimumSkeletonDuration),
+    ]);
+  }
+
+  Future<void> _openMembershipHistory({bool startAddFlow = false}) async {
+    await context.router.push(MembershipHistoryRoute(startAddFlow: startAddFlow));
+    if (!mounted) return;
+    final userId = _userId;
+    if (userId == null) return;
+    await context.read<CalendarCubit>().loadMembershipOverview(userId: userId, accountCreatedAt: _accountCreatedAt);
   }
 
   Future<void> _showDaySheet(BuildContext context, DateTime date, BaseState state) async {
@@ -357,9 +373,27 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
         }
       },
       builder: (ctx, state) {
+        final monthState = state is CalendarMonthLoadedState ? state : null;
+        final yearState = state is CalendarYearLoadedState ? state : null;
+        final membership = monthState?.membership ?? yearState?.membership;
+        final membershipChecked = monthState?.membershipChecked ?? yearState?.membershipChecked ?? false;
+        final hasActiveMembership = membership?.isActiveAt(DateTime.now()) ?? false;
+
         return Scaffold(
           backgroundColor: _calendarPageBackground(context),
-          appBar: GymAppBar(title: l10n.calendarTitle, showBackButton: false),
+          appBar: GymAppBar(
+            title: l10n.calendarTitle,
+            showBackButton: false,
+            actions: membershipChecked && !hasActiveMembership
+                ? [
+                    IconButton(
+                      tooltip: l10n.membershipHistoryTitle,
+                      icon: const Icon(Icons.card_membership_outlined),
+                      onPressed: _openMembershipHistory,
+                    ),
+                  ]
+                : null,
+          ),
           body: SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -370,8 +404,15 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
                   final selectedYear = _year.value;
                   final selectedMonth = _month.value;
 
-                  final monthState = state is CalendarMonthLoadedState ? state : null;
-                  final yearState = state is CalendarYearLoadedState ? state : null;
+                  final reminderDismissed =
+                      monthState?.membershipReminderDismissed ?? yearState?.membershipReminderDismissed ?? false;
+                  final reminderEligible =
+                      monthState?.membershipReminderEligible ?? yearState?.membershipReminderEligible ?? false;
+                  final showMembershipReminder =
+                      !reminderDismissed &&
+                      reminderEligible &&
+                      membershipChecked &&
+                      (membership == null || membership.isExpiredAt(DateTime.now()));
 
                   final title = yearly ? '$selectedYear' : '${_monthName(context, selectedMonth)} $selectedYear';
 
@@ -410,6 +451,14 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
                         centered: true,
                       ),
                       const SizedBox(height: 12),
+                      if (showMembershipReminder) ...[
+                        MembershipReminderBanner(
+                          membership: membership,
+                          onAction: () => _openMembershipHistory(startAddFlow: true),
+                          onDismiss: () => ctx.read<CalendarCubit>().dismissMembershipReminder(userId: userId),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
                       Expanded(
                         child: PullToRefresh(
                           onRefresh: _refreshActiveView,
@@ -1064,7 +1113,7 @@ class _CalendarDaySheetState extends State<_CalendarDaySheet> {
       return const SizedBox.shrink();
     }
 
-    final dateTitle = '${widget.date.day} ${_monthShort(context, widget.date.month)} ${widget.date.year}';
+    final dateTitle = AppDateFormatter.format(widget.date);
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 50),
@@ -2003,12 +2052,6 @@ String _monthName(BuildContext context, int month) {
     11 => l10n.monthsNovember,
     _ => l10n.monthsDecember,
   };
-}
-
-String _monthShort(BuildContext context, int month) {
-  final value = _monthName(context, month);
-  if (value.length <= 3) return value;
-  return value.substring(0, 3);
 }
 
 String _weekdayShort(BuildContext context, int weekday) {

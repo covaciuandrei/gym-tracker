@@ -1,6 +1,6 @@
 # Calendar Page — Screen Doc
 
-> Last updated: 2026-04-08
+> Last updated: 2026-07-22
 
 ## Route
 
@@ -14,6 +14,9 @@
 
 ```
 Scaffold
+  GymAppBar("Calendar")
+    if membership checked AND no membership is active:
+      IconButton(card_membership_outlined) → MembershipHistoryRoute()
   Column
     ── Header row ──
     Row(spaceBetween)
@@ -25,6 +28,14 @@ Scaffold
     Row(center)
       _ToggleButton('Monthly', selected: !yearlyView)
       _ToggleButton('Yearly', selected: yearlyView)
+
+    ── Optional membership reminder ──
+    MembershipReminderBanner
+      shown only when membership check completed AND
+      reminder was not permanently dismissed AND
+      latest relevant membership expired OR
+      no membership exists and the account is at least 2 hours old
+      actions: Add/Renew → MembershipHistoryRoute(startAddFlow: true), Dismiss forever
 
     ── Content ──
     Expanded(
@@ -82,7 +93,7 @@ Opens when user taps a day cell in monthly view.
 DraggableScrollableSheet or showModalBottomSheet
   Column
     ── Title ──
-    Text('Mon, Jan 15', style: tt.headlineSmall)
+    Text('15.01.2026', style: tt.headlineSmall)
     Divider
     ── Tab bar ──
     TabBar(tabs: [Tab(text: 'Workout'), Tab(text: 'Health')])
@@ -141,6 +152,7 @@ calendarCubit.loadMonth(year, month);        // on init and month change
 calendarCubit.loadYear(year);                // when switching to yearly view
 calendarCubit.markDay(date, workoutTypeId, durationMinutes);  // mark attended
 calendarCubit.clearDay(date);                // remove attendance
+calendarCubit.loadMembershipOverview(userId); // best-effort validity check
 
 // HealthCubit:
 healthCubit.loadMonthEntries(year, month);   // supplement dots on calendar
@@ -157,6 +169,36 @@ healthCubit.deleteEntry(entryId);            // delete log from health tab
 | `CalendarYearLoadedState(months, year)`  | loadYear  | render yearly grid  |
 | `PendingState`                           | any load  | show spinner        |
 | `SomethingWentWrongState`                | error     | show error snackbar |
+
+Both loaded states also carry `membership`, `membershipChecked`,
+`membershipReminderEligible`, and `membershipReminderDismissed`. Membership
+lookup failure is deliberately non-fatal: `membershipChecked` remains false and
+no reminder or app-bar shortcut is shown, while Calendar continues normally.
+
+## Gym Membership Reminder
+
+- Loaded once when the Calendar page mounts and refreshed on pull-to-refresh or
+  after returning from Membership History.
+- Any complete date in the reminder or day popup is displayed as `dd.MM.yyyy`.
+- Status is derived from date-only `startDate` / `validUntil` values; Calendar
+  never writes or auto-renews memberships.
+- A new account with no history receives a two-hour grace period before the
+  first missing-membership banner. The Firebase Auth creation timestamp is
+  used; established/migrated accounts without a timestamp are immediately
+  eligible.
+- An expired membership is eligible immediately. The banner remains until an
+  active period is detected or the user dismisses it.
+- Dismissal is persisted forever per user in `SharedPreferences`. It suppresses
+  future missing/expired banners but does not hide the app-bar shortcut.
+- If history exists but the relevant membership is expired, the CTA says
+  **Renew membership**. The history page offers to copy the latest details and
+  resets the start date to today.
+- If no history exists, the CTA says **Add membership** and the history route
+  opens the blank membership form directly. If history exists, it first offers
+  **Copy last details** or **Start fresh**.
+- Whenever the membership lookup succeeds and no membership is active, the
+  right side of the Calendar app bar shows a membership-history button. This is
+  available during the grace period and after permanent banner dismissal.
 
 ## Day Cell Data Model
 
@@ -182,7 +224,9 @@ Each day cell in `CalendarLoadedState` includes:
 ## Navigation In/Out
 
 - IN: MainShell tab 0 (initial tab)
-- OUT: no navigation; popup is in-page modal
+- OUT: day popup is in-page; membership banner opens
+  `MembershipHistoryRoute(startAddFlow: true)` and the app-bar shortcut opens
+  `MembershipHistoryRoute()`.
 
 ## Pull-to-Refresh
 

@@ -130,6 +130,12 @@ If any of these are true, the state **must** go through a cubit (emit state → 
 - **Every widget and page** must use `AppLocalizations.of(context)` for all displayed text — no hardcoded English strings in `build()` methods. This includes labels, headers, placeholders, button text, and preview/mock data labels.
 - **All emoji references must use `Emojis.*` constants** from `lib/presentation/resources/emojis.dart` — never use raw Unicode escapes (`\u{...}`) or literal emoji characters in widget code.
 
+## Date Presentation
+
+- **Every complete calendar date shown to users must use the fixed `dd.MM.yyyy` format** in every locale (for example, `02.07.2026`).
+- Use `AppDateFormatter` for user-facing complete dates; do not use locale-dependent `MaterialLocalizations.format*Date()` methods or ad-hoc date interpolation.
+- Firestore values, document IDs, and internal date keys remain canonical `YYYY-MM-DD` / `YYYY-MM`. Calendar day numbers, month/year headings, and times keep their purpose-specific formats.
+
 ---
 
 ## Code Quality

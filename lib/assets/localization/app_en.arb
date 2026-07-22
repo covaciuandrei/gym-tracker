@@ -200,6 +200,8 @@
   "profileManage": "Manage",
   "profileAccount": "Account",
   "profileWorkoutTypes": "Workout Types",
+  "profileMembershipHistory": "Membership history",
+  "profileMembershipHistorySubtitle": "Track purchases and validity",
   "profileSettings": "Settings",
   "profileSignOut": "Sign Out",
   "workoutTypesTitle": "Workout Types",
@@ -322,7 +324,7 @@
   "settingsPasswordChangedSuccess": "Password changed successfully.",
   "settingsDeleteAccount": "Delete Account",
   "settingsDeleteAccountTitle": "Delete Account",
-  "settingsDeleteAccountMessage": "This will permanently delete your account and all your data (workouts, supplements logs, training types). This action cannot be undone.",
+  "settingsDeleteAccountMessage": "This will permanently delete your account and all your data (workouts, supplement logs, training types, and gym memberships). This action cannot be undone.",
   "settingsDeleteAccountConfirm": "Delete My Account",
   "settingsDeleteAccountPasswordHint": "Enter your password to confirm",
   "settingsSignOut": "Sign Out",
@@ -358,5 +360,65 @@
     }
   },
   "bigUpdateAction": "Update now",
-  "bigUpdateLater": "Remind me later"
+  "bigUpdateLater": "Remind me later",
+
+  "membershipHistoryTitle": "Membership history",
+  "membershipAdd": "Add membership",
+  "membershipAddFirst": "Add first membership",
+  "membershipEdit": "Edit membership",
+  "membershipRenew": "Renew membership",
+  "membershipDelete": "Delete",
+  "membershipDeleteTitle": "Delete membership",
+  "membershipDeleteConfirm": "Delete the membership for {gymName}? This cannot be undone.",
+  "@membershipDeleteConfirm": {
+    "placeholders": {
+      "gymName": { "type": "String" }
+    }
+  },
+  "membershipEmptyTitle": "No memberships yet",
+  "membershipEmptyMessage": "Add a paid gym membership to keep its validity close to your workout calendar.",
+  "membershipGymName": "Gym name",
+  "membershipGymNameHint": "e.g. Downtown Fitness",
+  "membershipStartDate": "Purchase / start date",
+  "membershipDuration": "Validity",
+  "membershipDurationOneMonth": "1 month",
+  "membershipDurationThreeMonths": "3 months",
+  "membershipDurationSixMonths": "6 months",
+  "membershipDurationTwelveMonths": "12 months",
+  "membershipValidUntilValue": "Valid until {date}",
+  "@membershipValidUntilValue": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "membershipPrice": "Price",
+  "membershipPriceHint": "e.g. 150.00",
+  "membershipCurrency": "Currency",
+  "membershipStatusUpcoming": "Upcoming",
+  "membershipStatusExpired": "Expired",
+  "membershipDaysRemaining": "{count, plural, =0{Expires today} =1{1 day left} other{{count} days left}}",
+  "@membershipDaysRemaining": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "membershipMoreActions": "Membership actions",
+  "membershipCopyPromptTitle": "Reuse your last membership details?",
+  "membershipCopyPromptMessage": "Copy the gym, validity, price, and currency from your latest membership. The start date will reset to today.",
+  "membershipCopyLast": "Copy last details",
+  "membershipStartFresh": "Start fresh",
+  "membershipCreated": "Membership added.",
+  "membershipUpdated": "Membership updated.",
+  "membershipDeleted": "Membership deleted.",
+  "membershipCalendarExpiredTitle": "Membership expired",
+  "membershipCalendarExpiredMessage": "{gymName} expired on {date}. Add the new paid period when you renew.",
+  "@membershipCalendarExpiredMessage": {
+    "placeholders": {
+      "gymName": { "type": "String" },
+      "date": { "type": "String" }
+    }
+  },
+  "membershipCalendarMissingTitle": "No membership recorded",
+  "membershipCalendarMissingMessage": "Add one to track its validity alongside your workouts.",
+  "membershipCalendarDismiss": "Dismiss membership reminder"
 }

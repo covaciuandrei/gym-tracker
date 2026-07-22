@@ -47,6 +47,11 @@ class AppRouter extends RootStackRouter {
       page: ChangePasswordRoute.page,
       guards: [AuthGuard()],
     ),
+    AutoRoute(
+      path: '/membership-history',
+      page: MembershipHistoryRoute.page,
+      guards: [AuthGuard()],
+    ),
     AutoRoute(path: '/force-update', page: ForceUpdateRoute.page),
     AutoRoute(path: '/maintenance', page: MaintenanceRoute.page),
     AutoRoute(path: '/no-connection', page: NoConnectionRoute.page),

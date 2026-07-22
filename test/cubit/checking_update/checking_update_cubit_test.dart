@@ -61,7 +61,13 @@ void main() {
     test('persists dismissal and emits CheckingUpdateDismissedState', () async {
       when(() => service.rememberDismissal()).thenAnswer((_) async {});
 
-      final emitted = expectLater(sut.stream, emitsInOrder([isA<CheckingUpdateDismissedState>()]));
+      final emitted = expectLater(
+        sut.stream,
+        emitsInOrder([
+          const PendingState(),
+          isA<CheckingUpdateDismissedState>(),
+        ]),
+      );
 
       await sut.remindLater();
       await emitted;
@@ -72,7 +78,13 @@ void main() {
     test('still emits CheckingUpdateDismissedState when the service throws', () async {
       when(() => service.rememberDismissal()).thenThrow(Exception('boom'));
 
-      final emitted = expectLater(sut.stream, emitsInOrder([isA<CheckingUpdateDismissedState>()]));
+      final emitted = expectLater(
+        sut.stream,
+        emitsInOrder([
+          const PendingState(),
+          isA<CheckingUpdateDismissedState>(),
+        ]),
+      );
 
       await sut.remindLater();
       await emitted;
@@ -83,7 +95,13 @@ void main() {
     test('launches the store URL and emits CheckingUpdateDismissedState', () async {
       when(() => service.launchStoreUrl()).thenAnswer((_) async {});
 
-      final emitted = expectLater(sut.stream, emitsInOrder([isA<CheckingUpdateDismissedState>()]));
+      final emitted = expectLater(
+        sut.stream,
+        emitsInOrder([
+          const PendingState(),
+          isA<CheckingUpdateDismissedState>(),
+        ]),
+      );
 
       await sut.updateNow();
       await emitted;
@@ -94,7 +112,13 @@ void main() {
     test('still emits CheckingUpdateDismissedState when the launcher throws', () async {
       when(() => service.launchStoreUrl()).thenThrow(Exception('boom'));
 
-      final emitted = expectLater(sut.stream, emitsInOrder([isA<CheckingUpdateDismissedState>()]));
+      final emitted = expectLater(
+        sut.stream,
+        emitsInOrder([
+          const PendingState(),
+          isA<CheckingUpdateDismissedState>(),
+        ]),
+      );
 
       await sut.updateNow();
       await emitted;

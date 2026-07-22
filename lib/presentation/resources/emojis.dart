@@ -152,4 +152,7 @@ class Emojis {
 
   /// 📡  Satellite antenna — no connection screen
   static const satelliteAntenna = '\u{1F4E1}';
+
+  /// 💳  Credit card — manual membership purchase / history
+  static const creditCard = '\u{1F4B3}';
 }

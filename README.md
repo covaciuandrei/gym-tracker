@@ -2,7 +2,7 @@
 
 A personal gym attendance and supplement tracking app for Android and iOS, built with Flutter and Firebase.
 
-Track your workouts, log your supplements, monitor your streaks, and visualize your progress month-by-month and year-by-year.
+Track your workouts, gym memberships, supplements, streaks, and progress month-by-month and year-by-year.
 
 ---
 
@@ -44,6 +44,17 @@ Track your workouts, log your supplements, monitor your streaks, and visualize y
   - Remove individual log entries.
 - Days are color-coded by what was logged: workout-only (blue), supplement-only (green), both (cyan), and the workout type's emoji icon is rendered inside the cell.
 - The current day is always highlighted; navigation is by ← → arrows.
+- A compact reminder appears immediately for expired history, or after a two-hour grace period for a brand-new account with no history. Dismissal is permanent per user and never blocks Calendar use.
+- Whenever no membership is active, a Calendar app-bar shortcut keeps Membership History accessible even during the grace period or after dismissing the banner.
+
+### Gym memberships — manual purchase history
+
+- Record each paid membership period with the **gym name, purchase/start date, validity, price, and currency**.
+- Validity presets are 1, 3, 6, or 12 months. The 1-month option adds exactly 30 days; 3/6/12 use calendar-month arithmetic with end-of-month handling.
+- Membership state is derived from its dates — **upcoming, active, or expired** — rather than stored as a stale status field.
+- The history screen supports complete create, edit, renew/copy, and delete operations.
+- When adding a period after the first one, choose to copy the latest gym, validity, price, and currency while resetting the start date to today.
+- No payment is inferred and no auto-renewal occurs; every purchase remains an explicit historical record.
 
 ### Workout Types — your own taxonomy
 
@@ -83,7 +94,7 @@ All tabs share unified loading skeletons and "no data" empty states.
 ### Profile
 
 - Avatar with your initial, display name, email, and an **email-verified** badge.
-- Quick links to **Settings** and **Workout Types**.
+- Quick links to **Membership History** and **Settings**.
 - **Logout** button.
 
 ### Settings
@@ -125,7 +136,7 @@ Detailed UI specs for every screen live under [`docs/screens/`](docs/screens/):
 
 - Splash, Onboarding, Login, Register, Forgot Password
 - Main Shell (Calendar, Stats, Health, Profile tabs)
-- Workout Types, Settings, Change Password
+- Workout Types, Settings, Membership History, Change Password
 - Maintenance, Force Update, No Connection
 
 ---
@@ -242,7 +253,7 @@ This repo does **not** ship with usable Firebase credentials. To run the app you
    ```bash
    flutterfire configure
    ```
-   This generates `lib/firebase_options.dart` and the platform config files (`android/app/google-services.json`, `ios/Runner/GoogleService-Info.plist`).
+  This generates `lib/firebase_options.dart` and the platform config files (`android/app/google-services.json`, `ios/Runner/GoogleService-Info.plist`, and `ios/firebase_app_id_file.json` for Crashlytics symbol uploads).
 5. Deploy the included Firestore security rules:
    ```bash
    firebase deploy --only firestore:rules
@@ -271,8 +282,8 @@ The app's [version gate](#app-version-gate) reads a singleton document at `appCo
     "en": "https://<your-firebase-project>.web.app/privacy-en.html",
     "ro": "https://<your-firebase-project>.web.app/privacy-ro.html",
   },
-  "termsVersion": "2026-04-18",
-  "privacyVersion": "2026-04-18",
+  "termsVersion": "2026-07-21",
+  "privacyVersion": "2026-07-21",
   "updatedAt": "<server timestamp>",
 }
 ```
@@ -391,7 +402,8 @@ users/{userId}/
 ├── (profile fields)
 ├── trainingTypes/{typeId}
 ├── attendances/{YYYY-MM}/days/{YYYY-MM-DD}
-└── healthLogs/{YYYY-MM}/entries/{logId}
+├── healthLogs/{YYYY-MM}/entries/{logId}
+└── gymMemberships/{membershipId}
 
 supplementProducts/{productId}
 ingredients/{stdId}

@@ -4,14 +4,13 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/model/auth_user.dart';
 import 'package:gym_tracker/presentation/pages/profile/profile_page.dart';
+import 'package:mocktail/mocktail.dart';
 
 class MockAuthCubit extends Mock implements AuthCubit {}
 
@@ -24,10 +23,7 @@ Widget _buildApp(AuthCubit cubit, StackRouter router) {
     child: MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: BlocProvider<AuthCubit>.value(
-        value: cubit,
-        child: const ProfilePage(),
-      ),
+      home: BlocProvider<AuthCubit>.value(value: cubit, child: const ProfilePage()),
     ),
   );
 }
@@ -45,6 +41,7 @@ void main() {
   setUpAll(() {
     registerFallbackValue(const InitialState());
     registerFallbackValue(const LoginRoute());
+    registerFallbackValue(MembershipHistoryRoute());
     registerFallbackValue(const SettingsRoute());
   });
 
@@ -52,27 +49,14 @@ void main() {
     testWidgets('renders user card and section rows', (tester) async {
       final router = MockStackRouter();
       when(() => router.canPop()).thenReturn(false);
+      when(() => router.push(any<PageRouteInfo>(), onFailure: any(named: 'onFailure'))).thenAnswer((_) async => null);
       when(
-        () => router.push(
-          any<PageRouteInfo>(),
-          onFailure: any(named: 'onFailure'),
-        ),
-      ).thenAnswer((_) async => null);
-      when(
-        () => router.replace(
-          any<PageRouteInfo>(),
-          onFailure: any(named: 'onFailure'),
-        ),
+        () => router.replace(any<PageRouteInfo>(), onFailure: any(named: 'onFailure')),
       ).thenAnswer((_) async => null);
 
       final cubit = _stubCubit(
         const AuthAuthenticatedState(
-          user: AuthUser(
-            uid: 'u1',
-            email: 'alex@example.com',
-            displayName: 'Alex',
-            emailVerified: true,
-          ),
+          user: AuthUser(uid: 'u1', email: 'alex@example.com', displayName: 'Alex', emailVerified: true),
         ),
         const Stream.empty(),
       );
@@ -82,6 +66,7 @@ void main() {
       expect(find.text('Profile'), findsOneWidget);
       expect(find.text('MANAGE'), findsOneWidget);
       expect(find.text('ACCOUNT'), findsOneWidget);
+      expect(find.text('Membership history'), findsOneWidget);
       expect(find.text('Settings'), findsOneWidget);
       expect(find.text('Sign Out'), findsOneWidget);
       expect(find.text('alex@example.com'), findsOneWidget);
@@ -92,67 +77,43 @@ void main() {
     testWidgets('navigates to feature routes from row taps', (tester) async {
       final router = MockStackRouter();
       when(() => router.canPop()).thenReturn(false);
+      when(() => router.push(any<PageRouteInfo>(), onFailure: any(named: 'onFailure'))).thenAnswer((_) async => null);
       when(
-        () => router.push(
-          any<PageRouteInfo>(),
-          onFailure: any(named: 'onFailure'),
-        ),
-      ).thenAnswer((_) async => null);
-      when(
-        () => router.replace(
-          any<PageRouteInfo>(),
-          onFailure: any(named: 'onFailure'),
-        ),
+        () => router.replace(any<PageRouteInfo>(), onFailure: any(named: 'onFailure')),
       ).thenAnswer((_) async => null);
 
       final cubit = _stubCubit(
         const AuthAuthenticatedState(
-          user: AuthUser(
-            uid: 'u1',
-            email: 'alex@example.com',
-            displayName: 'Alex',
-            emailVerified: true,
-          ),
+          user: AuthUser(uid: 'u1', email: 'alex@example.com', displayName: 'Alex', emailVerified: true),
         ),
         const Stream.empty(),
       );
 
       await tester.pumpWidget(_buildApp(cubit, router));
 
+      await tester.tap(find.text('Membership history'));
+      await tester.pump();
+      final membershipRoute = verify(
+        () => router.push(captureAny<PageRouteInfo>(), onFailure: any(named: 'onFailure')),
+      ).captured.single;
+      expect(membershipRoute, isA<MembershipHistoryRoute>());
+
       await tester.tap(find.text('Settings'));
       await tester.pump();
-      verify(
-        () => router.push(
-          const SettingsRoute(),
-          onFailure: any(named: 'onFailure'),
-        ),
-      ).called(1);
+      verify(() => router.push(const SettingsRoute(), onFailure: any(named: 'onFailure'))).called(1);
     });
 
     testWidgets('calls signOut when sign-out row is tapped', (tester) async {
       final router = MockStackRouter();
       when(() => router.canPop()).thenReturn(false);
+      when(() => router.push(any<PageRouteInfo>(), onFailure: any(named: 'onFailure'))).thenAnswer((_) async => null);
       when(
-        () => router.push(
-          any<PageRouteInfo>(),
-          onFailure: any(named: 'onFailure'),
-        ),
-      ).thenAnswer((_) async => null);
-      when(
-        () => router.replace(
-          any<PageRouteInfo>(),
-          onFailure: any(named: 'onFailure'),
-        ),
+        () => router.replace(any<PageRouteInfo>(), onFailure: any(named: 'onFailure')),
       ).thenAnswer((_) async => null);
 
       final cubit = _stubCubit(
         const AuthAuthenticatedState(
-          user: AuthUser(
-            uid: 'u1',
-            email: 'alex@example.com',
-            displayName: 'Alex',
-            emailVerified: true,
-          ),
+          user: AuthUser(uid: 'u1', email: 'alex@example.com', displayName: 'Alex', emailVerified: true),
         ),
         const Stream.empty(),
       );
@@ -167,17 +128,9 @@ void main() {
     testWidgets('redirects to login on unauthenticated state', (tester) async {
       final router = MockStackRouter();
       when(() => router.canPop()).thenReturn(false);
+      when(() => router.push(any<PageRouteInfo>(), onFailure: any(named: 'onFailure'))).thenAnswer((_) async => null);
       when(
-        () => router.push(
-          any<PageRouteInfo>(),
-          onFailure: any(named: 'onFailure'),
-        ),
-      ).thenAnswer((_) async => null);
-      when(
-        () => router.replace(
-          any<PageRouteInfo>(),
-          onFailure: any(named: 'onFailure'),
-        ),
+        () => router.replace(any<PageRouteInfo>(), onFailure: any(named: 'onFailure')),
       ).thenAnswer((_) async => null);
 
       final controller = StreamController<BaseState>.broadcast(sync: true);
@@ -185,12 +138,7 @@ void main() {
 
       final cubit = _stubCubit(
         const AuthAuthenticatedState(
-          user: AuthUser(
-            uid: 'u1',
-            email: 'alex@example.com',
-            displayName: 'Alex',
-            emailVerified: true,
-          ),
+          user: AuthUser(uid: 'u1', email: 'alex@example.com', displayName: 'Alex', emailVerified: true),
         ),
         controller.stream,
       );
@@ -199,12 +147,7 @@ void main() {
       controller.add(const AuthUnauthenticatedState());
       await tester.pump();
 
-      verify(
-        () => router.replace(
-          const LoginRoute(),
-          onFailure: any(named: 'onFailure'),
-        ),
-      ).called(1);
+      verify(() => router.replace(const LoginRoute(), onFailure: any(named: 'onFailure'))).called(1);
     });
   });
 }

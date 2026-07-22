@@ -52,7 +52,8 @@ class GymAppBar extends StatelessWidget implements PreferredSizeWidget {
     final colorScheme = theme.colorScheme;
 
     // Determine if we should show back button
-    final canPop = context.router.canPop();
+    final stackRouter = StackRouterScope.of(context)?.controller;
+    final canPop = stackRouter?.canPop() ?? Navigator.of(context).canPop();
     final shouldShowBack = showBackButton ?? (automaticallyImplyLeading && canPop);
 
     return AppBar(
@@ -76,7 +77,13 @@ class GymAppBar extends StatelessWidget implements PreferredSizeWidget {
       leading: shouldShowBack
           ? IconButton(
               icon: Icon(Icons.arrow_back_ios_new, color: foregroundColor ?? colorScheme.onSurface, size: 20),
-              onPressed: () => context.router.maybePop(),
+              onPressed: () {
+                if (stackRouter != null) {
+                  stackRouter.maybePop();
+                } else {
+                  Navigator.of(context).maybePop();
+                }
+              },
               tooltip: MaterialLocalizations.of(context).backButtonTooltip,
             )
           : null,

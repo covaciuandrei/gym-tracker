@@ -7,6 +7,7 @@ import 'package:injectable/injectable.dart';
 ///   - `users/{uid}/trainingTypes/*`
 ///   - `users/{uid}/attendances/{YYYY-MM}/days/*`
 ///   - `users/{uid}/healthLogs/{YYYY-MM}/entries/*`
+///   - `users/{uid}/gymMemberships/*`
 ///   - `users/{uid}` (the profile document itself)
 ///
 /// Global `supplementProducts` created by the user are intentionally kept
@@ -30,7 +31,7 @@ class AccountCleanupSource {
   /// security rules typically require the caller to be authenticated.
   ///
   /// Uses sequential deletion order so partial failure is predictable:
-  /// healthLogs → attendances → trainingTypes → user profile.
+  /// healthLogs → attendances → trainingTypes → gymMemberships → user profile.
   Future<void> deleteAllUserData({required String userId}) async {
     final userDoc = _db.collection('users').doc(userId);
 
@@ -39,11 +40,9 @@ class AccountCleanupSource {
       parentCollection: userDoc.collection('healthLogs'),
       subcollectionName: 'entries',
     );
-    await _deleteNestedMonthCollections(
-      parentCollection: userDoc.collection('attendances'),
-      subcollectionName: 'days',
-    );
+    await _deleteNestedMonthCollections(parentCollection: userDoc.collection('attendances'), subcollectionName: 'days');
     await _deleteCollection(userDoc.collection('trainingTypes'));
+    await _deleteCollection(userDoc.collection('gymMemberships'));
     await userDoc.delete();
   }
 

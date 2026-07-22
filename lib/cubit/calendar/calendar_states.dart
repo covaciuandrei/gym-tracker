@@ -6,6 +6,10 @@ class CalendarMonthLoadedState extends BaseState {
     required this.healthLogs,
     required this.products,
     required this.workoutTypes,
+    required this.membership,
+    required this.membershipChecked,
+    required this.membershipReminderDismissed,
+    required this.membershipReminderEligible,
     required this.year,
     required this.month,
   });
@@ -14,6 +18,10 @@ class CalendarMonthLoadedState extends BaseState {
   final List<SupplementLog> healthLogs;
   final List<SupplementProduct> products;
   final List<TrainingType> workoutTypes;
+  final GymMembership? membership;
+  final bool membershipChecked;
+  final bool membershipReminderDismissed;
+  final bool membershipReminderEligible;
   final int year;
   final int month;
 
@@ -23,6 +31,10 @@ class CalendarMonthLoadedState extends BaseState {
     healthLogs,
     products,
     workoutTypes,
+    membership,
+    membershipChecked,
+    membershipReminderDismissed,
+    membershipReminderEligible,
     year,
     month,
   ];
@@ -33,12 +45,20 @@ class CalendarYearLoadedState extends BaseState {
     required this.attendanceByMonth,
     required this.supplementsByMonth,
     required this.workoutTypes,
+    required this.membership,
+    required this.membershipChecked,
+    required this.membershipReminderDismissed,
+    required this.membershipReminderEligible,
     required this.year,
   });
 
   final Map<int, List<AttendanceDay>> attendanceByMonth;
   final Map<int, List<SupplementLog>> supplementsByMonth;
   final List<TrainingType> workoutTypes;
+  final GymMembership? membership;
+  final bool membershipChecked;
+  final bool membershipReminderDismissed;
+  final bool membershipReminderEligible;
   final int year;
 
   @override
@@ -46,6 +66,10 @@ class CalendarYearLoadedState extends BaseState {
     attendanceByMonth,
     supplementsByMonth,
     workoutTypes,
+    membership,
+    membershipChecked,
+    membershipReminderDismissed,
+    membershipReminderEligible,
     year,
   ];
 }

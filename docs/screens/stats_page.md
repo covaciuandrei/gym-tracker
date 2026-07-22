@@ -1,6 +1,6 @@
 # Stats Page — Screen Doc
 
-> Last updated: 2026-04-08
+> Last updated: 2026-07-22
 
 ## Route
 
@@ -64,6 +64,7 @@ SingleChildScrollView → Column(padding: 16)
     _StatCard('Best Streak', value: '$n weeks', icon: 🏆,
               subtitle: motivationalMessage(n))
   )
+  Tap a streak card → temporarily show `dd.MM.yyyy → dd.MM.yyyy`
   SizedBox(height: 24)
 
   ── Favorite day ──

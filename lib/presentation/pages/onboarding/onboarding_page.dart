@@ -331,8 +331,9 @@ class _CalendarPreview extends StatelessWidget {
                   final hasWorkout = state == 1 || state == 3;
                   final hasSupplement = state == 2 || state == 3;
 
-                  if (day == 0)
+                  if (day == 0) {
                     return const Expanded(child: SizedBox(height: 38));
+                  }
 
                   // Colours copied from _calendarDayBackground
                   Color bg;

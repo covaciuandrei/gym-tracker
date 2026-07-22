@@ -19,18 +19,21 @@ import '../cubit/auth/auth_cubit.dart' as _i548;
 import '../cubit/calendar/calendar_cubit.dart' as _i1060;
 import '../cubit/checking_update/checking_update_cubit.dart' as _i772;
 import '../cubit/health/health_cubit.dart' as _i829;
+import '../cubit/membership/membership_cubit.dart' as _i231;
 import '../cubit/settings/settings_cubit.dart' as _i411;
 import '../cubit/splash/splash_cubit.dart' as _i963;
 import '../cubit/stats/stats_cubit.dart' as _i730;
 import '../cubit/workout/workout_cubit.dart' as _i800;
 import '../data/mappers/app_config_mapper.dart' as _i710;
 import '../data/mappers/attendance_day_mapper.dart' as _i604;
+import '../data/mappers/gym_membership_mapper.dart' as _i169;
 import '../data/mappers/supplement_mapper.dart' as _i472;
 import '../data/mappers/training_type_mapper.dart' as _i660;
 import '../data/mappers/user_mapper.dart' as _i455;
 import '../data/remote/account/account_cleanup_source.dart' as _i243;
 import '../data/remote/app_config/app_config_source.dart' as _i892;
 import '../data/remote/attendance/attendance_day_source.dart' as _i497;
+import '../data/remote/membership/gym_membership_source.dart' as _i164;
 import '../data/remote/supplement/health_source.dart' as _i531;
 import '../data/remote/training_type/training_type_source.dart' as _i96;
 import '../data/remote/user/user_source.dart' as _i905;
@@ -42,6 +45,8 @@ import '../service/attendance/attendance_service.dart' as _i483;
 import '../service/auth/auth_service.dart' as _i637;
 import '../service/checking_update/checking_update_service.dart' as _i975;
 import '../service/health/health_service.dart' as _i17;
+import '../service/membership/gym_membership_service.dart' as _i874;
+import '../service/membership/membership_reminder_service.dart' as _i993;
 import '../service/user/user_service.dart' as _i729;
 import '../service/workout/workout_service.dart' as _i425;
 import 'app_router.dart' as _i313;
@@ -57,17 +62,21 @@ _i174.GetIt $initGetIt(
   final gh = _i526.GetItHelper(getIt, environment, environmentFilter);
   final firebaseModule = _$FirebaseModule();
   gh.factory<_i411.SettingsCubit>(() => _i411.SettingsCubit());
-  gh.factory<_i710.AppConfigMapper>(() => _i710.AppConfigMapper());
-  gh.factory<_i604.AttendanceDayMapper>(() => _i604.AttendanceDayMapper());
-  gh.factory<_i472.SupplementMapper>(() => _i472.SupplementMapper());
   gh.factory<_i660.TrainingTypeMapper>(() => _i660.TrainingTypeMapper());
+  gh.factory<_i604.AttendanceDayMapper>(() => _i604.AttendanceDayMapper());
   gh.factory<_i455.UserMapper>(() => _i455.UserMapper());
-  gh.lazySingleton<_i313.AppRouter>(() => _i313.AppRouter());
-  gh.lazySingleton<_i477.AppVersionStatus>(() => _i477.AppVersionStatus());
+  gh.factory<_i472.SupplementMapper>(() => _i472.SupplementMapper());
+  gh.factory<_i710.AppConfigMapper>(() => _i710.AppConfigMapper());
+  gh.factory<_i169.GymMembershipMapper>(() => _i169.GymMembershipMapper());
+  gh.factory<_i993.MembershipReminderService>(
+    () => const _i993.MembershipReminderService(),
+  );
   gh.lazySingleton<_i59.FirebaseAuth>(() => firebaseModule.firebaseAuth);
   gh.lazySingleton<_i974.FirebaseFirestore>(
     () => firebaseModule.firebaseFirestore,
   );
+  gh.lazySingleton<_i477.AppVersionStatus>(() => _i477.AppVersionStatus());
+  gh.lazySingleton<_i313.AppRouter>(() => _i313.AppRouter());
   gh.factory<_i531.HealthSource>(
     () => _i531.HealthSource(
       gh<_i974.FirebaseFirestore>(),
@@ -82,6 +91,12 @@ _i174.GetIt $initGetIt(
   );
   gh.factory<_i17.HealthService>(
     () => _i17.HealthService(gh<_i531.HealthSource>()),
+  );
+  gh.factory<_i164.GymMembershipSource>(
+    () => _i164.GymMembershipSource(
+      gh<_i974.FirebaseFirestore>(),
+      gh<_i169.GymMembershipMapper>(),
+    ),
   );
   gh.factory<_i637.AuthService>(
     () => _i637.AuthService(gh<_i59.FirebaseAuth>()),
@@ -129,11 +144,23 @@ _i174.GetIt $initGetIt(
   gh.factory<_i425.WorkoutService>(
     () => _i425.WorkoutService(gh<_i96.TrainingTypeSource>()),
   );
+  gh.factory<_i874.GymMembershipService>(
+    () => _i874.GymMembershipService(gh<_i164.GymMembershipSource>()),
+  );
   gh.factory<_i730.StatsCubit>(
     () => _i730.StatsCubit(
       gh<_i483.AttendanceService>(),
       gh<_i425.WorkoutService>(),
       gh<_i17.HealthService>(),
+    ),
+  );
+  gh.factory<_i1060.CalendarCubit>(
+    () => _i1060.CalendarCubit(
+      gh<_i483.AttendanceService>(),
+      gh<_i17.HealthService>(),
+      gh<_i425.WorkoutService>(),
+      gh<_i874.GymMembershipService>(),
+      gh<_i993.MembershipReminderService>(),
     ),
   );
   gh.factory<_i963.SplashCubit>(
@@ -145,12 +172,8 @@ _i174.GetIt $initGetIt(
       gh<_i477.AppVersionStatus>(),
     ),
   );
-  gh.factory<_i1060.CalendarCubit>(
-    () => _i1060.CalendarCubit(
-      gh<_i483.AttendanceService>(),
-      gh<_i17.HealthService>(),
-      gh<_i425.WorkoutService>(),
-    ),
+  gh.factory<_i231.MembershipCubit>(
+    () => _i231.MembershipCubit(gh<_i874.GymMembershipService>()),
   );
   gh.factory<_i502.AccountCleanupService>(
     () => _i502.AccountCleanupService(gh<_i243.AccountCleanupSource>()),

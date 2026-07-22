@@ -3,11 +3,14 @@ import 'dart:async';
 import 'package:gym_tracker/cubit/base_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/model/attendance_day.dart';
+import 'package:gym_tracker/model/gym_membership.dart';
 import 'package:gym_tracker/model/supplement_log.dart';
 import 'package:gym_tracker/model/supplement_product.dart';
 import 'package:gym_tracker/model/training_type.dart';
 import 'package:gym_tracker/service/attendance/attendance_service.dart';
 import 'package:gym_tracker/service/health/health_service.dart';
+import 'package:gym_tracker/service/membership/gym_membership_service.dart';
+import 'package:gym_tracker/service/membership/membership_reminder_service.dart';
 import 'package:gym_tracker/service/workout/workout_service.dart';
 import 'package:injectable/injectable.dart';
 
@@ -15,11 +18,19 @@ part 'calendar_states.dart';
 
 @injectable
 class CalendarCubit extends BaseCubit {
-  CalendarCubit(this._attendanceService, this._healthService, this._workoutService);
+  CalendarCubit(
+    this._attendanceService,
+    this._healthService,
+    this._workoutService,
+    this._membershipService,
+    this._membershipReminderService,
+  );
 
   final AttendanceService _attendanceService;
   final HealthService _healthService;
   final WorkoutService _workoutService;
+  final GymMembershipService _membershipService;
+  final MembershipReminderService _membershipReminderService;
 
   final List<StreamSubscription<List<AttendanceDay>>> _monthAttendanceSubscriptions =
       <StreamSubscription<List<AttendanceDay>>>[];
@@ -27,11 +38,24 @@ class CalendarCubit extends BaseCubit {
       <StreamSubscription<List<SupplementLog>>>[];
   StreamSubscription<List<SupplementProduct>>? _productsSubscription;
   StreamSubscription<List<TrainingType>>? _typesSubscription;
+  Timer? _membershipReminderTimer;
 
   List<AttendanceDay> _monthDays = const <AttendanceDay>[];
   List<SupplementLog> _monthLogs = const <SupplementLog>[];
   List<SupplementProduct> _products = const <SupplementProduct>[];
   List<TrainingType> _types = const <TrainingType>[];
+  GymMembership? _membership;
+  bool _membershipChecked = false;
+  bool _membershipReminderDismissed = false;
+  bool _membershipReminderEligible = false;
+  bool _monthReady = false;
+  bool _yearReady = false;
+  bool _yearViewActive = false;
+
+  Map<int, List<AttendanceDay>> _yearAttendanceByMonth = const <int, List<AttendanceDay>>{};
+  Map<int, List<SupplementLog>> _yearSupplementsByMonth = const <int, List<SupplementLog>>{};
+  List<TrainingType> _yearWorkoutTypes = const <TrainingType>[];
+  int _activeYear = 0;
 
   int _activeMonthYear = 0;
   int _activeMonth = 0;
@@ -61,7 +85,7 @@ class CalendarCubit extends BaseCubit {
   }
 
   void _emitMonthLoaded() {
-    if (_activeMonthYear == 0 || _activeMonth == 0) {
+    if (!_monthReady || _activeMonthYear == 0 || _activeMonth == 0) {
       return;
     }
     safeEmit(
@@ -70,10 +94,84 @@ class CalendarCubit extends BaseCubit {
         healthLogs: _monthLogs,
         products: _products,
         workoutTypes: _types,
+        membership: _membership,
+        membershipChecked: _membershipChecked,
+        membershipReminderDismissed: _membershipReminderDismissed,
+        membershipReminderEligible: _membershipReminderEligible,
         year: _activeMonthYear,
         month: _activeMonth,
       ),
     );
+  }
+
+  void _emitYearLoaded() {
+    if (!_yearReady || _activeYear == 0) return;
+    safeEmit(
+      CalendarYearLoadedState(
+        attendanceByMonth: _yearAttendanceByMonth,
+        supplementsByMonth: _yearSupplementsByMonth,
+        workoutTypes: _yearWorkoutTypes,
+        membership: _membership,
+        membershipChecked: _membershipChecked,
+        membershipReminderDismissed: _membershipReminderDismissed,
+        membershipReminderEligible: _membershipReminderEligible,
+        year: _activeYear,
+      ),
+    );
+  }
+
+  Future<void> loadMembershipOverview({required String userId, DateTime? accountCreatedAt}) async {
+    _membershipReminderTimer?.cancel();
+    _membershipReminderTimer = null;
+    try {
+      _membership = await _membershipService.getRelevant(userId: userId);
+      _membershipReminderDismissed = await _membershipReminderService.isPermanentlyDismissed(userId: userId);
+      _membershipReminderEligible = true;
+
+      if (_membership == null && !_membershipReminderDismissed) {
+        final remaining = _membershipReminderService.remainingInitialDelay(accountCreatedAt: accountCreatedAt);
+        _membershipReminderEligible = remaining == Duration.zero;
+        if (!_membershipReminderEligible) {
+          _membershipReminderTimer = Timer(remaining, () {
+            if (isClosed) return;
+            loadMembershipOverview(userId: userId, accountCreatedAt: accountCreatedAt);
+          });
+        }
+      }
+
+      _membershipChecked = true;
+      if (_yearViewActive) {
+        _emitYearLoaded();
+      } else {
+        _emitMonthLoaded();
+      }
+    } catch (_) {
+      // Membership reminders are supplementary and must never block Calendar.
+      _membershipChecked = false;
+      if (_yearViewActive) {
+        _emitYearLoaded();
+      } else {
+        _emitMonthLoaded();
+      }
+    }
+  }
+
+  Future<void> dismissMembershipReminder({required String userId}) async {
+    await guardedAction(() async {
+      try {
+        await _membershipReminderService.rememberPermanentDismissal(userId: userId);
+        _membershipReminderTimer?.cancel();
+        _membershipReminderTimer = null;
+        _membershipReminderDismissed = true;
+        if (_yearViewActive) {
+          _emitYearLoaded();
+        } else {
+          _emitMonthLoaded();
+        }
+      } catch (_) {
+        safeEmit(const SomethingWentWrongState());
+      }
+    });
   }
 
   /// Subscribes to attendance data for the given [year]/[month] and emits
@@ -108,6 +206,8 @@ class CalendarCubit extends BaseCubit {
 
     _activeMonthYear = year;
     _activeMonth = month;
+    _yearViewActive = false;
+    _monthReady = false;
     final token = ++_loadToken;
 
     _monthDays = const <AttendanceDay>[];
@@ -128,11 +228,13 @@ class CalendarCubit extends BaseCubit {
           (days) {
             _attendanceByMonthKey[currentKey] = days;
             _monthDays = _mergedAttendance();
+            _monthReady = true;
             _emitMonthLoaded();
           },
           onError: (_) {
             _attendanceByMonthKey[currentKey] = const <AttendanceDay>[];
             _monthDays = _mergedAttendance();
+            _monthReady = true;
             _emitMonthLoaded();
           },
         );
@@ -144,11 +246,13 @@ class CalendarCubit extends BaseCubit {
           (logs) {
             _healthByMonthKey[currentKey] = logs;
             _monthLogs = _mergedHealthLogs();
+            _monthReady = true;
             _emitMonthLoaded();
           },
           onError: (_) {
             _healthByMonthKey[currentKey] = const <SupplementLog>[];
             _monthLogs = _mergedHealthLogs();
+            _monthReady = true;
             _emitMonthLoaded();
           },
         );
@@ -222,6 +326,9 @@ class CalendarCubit extends BaseCubit {
   }
 
   Future<void> loadYear({required String userId, required int year}) async {
+    _yearViewActive = true;
+    _yearReady = false;
+    _activeYear = year;
     safeEmit(const PendingState());
     try {
       final attendanceFutures = <Future<List<AttendanceDay>>>[
@@ -258,14 +365,11 @@ class CalendarCubit extends BaseCubit {
           month: health[month - 1].where((log) => log.servingsTaken > 0).toList(growable: false),
       };
 
-      safeEmit(
-        CalendarYearLoadedState(
-          attendanceByMonth: attendanceByMonth,
-          supplementsByMonth: healthByMonth,
-          workoutTypes: types,
-          year: year,
-        ),
-      );
+      _yearAttendanceByMonth = attendanceByMonth;
+      _yearSupplementsByMonth = healthByMonth;
+      _yearWorkoutTypes = types;
+      _yearReady = true;
+      _emitYearLoaded();
     } catch (_) {
       safeEmit(const SomethingWentWrongState());
     }
@@ -348,6 +452,7 @@ class CalendarCubit extends BaseCubit {
 
   @override
   Future<void> close() async {
+    _membershipReminderTimer?.cancel();
     for (final sub in _monthAttendanceSubscriptions) {
       await sub.cancel();
     }

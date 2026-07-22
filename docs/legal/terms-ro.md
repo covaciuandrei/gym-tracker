@@ -1,7 +1,7 @@
 # Termeni și Condiții
 
-**Ultima actualizare:** 18 aprilie 2026
-**Data intrării în vigoare:** 18 aprilie 2026
+**Ultima actualizare:** 21 iulie 2026
+**Data intrării în vigoare:** 21 iulie 2026
 
 Bine ai venit la **Gym Tracker** (denumită în continuare „Aplicația"). Prezenții Termeni și Condiții („Termenii") reglementează accesul tău la Aplicație și modul în care o folosești. Prin crearea unui cont sau prin utilizarea Aplicației, ești de acord să respecți acești Termeni. Dacă nu ești de acord, te rugăm să nu folosești Aplicația.
 
@@ -9,7 +9,7 @@ Aplicația este operată de **Covaciu Andrei**, persoană fizică cu domiciliul 
 
 ## 1. Acceptare și scop
 
-Gym Tracker este o aplicație mobilă gratuită care îți permite să urmărești prezența la sală, tipul și durata antrenamentelor, precum și administrarea de suplimente, și să vizualizezi statistici personale pe baza acestor date. Acești Termeni formează un acord între tine și noi privind utilizarea Aplicației. În prezent nu se percepe niciun abonament, tarif sau achiziție în aplicație.
+Gym Tracker este o aplicație mobilă gratuită care îți permite să urmărești prezența la sală, plățile și valabilitatea abonamentelor la sală introduse manual, tipul și durata antrenamentelor, precum și administrarea de suplimente, și să vizualizezi statistici personale pe baza acestor date. Aplicația nu procesează plăți către săli. Acești Termeni formează un acord între tine și noi privind utilizarea Aplicației. În prezent nu se percepe niciun tarif sau achiziție în aplicație pentru utilizarea Gym Tracker.
 
 ## 2. Eligibilitate
 
@@ -39,7 +39,7 @@ Putem suspenda sau închide contul tău dacă încalci aceste reguli.
 
 ## 5. Conținutul utilizatorului
 
-Conținutul pe care îl adaugi în Aplicație — inclusiv prezențele la sală, tipurile de antrenament, produsele de suplimente și înregistrările de aport de suplimente („Conținutul tău") — îți aparține. Prin utilizarea Aplicației ne acorzi o licență limitată, neexclusivă, fără redevență, pentru a stoca, procesa și afișa Conținutul tău exclusiv în scopul operării și furnizării Aplicației către tine. Poți șterge Conținutul tău oricând, direct din Aplicație.
+Conținutul pe care îl adaugi în Aplicație — inclusiv prezențele la sală, detaliile abonamentelor la sală, tipurile de antrenament, produsele de suplimente și înregistrările de aport de suplimente („Conținutul tău") — îți aparține. Prin utilizarea Aplicației ne acorzi o licență limitată, neexclusivă, fără redevență, pentru a stoca, procesa și afișa Conținutul tău exclusiv în scopul operării și furnizării Aplicației către tine. Poți șterge Conținutul tău oricând, direct din Aplicație.
 
 ## 6. Aviz medical — nu constituie sfat medical
 

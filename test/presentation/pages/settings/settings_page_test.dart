@@ -303,7 +303,7 @@ void main() {
       expect(
         find.text(
           'This will permanently delete your account and all your data '
-          '(workouts, supplements logs, training types). '
+          '(workouts, supplement logs, training types, and gym memberships). '
           'This action cannot be undone.',
         ),
         findsOneWidget,

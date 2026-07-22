@@ -8,8 +8,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/cubit/calendar/calendar_cubit.dart';
 import 'package:gym_tracker/model/attendance_day.dart';
+import 'package:gym_tracker/model/gym_membership.dart';
 import 'package:gym_tracker/service/attendance/attendance_service.dart';
 import 'package:gym_tracker/service/health/health_service.dart';
+import 'package:gym_tracker/service/membership/gym_membership_service.dart';
+import 'package:gym_tracker/service/membership/membership_reminder_service.dart';
 import 'package:gym_tracker/service/workout/workout_service.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -20,6 +23,10 @@ class MockAttendanceService extends Mock implements AttendanceService {}
 class MockHealthService extends Mock implements HealthService {}
 
 class MockWorkoutService extends Mock implements WorkoutService {}
+
+class MockGymMembershipService extends Mock implements GymMembershipService {}
+
+class MockMembershipReminderService extends Mock implements MembershipReminderService {}
 
 class _FakeAttendanceDay extends Fake implements AttendanceDay {}
 
@@ -38,6 +45,16 @@ final _dayA = AttendanceDay(
 
 final _dayB = AttendanceDay(date: '2025-06-09', timestamp: DateTime(2025, 6, 9));
 
+final _membership = GymMembership(
+  id: 'membership_1',
+  gymName: 'Test Gym',
+  startDate: DateTime(2025, 6, 1),
+  durationMonths: 1,
+  validUntil: DateTime(2025, 7, 1),
+  priceMinor: 15000,
+  currency: 'RON',
+);
+
 // ─── Tests ────────────────────────────────────────────────────────────────
 
 void main() {
@@ -48,12 +65,16 @@ void main() {
   late MockAttendanceService mockService;
   late MockHealthService mockHealthService;
   late MockWorkoutService mockWorkoutService;
+  late MockGymMembershipService mockMembershipService;
+  late MockMembershipReminderService mockReminderService;
   late CalendarCubit sut;
 
   setUp(() {
     mockService = MockAttendanceService();
     mockHealthService = MockHealthService();
     mockWorkoutService = MockWorkoutService();
+    mockMembershipService = MockGymMembershipService();
+    mockReminderService = MockMembershipReminderService();
 
     // Stub the health and workout service methods that CalendarCubit calls
     when(
@@ -84,7 +105,13 @@ void main() {
 
     when(() => mockWorkoutService.watchAll(any<String>())).thenAnswer((_) => Stream.value([]));
 
-    sut = CalendarCubit(mockService, mockHealthService, mockWorkoutService);
+    when(() => mockMembershipService.getRelevant(userId: any(named: 'userId'))).thenAnswer((_) async => null);
+    when(() => mockReminderService.isPermanentlyDismissed(userId: any(named: 'userId'))).thenAnswer((_) async => false);
+    when(
+      () => mockReminderService.remainingInitialDelay(accountCreatedAt: any(named: 'accountCreatedAt')),
+    ).thenReturn(Duration.zero);
+
+    sut = CalendarCubit(mockService, mockHealthService, mockWorkoutService, mockMembershipService, mockReminderService);
   });
 
   tearDown(() => sut.close());
@@ -124,14 +151,109 @@ void main() {
       await future;
     });
 
-    test('emits pending then somethingWentWrong on stream error', () async {
+    test('degrades a stream error to an empty loaded state', () async {
       when(
         () => mockService.watchMonth(userId: _userId, year: _year, month: _month),
       ).thenAnswer((_) => Stream.error(Exception('network')));
 
-      final future = expectLater(sut.stream, emitsInOrder([const PendingState(), const SomethingWentWrongState()]));
+      final future = expectLater(
+        sut.stream,
+        emitsInOrder([
+          const PendingState(),
+          isA<CalendarMonthLoadedState>().having((state) => state.days, 'days', isEmpty),
+        ]),
+      );
       sut.loadMonth(userId: _userId, year: _year, month: _month);
       await future;
+    });
+  });
+
+  group('loadMembershipOverview', () {
+    test('adds checked membership data to the current calendar state', () async {
+      when(
+        () => mockService.watchMonth(userId: _userId, year: _year, month: _month),
+      ).thenAnswer((_) => Stream.value([]));
+      sut.loadMonth(userId: _userId, year: _year, month: _month);
+      await sut.stream.where((state) => state is CalendarMonthLoadedState).cast<CalendarMonthLoadedState>().first;
+
+      when(() => mockMembershipService.getRelevant(userId: _userId)).thenAnswer((_) async => _membership);
+      final updatedState = sut.stream
+          .where((state) => state is CalendarMonthLoadedState)
+          .cast<CalendarMonthLoadedState>()
+          .firstWhere((state) => state.membershipChecked);
+
+      await sut.loadMembershipOverview(userId: _userId);
+      final state = await updatedState;
+
+      expect(state.membership, _membership);
+      expect(state.membershipChecked, isTrue);
+      expect(state.membershipReminderEligible, isTrue);
+      expect(state.membershipReminderDismissed, isFalse);
+    });
+
+    test('keeps a missing-membership reminder ineligible during the new-account grace period', () async {
+      final accountCreatedAt = DateTime(2026, 7, 21, 10);
+      when(
+        () => mockService.watchMonth(userId: _userId, year: _year, month: _month),
+      ).thenAnswer((_) => Stream.value([]));
+      when(
+        () => mockReminderService.remainingInitialDelay(accountCreatedAt: accountCreatedAt),
+      ).thenReturn(const Duration(hours: 1));
+      sut.loadMonth(userId: _userId, year: _year, month: _month);
+      await sut.stream.where((state) => state is CalendarMonthLoadedState).cast<CalendarMonthLoadedState>().first;
+
+      final updatedState = sut.stream
+          .where((state) => state is CalendarMonthLoadedState)
+          .cast<CalendarMonthLoadedState>()
+          .firstWhere((state) => state.membershipChecked);
+      await sut.loadMembershipOverview(userId: _userId, accountCreatedAt: accountCreatedAt);
+      final state = await updatedState;
+
+      expect(state.membership, isNull);
+      expect(state.membershipReminderEligible, isFalse);
+    });
+
+    test('permanent dismissal is reflected in the loaded calendar state', () async {
+      when(
+        () => mockService.watchMonth(userId: _userId, year: _year, month: _month),
+      ).thenAnswer((_) => Stream.value([]));
+      when(() => mockReminderService.isPermanentlyDismissed(userId: _userId)).thenAnswer((_) async => true);
+      sut.loadMonth(userId: _userId, year: _year, month: _month);
+      await sut.stream.where((state) => state is CalendarMonthLoadedState).cast<CalendarMonthLoadedState>().first;
+
+      final updatedState = sut.stream
+          .where((state) => state is CalendarMonthLoadedState)
+          .cast<CalendarMonthLoadedState>()
+          .firstWhere((state) => state.membershipChecked);
+      await sut.loadMembershipOverview(userId: _userId);
+      final state = await updatedState;
+
+      expect(state.membershipReminderDismissed, isTrue);
+    });
+
+    test('dismissMembershipReminder persists and re-emits the calendar state', () async {
+      when(
+        () => mockService.watchMonth(userId: _userId, year: _year, month: _month),
+      ).thenAnswer((_) => Stream.value([]));
+      when(() => mockReminderService.rememberPermanentDismissal(userId: _userId)).thenAnswer((_) async {});
+      sut.loadMonth(userId: _userId, year: _year, month: _month);
+      await sut.stream.where((state) => state is CalendarMonthLoadedState).cast<CalendarMonthLoadedState>().first;
+      await sut.loadMembershipOverview(userId: _userId);
+
+      final expectation = expectLater(
+        sut.stream,
+        emitsInOrder([
+          const PendingState(),
+          isA<CalendarMonthLoadedState>().having(
+            (state) => state.membershipReminderDismissed,
+            'membershipReminderDismissed',
+            isTrue,
+          ),
+        ]),
+      );
+      await sut.dismissMembershipReminder(userId: _userId);
+      await expectation;
+      verify(() => mockReminderService.rememberPermanentDismissal(userId: _userId)).called(1);
     });
   });
 

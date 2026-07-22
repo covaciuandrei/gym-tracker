@@ -1,7 +1,7 @@
 # Terms of Service
 
-**Last Updated:** 18 April 2026
-**Effective Date:** 18 April 2026
+**Last Updated:** 21 July 2026
+**Effective Date:** 21 July 2026
 
 Welcome to **Gym Tracker** (the "App"). These Terms of Service ("Terms") govern your access to and use of the App. By creating an account or otherwise using the App, you agree to be bound by these Terms. If you do not agree, do not use the App.
 
@@ -9,7 +9,7 @@ The App is operated by **Covaciu Andrei**, an individual established in Romania 
 
 ## 1. Acceptance and Scope
 
-Gym Tracker is a free mobile application that lets you track gym attendance, workout types and durations, and supplement intake, and view personal statistics derived from that data. These Terms form a binding agreement between you and us regarding your use of the App. No subscription, fee, or in-app purchase is currently required.
+Gym Tracker is a free mobile application that lets you track gym attendance, manually entered gym-membership purchases and validity, workout types and durations, and supplement intake, and view personal statistics derived from that data. The App does not process payments to gyms. These Terms form a binding agreement between you and us regarding your use of the App. No fee or in-app purchase is currently required to use Gym Tracker.
 
 ## 2. Eligibility
 
@@ -39,7 +39,7 @@ We may suspend or terminate your access if you breach these rules.
 
 ## 5. User Content
 
-Content you add to the App — including attendance entries, workout types, supplement products, and supplement intake logs ("Your Content") — belongs to you. By using the App, you grant us a limited, non-exclusive, royalty-free licence to store, process, and display Your Content solely to operate and provide the App to you. You can delete Your Content at any time from within the App.
+Content you add to the App — including attendance entries, gym-membership details, workout types, supplement products, and supplement intake logs ("Your Content") — belongs to you. By using the App, you grant us a limited, non-exclusive, royalty-free licence to store, process, and display Your Content solely to operate and provide the App to you. You can delete Your Content at any time from within the App.
 
 ## 6. Health Disclaimer — Not Medical Advice
 

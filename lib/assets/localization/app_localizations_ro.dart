@@ -535,6 +535,13 @@ class AppLocalizationsRo extends AppLocalizations {
   String get profileWorkoutTypes => 'Tipuri de Antrenament';
 
   @override
+  String get profileMembershipHistory => 'Istoric abonamente la sală';
+
+  @override
+  String get profileMembershipHistorySubtitle =>
+      'Urmărește plățile și valabilitatea';
+
+  @override
   String get profileSettings => 'Setări';
 
   @override
@@ -873,7 +880,7 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get settingsDeleteAccountMessage =>
-      'Aceasta va șterge permanent contul tău și toate datele asociate (antrenamente, înregistrări suplimente, tipuri de antrenament). Această acțiune nu poate fi anulată.';
+      'Aceasta va șterge permanent contul tău și toate datele asociate (antrenamente, înregistrări suplimente, tipuri de antrenament și abonamente la sală). Această acțiune nu poate fi anulată.';
 
   @override
   String get settingsDeleteAccountConfirm => 'Șterge Contul Meu';
@@ -966,4 +973,139 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get bigUpdateLater => 'Mai târziu';
+
+  @override
+  String get membershipHistoryTitle => 'Istoric abonamente la sală';
+
+  @override
+  String get membershipAdd => 'Adaugă abonament';
+
+  @override
+  String get membershipAddFirst => 'Adaugă primul abonament';
+
+  @override
+  String get membershipEdit => 'Editează abonamentul';
+
+  @override
+  String get membershipRenew => 'Reînnoiește abonamentul';
+
+  @override
+  String get membershipDelete => 'Șterge';
+
+  @override
+  String get membershipDeleteTitle => 'Șterge abonamentul';
+
+  @override
+  String membershipDeleteConfirm(String gymName) {
+    return 'Ștergi abonamentul pentru $gymName? Acțiunea nu poate fi anulată.';
+  }
+
+  @override
+  String get membershipEmptyTitle => 'Niciun abonament adăugat';
+
+  @override
+  String get membershipEmptyMessage =>
+      'Adaugă un abonament plătit pentru a-i urmări valabilitatea lângă calendarul antrenamentelor.';
+
+  @override
+  String get membershipGymName => 'Numele sălii';
+
+  @override
+  String get membershipGymNameHint => 'ex. Sala Centrală';
+
+  @override
+  String get membershipStartDate => 'Data plății / începerii';
+
+  @override
+  String get membershipDuration => 'Valabilitate';
+
+  @override
+  String get membershipDurationOneMonth => '1 lună';
+
+  @override
+  String get membershipDurationThreeMonths => '3 luni';
+
+  @override
+  String get membershipDurationSixMonths => '6 luni';
+
+  @override
+  String get membershipDurationTwelveMonths => '12 luni';
+
+  @override
+  String membershipValidUntilValue(String date) {
+    return 'Valabil până la $date';
+  }
+
+  @override
+  String get membershipPrice => 'Preț';
+
+  @override
+  String get membershipPriceHint => 'ex. 150,00';
+
+  @override
+  String get membershipCurrency => 'Monedă';
+
+  @override
+  String get membershipStatusUpcoming => 'Urmează';
+
+  @override
+  String get membershipStatusExpired => 'Expirat';
+
+  @override
+  String membershipDaysRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count de zile rămase',
+      few: '$count zile rămase',
+      one: '1 zi rămasă',
+      zero: 'Expiră astăzi',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get membershipMoreActions => 'Acțiuni abonament';
+
+  @override
+  String get membershipCopyPromptTitle =>
+      'Refolosești detaliile ultimului abonament?';
+
+  @override
+  String get membershipCopyPromptMessage =>
+      'Copiază sala, valabilitatea, prețul și moneda din cel mai recent abonament. Data de început va fi resetată la astăzi.';
+
+  @override
+  String get membershipCopyLast => 'Copiază detaliile';
+
+  @override
+  String get membershipStartFresh => 'Începe de la zero';
+
+  @override
+  String get membershipCreated => 'Abonamentul a fost adăugat.';
+
+  @override
+  String get membershipUpdated => 'Abonamentul a fost actualizat.';
+
+  @override
+  String get membershipDeleted => 'Abonamentul a fost șters.';
+
+  @override
+  String get membershipCalendarExpiredTitle => 'Abonament expirat';
+
+  @override
+  String membershipCalendarExpiredMessage(String gymName, String date) {
+    return 'Abonamentul $gymName a expirat la $date. Adaugă noua perioadă plătită când îl reînnoiești.';
+  }
+
+  @override
+  String get membershipCalendarMissingTitle => 'Niciun abonament înregistrat';
+
+  @override
+  String get membershipCalendarMissingMessage =>
+      'Adaugă unul pentru a-i urmări valabilitatea împreună cu antrenamentele.';
+
+  @override
+  String get membershipCalendarDismiss =>
+      'Închide notificarea despre abonament';
 }

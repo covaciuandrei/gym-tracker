@@ -1,6 +1,6 @@
 # Profile Page — Screen Doc
 
-> Last updated: 2026-05-11
+> Last updated: 2026-07-21
 
 ## Route
 
@@ -46,6 +46,10 @@ Scaffold(backgroundColor: cs.surfaceContainerLow)
           ── MANAGE section ──
           _SectionHeader("MANAGE")
           Card(surfaceContainerHigh, borderRadius: 16) [
+            ListTile(card_membership_outlined, "Membership history", chevron)
+              subtitle: "Track purchases and validity"
+              → MembershipHistoryRoute
+            Divider
             ListTile(settings, "Settings", chevron) → SettingsRoute
           ]
 
@@ -84,7 +88,8 @@ Scaffold(backgroundColor: cs.surfaceContainerLow)
 ## Navigation In/Out
 
 - IN: MainShell tab 4
-- OUT: → `SettingsRoute` (push), → `LoginRoute` (replace on sign out)
+- OUT: → `MembershipHistoryRoute` (push), → `SettingsRoute` (push),
+  → `LoginRoute` (replace on sign out)
 
 ## Status
 
@@ -140,10 +145,11 @@ Scaffold
         Card(elevation: 0, color: cs.surfaceContainerHigh, borderRadius: 16)
           Column
             ListTile(
-              leading: Icon(Icons.fitness_center, color: cs.primary),
-              title: Text('Workout Types', style: tt.titleMedium),
+              leading: Icon(Icons.card_membership_outlined, color: cs.primary),
+              title: Text('Membership history', style: tt.titleMedium),
+              subtitle: Text('Track purchases and validity'),
               trailing: Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
-              onTap: () => context.router.push(const WorkoutTypesRoute()),
+              onTap: () => context.router.push(MembershipHistoryRoute()),
             )
             Divider(indent: 16, endIndent: 16, height: 1)
             ListTile(
@@ -171,7 +177,7 @@ Scaffold
 ## Interactions
 | Element | Action |
 |---|---|
-| "Workout Types" tile | `context.router.push(WorkoutTypesRoute())` |
+| "Membership history" tile | `context.router.push(MembershipHistoryRoute())` |
 | "Settings" tile | `context.router.push(SettingsRoute())` |
 | "Sign Out" tile | `context.read<AuthCubit>().signOut()` |
 
@@ -208,4 +214,4 @@ final user = FirebaseAuth.instance.currentUser;
 
 ## Navigation In/Out
 - IN: MainShell tab 3
-- OUT: → `WorkoutTypesRoute` (push), → `SettingsRoute` (push), → `LoginRoute` (replace on sign out)
+- OUT: → `MembershipHistoryRoute` (push), → `SettingsRoute` (push), → `LoginRoute` (replace on sign out)

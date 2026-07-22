@@ -1,5 +1,4 @@
-# Uncomment this line to define a global platform for your project
-# platform :ios, '13.0'
+platform :ios, '13.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -39,5 +38,19 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+
+    # Some Firebase transitive pods still declare obsolete iOS 9/10 targets.
+    # Keep every generated pod target aligned with Runner's minimum version.
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+    end
+
+    # gRPC, BoringSSL, and abseil intentionally update generated header
+    # symlinks on every build and have no stable output-file declaration.
+    target.build_phases.each do |phase|
+      next unless phase.respond_to?(:name) && phase.name == 'Create Symlinks to Header Folders'
+
+      phase.always_out_of_date = '1'
+    end
   end
 end

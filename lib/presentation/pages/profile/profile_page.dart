@@ -74,6 +74,17 @@ class _ProfilePageState extends State<ProfilePage> {
                         child: Column(
                           children: [
                             ListTile(
+                              leading: Icon(Icons.card_membership_outlined, color: cs.primary),
+                              title: Text(l10n.profileMembershipHistory),
+                              subtitle: Text(
+                                l10n.profileMembershipHistorySubtitle,
+                                style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                              ),
+                              trailing: Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
+                              onTap: () => ctx.router.push(MembershipHistoryRoute()),
+                            ),
+                            const Divider(indent: 16, endIndent: 16, height: 1),
+                            ListTile(
                               leading: Icon(Icons.settings, color: cs.primary),
                               title: Text(l10n.profileSettings),
                               trailing: Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
