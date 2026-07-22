@@ -92,7 +92,9 @@ void main() {
     // tests override as needed.
     when(() => onboarding.isFirstLaunch).thenReturn(false);
     when(() => locale.locale).thenReturn(const Locale('en'));
-    when(() => auth.currentUser).thenReturn(MockUser());
+    final verifiedUser = MockUser();
+    when(() => verifiedUser.emailVerified).thenReturn(true);
+    when(() => auth.currentUser).thenReturn(verifiedUser);
   });
 
   _TestSplashCubit buildSut({required String version, bool android = true}) =>
@@ -185,13 +187,29 @@ void main() {
     test('returning user signed in → main shell', () async {
       when(() => service.getAppConfig()).thenAnswer((_) async => _config(latest: '1.0.0'));
       when(() => onboarding.isFirstLaunch).thenReturn(false);
-      when(() => auth.currentUser).thenReturn(MockUser());
+      final verifiedUser = MockUser();
+      when(() => verifiedUser.emailVerified).thenReturn(true);
+      when(() => auth.currentUser).thenReturn(verifiedUser);
       final sut = buildSut(version: '1.0.0');
 
       final future = expectLater(
         sut.stream,
         emitsInOrder([const PendingState(), const SplashNavigateMainShellState()]),
       );
+      await sut.start(minSplashDuration: Duration.zero);
+      await future;
+      await sut.close();
+    });
+
+    test('unverified Firebase session → login', () async {
+      when(() => service.getAppConfig()).thenAnswer((_) async => _config(latest: '1.0.0'));
+      when(() => onboarding.isFirstLaunch).thenReturn(false);
+      final unverifiedUser = MockUser();
+      when(() => unverifiedUser.emailVerified).thenReturn(false);
+      when(() => auth.currentUser).thenReturn(unverifiedUser);
+      final sut = buildSut(version: '1.0.0');
+
+      final future = expectLater(sut.stream, emitsInOrder([const PendingState(), const SplashNavigateLoginState()]));
       await sut.start(minSplashDuration: Duration.zero);
       await future;
       await sut.close();

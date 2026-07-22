@@ -138,6 +138,7 @@ void main() {
   group('signUp', () {
     test('emits pending then signUpSuccess', () async {
       when(() => mockService.signUp(email: _email, password: _password)).thenAnswer((_) async => _fakeUser);
+      when(() => mockService.signOut()).thenAnswer((_) async {});
       final future = expectLater(sut.stream, emitsInOrder([const PendingState(), const AuthSignUpSuccessState()]));
       await sut.signUp(
         email: _email,
@@ -158,10 +159,12 @@ void main() {
           consent: const <String, Object?>{'termsAccepted': true},
         ),
       ).called(1);
+      verify(() => mockService.signOut()).called(1);
     });
 
     test('seeds RON when a Romanian account is created', () async {
       when(() => mockService.signUp(email: _email, password: _password)).thenAnswer((_) async => _fakeUser);
+      when(() => mockService.signOut()).thenAnswer((_) async {});
 
       await sut.signUp(
         email: _email,

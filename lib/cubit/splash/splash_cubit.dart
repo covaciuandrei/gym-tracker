@@ -109,7 +109,7 @@ class SplashCubit extends BaseCubit {
     if (_onboardingHelper.isFirstLaunch) {
       return const SplashNavigateOnboardingState();
     }
-    if (_authInstance.currentUser != null) {
+    if (_authInstance.currentUser?.emailVerified == true) {
       return const SplashNavigateMainShellState();
     }
     return const SplashNavigateLoginState();

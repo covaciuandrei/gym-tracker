@@ -71,6 +71,7 @@ class AuthCubit extends BaseCubit {
       try {
         final user = await _authService.signUp(email: email, password: password);
         await _createUser(user: user, displayName: displayName, language: language, consent: consent);
+        await _authService.signOut();
         safeEmit(const AuthSignUpSuccessState());
       } on EmailAlreadyInUseException {
         safeEmit(const AuthEmailAlreadyInUseState());
