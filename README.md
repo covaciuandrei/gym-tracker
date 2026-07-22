@@ -71,12 +71,12 @@ The Health page has **three tabs**:
 
 - **Today** — every supplement you've logged today, grouped by product, with brand, servings count, and per-entry remove.
 - **My Supplements** — products you have personally created. Search, edit, or delete them. Tap **+** to add a new one.
-- **All Supplements** — the **global catalog** shared by all users (your own products + everyone else's). Verified products show a badge. Search by name/brand and quick-log to today.
+- **All Supplements** — the **global catalog** shared by all users (your own products + everyone else's). Search by name/brand and tap a product to quick-log its default servings for today.
 
 When you create a supplement product you provide:
 
 - Name, brand, default servings per day.
-- An **ingredient list**, autocompleted from a shared `ingredients` collection (vitamins, minerals, etc. — each with a standardized id, amount, and unit).
+- A manually entered **ingredient list** (name, amount, and unit). The app generates a local standardized ID from each ingredient name; Firestore-backed autocomplete is a future improvement.
 
 Logging a supplement records it against the current day in your `healthLogs`, ready to be visualized in stats.
 
@@ -110,7 +110,7 @@ All tabs share unified loading skeletons and "no data" empty states.
 ### Authentication & onboarding
 
 - Email + password sign-in / sign-up via **Firebase Auth**.
-- Email verification, password reset, and resend-verification flows (with cooldown tracking).
+- Email verification and password reset through Firebase's hosted action pages. Newly registered users are signed out until they return with a verified email.
 - **Mandatory legal consent** on Register — user must tick an "I have read and agree to the [Terms of Service] and [Privacy Policy]" checkbox (links open the localized hosted page) before the account is created. Required by GDPR Art. 9(2)(a) since the app collects health-related data.
 - First-launch **onboarding** walkthrough.
 
@@ -390,8 +390,8 @@ On every cold launch, `SplashCubit` fetches `appConfig/version` and routes the u
 | `currentVersion < minRequired` | `ForceUpdatePage`  | Blocking, opens store URL                |
 | Network/config fetch failed    | `NoConnectionPage` | Blocking, with retry                     |
 | First launch                   | `OnboardingPage`   | One-time walkthrough                     |
-| Signed in                      | `MainShellPage`    | Normal app entry                         |
-| Signed out                     | `LoginPage`        | Normal auth entry                        |
+| Signed in + email verified     | `MainShellPage`    | Normal app entry                         |
+| Signed out or unverified       | `LoginPage`        | Normal auth entry                        |
 
 After reaching `MainShellPage`, `CheckingUpdateCubit` may also surface a soft `BigUpdateBottomSheet` when `latestVersion` is a "big" jump (major bump, or minor diff ≥ 2). It respects a 3-day per-version snooze stored in `SharedPreferences`.
 
@@ -408,7 +408,7 @@ users/{userId}/
 └── gymMemberships/{membershipId}
 
 supplementProducts/{productId}
-ingredients/{stdId}
+ingredients/{stdId}  (reserved; not read by the current app)
 appConfig/version
 ```
 

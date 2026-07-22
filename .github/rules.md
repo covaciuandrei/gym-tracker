@@ -193,6 +193,17 @@ When building or updating a page's UI, **always** follow this sequence:
 
 ---
 
+## Feature Documentation
+
+- `docs/features/` is the canonical source for end-to-end feature behavior and code flow; `docs/screens/` remains the source for per-screen layout and interaction details.
+- **Before changing a feature**, read its matching `docs/features/<feature>.md` file in addition to the relevant screen prep doc.
+- Any change to a feature's behavior, data model, navigation, cubit states, business rules, or user workflow **must update the matching feature map in the same change set**.
+- Every new user-facing feature must add a feature map based on `docs/features/_TEMPLATE.md` and an entry in `docs/features/README.md`.
+- Every documented workflow must include both a Mermaid diagram and a short numbered **In plain English** explanation.
+- Keep the feature status, last-updated date, key-file links, tests, edge cases, and known limitations accurate. Never leave a feature marked complete while it still contains TODO placeholders.
+
+---
+
 ## Sources & Mappers
 
 - **Every source:** `@injectable`, `const` constructor, receives mapper and `FirebaseFirestore` instance via injection.

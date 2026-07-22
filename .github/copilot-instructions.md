@@ -106,7 +106,7 @@ decoration: BoxDecoration(
 | `empty_state.dart`                 | No-data placeholder (emoji + title + optional CTA). Use when a list/section has zero items.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `confirmation_dialog.dart`         | Generic yes/no destructive confirmation dialog with customizable labels and confirm color.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `action_bottom_sheet.dart`         | Reusable draggable modal-sheet scaffold (handle, title, body, footer). Use for create/edit forms and action sheets.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `membership_form_sheet.dart`       | Create/edit form for one manually purchased gym-membership period. Owns only local draft state; supports gym, integer minor-unit price, per-record currency, editable start date, and 1/3/6/12-month validity presets. The 1-month option adds exactly 30 date-only days; 3/6/12 use calendar-month arithmetic. Returns `GymMembershipDraft`; persistence stays in `MembershipCubit`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `membership_form_sheet.dart`       | Create/edit form for one manually purchased gym-membership period. Owns only local draft state; supports gym, integer minor-unit price, per-record currency, editable start date, and 1/3/6/12-month validity presets. The 1-month option adds exactly 30 date-only days; 3/6/12 use calendar-month arithmetic. Returns `GymMembershipDraft`; persistence stays in `MembershipCubit`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `password_strength_indicator.dart` | Animated strength bar + 4 requirement bullets. Add below every new-password field. Uses `ListenableBuilder` — no setState.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `password_match_indicator.dart`    | Green/red match label below confirm-password field. Uses `ListenableBuilder.merge` — no setState.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `form_card.dart`                   | Styled card container for auth forms (shadow, rounded corners, `surfaceContainerHigh` bg). Takes `formKey` + `children`; wraps them in `AutofillGroup > Form > Column`. **Use as the base for every form panel instead of duplicating the decoration.**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
@@ -143,6 +143,7 @@ decoration: BoxDecoration(
 | Firestore sources + DTOs | `lib/data/remote/<feature>/`                                 |
 | Mappers                  | `lib/data/mappers/`                                          |
 | Screen prep docs         | `docs/screens/<page_name>.md`                                |
+| Feature behavior maps    | `docs/features/<feature>.md`                                 |
 | App version status cache | `lib/core/app_version_status.dart`                           |
 | App version gate docs    | `docs/app_version_gate/`                                     |
 
@@ -178,7 +179,7 @@ decoration: BoxDecoration(
 **Auth gating in current implementation:**
 
 - `SplashPage` runs the `SplashCubit` version gate **before** evaluating auth; it then `replaceAll`s with one of the terminal routes: `MaintenanceRoute`, `ForceUpdateRoute`, `NoConnectionRoute`, `OnboardingRoute`, `MainShellRoute`, or `LoginRoute`.
-- `AuthGuard` (`lib/core/guards/auth_guard.dart`) is attached to `MainShellRoute`, `WorkoutTypesRoute`, `SettingsRoute`, `ChangePasswordRoute`, and `MembershipHistoryRoute`. It redirects to `LoginRoute` whenever `FirebaseAuth.instance.currentUser == null`. Authenticated-only pages can safely use `getIt<FirebaseAuth>().currentUser!.uid` in `build()`.
+- `AuthGuard` (`lib/core/guards/auth_guard.dart`) is attached to `MainShellRoute`, `WorkoutTypesRoute`, `SettingsRoute`, `ChangePasswordRoute`, and `MembershipHistoryRoute`. It allows only a non-null Firebase user whose `emailVerified` is true; null or unverified sessions redirect to `LoginRoute`. Authenticated-only pages can safely use `getIt<FirebaseAuth>().currentUser!.uid` in `build()`.
 - `OnboardingGuard` (`lib/core/guards/onboarding_guard.dart`) is attached to `MainShellRoute` and redirects to `OnboardingRoute` when `OnboardingHelper.isFirstLaunch` is true (defense-in-depth on top of the Splash gate).
 - Pages still listen to `AuthCubit` (`AuthSignOutSuccessState`, `AuthUnauthenticatedState`) to handle **runtime** sign-out — that's a separate concern from entry guards.
 
@@ -189,7 +190,7 @@ decoration: BoxDecoration(
 | Component                   | Actions / State                                                                                                                                                                                                                                                                                                      |
 | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **LoginComponent**          | `email`, `password` fields; `onSubmit()` → `AuthCubit.signIn()` → emits `AuthSignInSuccessState` → navigate `MainShell`; emits `AuthInvalidCredentialsState` or `AuthEmailNotVerifiedState` on failure; link to `/register`, `/forgot-password`                                                                      |
-| **RegisterComponent**       | `email`, `password`, `confirmPassword`, `displayName`; GDPR consent checkbox (required); validates: email format, password ≥8 chars + uppercase + lowercase + number, passwords match; `onSubmit()` → `AuthCubit.signUp({email, password, displayName, consent})` → emits `AuthSignUpSuccessState`; link to `/login` |
+| **RegisterComponent**       | `email`, `password`, `confirmPassword`, `displayName`; age 16+ and GDPR consent checkboxes (required); validates email/password/match; `AuthCubit.signUp({email, password, displayName, language, consent})` creates the profile, seeds currency, mirrors the display name, signs out the unverified Firebase session, then emits `AuthSignUpSuccessState`; link to `/login` |
 | **ForgotPasswordComponent** | `email` field; `onSubmit()` → `AuthCubit.resetPassword({email})` → emits `AuthPasswordResetSentState`; link back to `/login`                                                                                                                                                                                         |
 
 **AuthCubit states:** `AuthAuthenticatedState`, `AuthUnauthenticatedState`, `AuthSignInSuccessState`, `AuthSignUpSuccessState`, `AuthSignOutSuccessState`, `AuthPasswordResetSentState`, `AuthPasswordChangedState`, `AuthAccountDeletedState`, `AuthEmailNotVerifiedState`, `AuthInvalidCredentialsState`, `AuthEmailAlreadyInUseState`, `AuthWeakPasswordState`.
@@ -198,40 +199,40 @@ decoration: BoxDecoration(
 
 #### CALENDAR FEATURE
 
-| Aspect                     | Detail                                                                                                                                      |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| **View modes**             | `monthly` (default) and `yearly` toggle                                                                                                     |
-| **Monthly grid**           | 7-col Mon-first grid, 42 cells (prev/current/next month days), today highlighted                                                            |
-| **Yearly grid**            | 12 mini-month grids side by side, same Mon-first layout                                                                                     |
-| **Day cell states**        | `attended` (workout only), `supplement` only, `both`, plain/today                                                                           |
-| **Day cell colours**       | workout=`calWorkout` (#3b82f6), supplement=`calSupplement` (#10b981), both=`calBoth` (#06b6d4)                                              |
-| **Day cell icon**          | Shows workout-type emoji icon if a type was assigned                                                                                        |
-| **Navigation**             | ← → arrows (prev/next month or prev/next year); year shown in header                                                                        |
-| **Day tap → popup**        | Bottom sheet / dialog with two tabs: **Workout** tab and **Health** tab                                                                     |
-| **Workout tab actions**    | Toggle attendance (mark/unmark); select workout type from dropdown; select duration (optional); edit type/duration on already-attended days |
-| **Health tab actions**     | Show today's supplement logs (carousel with pages of 2); log a supplement (product dropdown); remove individual supplement log              |
-| **Data loading**           | Monthly view subscribes live to the current month and prefetches prev/next once in the background via `get()`; yearly loads full year       |
-| **Workout types dropdown** | Custom dropdown (not native select); shows emoji + name + colour dot                                                                        |
-| **Products dropdown**      | Custom dropdown for supplement selection                                                                                                    |
-| **Skeleton loading**       | Array(42) skeleton cells during load                                                                                                        |
+| Aspect                     | Detail                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **View modes**             | `monthly` (default) and `yearly` toggle                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **Monthly grid**           | 7-col Mon-first grid, 42 cells (prev/current/next month days), today highlighted                                                                                                                                                                                                                                                                                                                                                               |
+| **Yearly grid**            | 12 mini-month grids side by side, same Mon-first layout                                                                                                                                                                                                                                                                                                                                                                                        |
+| **Day cell states**        | `attended` (workout only), `supplement` only, `both`, plain/today                                                                                                                                                                                                                                                                                                                                                                              |
+| **Day cell colours**       | workout=`calWorkout` (#3b82f6), supplement=`calSupplement` (#10b981), both=`calBoth` (#06b6d4)                                                                                                                                                                                                                                                                                                                                                 |
+| **Day cell icon**          | Shows workout-type emoji icon if a type was assigned                                                                                                                                                                                                                                                                                                                                                                                           |
+| **Navigation**             | ← → arrows (prev/next month or prev/next year); year shown in header                                                                                                                                                                                                                                                                                                                                                                           |
+| **Day tap → popup**        | Bottom sheet / dialog with two tabs: **Workout** tab and **Health** tab                                                                                                                                                                                                                                                                                                                                                                        |
+| **Workout tab actions**    | Toggle attendance (mark/unmark); select workout type from dropdown; select duration (optional); edit type/duration on already-attended days                                                                                                                                                                                                                                                                                                    |
+| **Health tab actions**     | Show today's supplement logs (carousel with pages of 2); log a supplement (product dropdown); remove individual supplement log                                                                                                                                                                                                                                                                                                                 |
+| **Data loading**           | Monthly view subscribes live to the current month and prefetches prev/next once in the background via `get()`; yearly loads full year                                                                                                                                                                                                                                                                                                          |
+| **Workout types dropdown** | Custom dropdown (not native select); shows emoji + name + colour dot                                                                                                                                                                                                                                                                                                                                                                           |
+| **Products dropdown**      | Custom dropdown for supplement selection                                                                                                                                                                                                                                                                                                                                                                                                       |
+| **Skeleton loading**       | Array(42) skeleton cells during load                                                                                                                                                                                                                                                                                                                                                                                                           |
 | **Membership reminder**    | Best-effort `CalendarCubit.loadMembershipOverview()` check. Expired history is eligible immediately; a brand-new account with no history gets a 2-hour grace period. Dismissal is permanent per user via `MembershipReminderService` + `SharedPreferences`. The banner CTA opens `MembershipHistoryRoute(startAddFlow: true)`; a right app-bar shortcut opens history whenever no membership is active. Calendar never writes membership data. |
 
 #### GYM MEMBERSHIP FEATURE
 
-| Aspect                   | Detail                                                                                                                                                              |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Purpose**              | Manual history of paid gym-membership periods. The app does not process payments, infer purchases, cancel records, or auto-renew them.                              |
-| **History page**         | Newest-first list with loading skeleton, error/empty states, and pull-to-refresh. Empty history uses a centered Add first membership CTA; the add FAB appears only when records exist. |
-| **Create flow**          | First record opens a blank form. Later records offer Copy last details or Start fresh; copied records reset the start date to today.                                |
-| **Record actions**       | Renew creates a new copied historical record; Edit updates the selected record; Delete confirms and permanently removes only that record.                           |
-| **Fields**               | Gym name, editable purchase/start date, 1/3/6/12-month validity presets, integer `priceMinor`, and per-record EUR/GBP/RON/USD currency.                              |
-| **Derived status**       | Upcoming, active, expires today / days remaining, or expired are derived from inclusive date-only `startDate` and `validUntil`; status is never stored in Firestore. |
-| **Validity rules**       | 1 month adds exactly 30 date-only days. The 3/6/12-month options use calendar-month arithmetic and clamp invalid target days.                                       |
-| **Navigation**           | `/membership-history`, authenticated; opened from Profile, the Calendar reminder, or the Calendar app-bar shortcut.                                                 |
+| Aspect             | Detail                                                                                                                                                                                 |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Purpose**        | Manual history of paid gym-membership periods. The app does not process payments, infer purchases, cancel records, or auto-renew them.                                                 |
+| **History page**   | Newest-first list with loading skeleton, error/empty states, and pull-to-refresh. Empty history uses a centered Add first membership CTA; the add FAB appears only when records exist. |
+| **Create flow**    | First record opens a blank form. Later records offer Copy last details or Start fresh; copied records reset the start date to today.                                                   |
+| **Record actions** | Renew creates a new copied historical record; Edit updates the selected record; Delete confirms and permanently removes only that record.                                              |
+| **Fields**         | Gym name, editable purchase/start date, 1/3/6/12-month validity presets, integer `priceMinor`, and per-record EUR/GBP/RON/USD currency.                                                |
+| **Derived status** | Upcoming, active, expires today / days remaining, or expired are derived from inclusive date-only `startDate` and `validUntil`; status is never stored in Firestore.                   |
+| **Validity rules** | 1 month adds exactly 30 date-only days. The 3/6/12-month options use calendar-month arithmetic and clamp invalid target days.                                                          |
+| **Navigation**     | `/membership-history`, authenticated; opened from Profile, the Calendar reminder, or the Calendar app-bar shortcut.                                                                    |
 
 #### STATS FEATURE
 
-Stats is a **shell with 4 sub-tabs**. The year is shared via query param `?year=`.
+Stats is a **shell with 4 sub-tabs**. The selected year starts at the current year and is held locally in `StatsView`; it is not currently written to a route query parameter.
 
 | Tab             | What it shows                                                                                                           |
 | --------------- | ----------------------------------------------------------------------------------------------------------------------- |
@@ -242,7 +243,7 @@ Stats is a **shell with 4 sub-tabs**. The year is shared via query param `?year=
 
 All stats tabs share:
 
-- Year selector (← current year →) — changes `?year=` query param
+- Year selector (← current year →) — resets all cubit slices for the selected local year
 - Loading skeleton cards
 - "No data" empty state when no records
 
@@ -253,15 +254,15 @@ All stats tabs share:
 | **View modes**              | 3 tabs: `today` (default), `my_supplements`, `all_supplements`                                                                                                                                               |
 | **Today tab**               | Lists today's supplement logs grouped by product; shows product name + brand + servings taken; delete individual log                                                                                         |
 | **My Supplements tab**      | Lists products created by current user; search bar; edit/delete each product; "Add product" FAB                                                                                                              |
-| **All Supplements tab**     | Lists all products (global + user-created); search bar; verified badge on global products; add to today's log                                                                                                |
-| **SupplementFormComponent** | Create/edit supplement product: `name`, `brand`, ingredient list (autocomplete from Firestore `ingredients` collection with stdId, amount, unit); save → `firebaseService.addProduct()` or `updateProduct()` |
-| **Auto-seed**               | On first load, if `ingredients` collection is empty, seeds it from `core/constants/ingredients.ts`                                                                                                           |
+| **All Supplements tab**     | Lists all products (global + user-created); client-side search; tapping a product quick-logs its default servings for today                                                                                  |
+| **Supplement form**         | Create/edit product: `name`, `brand`, default servings, and a manually entered ingredient list (`stdId` is generated locally from the name; supported units: mg/mcg/g/IU/ml)                                |
+| **Ingredient catalog**      | The current implementation does not read or seed the shared `ingredients` collection; Firestore-backed autocomplete remains a future improvement                                                            |
 
 #### WORKOUT TYPES FEATURE
 
 | Aspect                 | Detail                                                                                                          |
 | ---------------------- | --------------------------------------------------------------------------------------------------------------- |
-| **List view**          | Grid/list of cards; each card: emoji icon + name + colour dot + edit/delete buttons                             |
+| **List view**          | List of cards; each row shows emoji + name, opens edit on row tap, and has a delete button                      |
 | **Empty state**        | "No workout types yet" with create button                                                                       |
 | **Create modal**       | Fields: name (text), colour picker (10 preset swatches), icon picker (20 preset emojis)                         |
 | **Edit modal**         | Same form, pre-populated                                                                                        |
@@ -289,13 +290,14 @@ All stats tabs share:
 
 #### SETTINGS FEATURE
 
-| Aspect                 | Detail                                                                                              |
-| ---------------------- | --------------------------------------------------------------------------------------------------- |
-| **Appearance section** | Dark/light theme toggle → `themeService.toggleTheme()`                                              |
-| **Language section**   | Language picker (EN / RO) → `languageService.setLanguage(lang)`                                     |
-| **Account section**    | "Change password" navigates to dedicated `ChangePasswordPage`; form uses reusable `SetPasswordCard` |
-| **App version**        | Loaded dynamically via `package_info_plus` in `SettingsCubit.init()`                                |
-| **Navigation**         | Back arrow → previous page                                                                          |
+| Aspect                 | Detail                                                                                                                                                          |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Appearance section** | Dark/light theme toggle → `ThemeHelper.setDark()` → device-local `SharedPreferences`                                                                             |
+| **Language section**   | Language picker (EN / RO) → `LocaleHelper.setLocale()` → device-local `SharedPreferences`                                                                        |
+| **Currency section**   | Account default picker (EUR / GBP / RON / USD) → `SettingsCubit.setCurrency()`; Romanian sign-ups start with RON, every other or legacy account defaults to EUR |
+| **Account section**    | "Change password" navigates to dedicated `ChangePasswordPage`; form uses reusable `SetPasswordCard`                                                             |
+| **App version**        | Loaded dynamically via `package_info_plus` in `SettingsCubit.init()`                                                                                            |
+| **Navigation**         | Back arrow → previous page                                                                                                                                      |
 
 #### APP VERSION GATE FEATURE
 
@@ -312,6 +314,16 @@ All stats tabs share:
 | **Version classifier**    | `VersionComparator.isBigJump(from, to)` — true iff major increased OR minor diff ≥ 2. Single-step minor / patch bumps are silent.                                                                                                                 |
 | **Dismissal cool-down**   | `SharedPreferences` keys `big_update_dismissed_version` + `big_update_dismissed_at_ms`. Sheet re-appears when `latestVersion` changes OR 3 days have elapsed.                                                                                     |
 
+#### ONBOARDING FEATURE
+
+| Aspect | Detail |
+| ------ | ------ |
+| **Purpose** | Three-slide first-launch walkthrough for workouts, supplements, and statistics. |
+| **Entry** | `SplashCubit` routes to `OnboardingRoute` while `OnboardingHelper.isFirstLaunch` is true; `OnboardingGuard` is defense in depth for Main Shell. |
+| **Exit** | Skip or Get Started replaces the route with Login. |
+| **Completion** | The device-local `app_onboarding_complete` flag is written only after the first successful verified sign-in, not when leaving the walkthrough. |
+| **Persistence** | `SharedPreferences`; per device/app install, not per Firebase account. |
+
 ### 7.3 Firestore Data Model
 
 ```
@@ -323,24 +335,25 @@ firestore/
 │   │   ├── lastVerificationEmailSentAt  Timestamp? ← cooldown tracking for resend buttons; deleted on login
 │   │   ├── theme                        String   ← 'dark' | 'light'
 │   │   ├── language                     String   ← 'en' | 'ro'
+│   │   ├── currency                     String   ← account default: EUR | GBP | RON | USD
 │   │   ├── lastLoginAt                  Timestamp
 │   │   ├── createdAt                    Timestamp
 │   │   ├── consent                      Map      ← GDPR: {termsVersion, privacyVersion, termsUrl, privacyUrl, acceptedAt, ipCountry?}
-│   │   └── stats.totalAttendances       Number
+│   │   └── totalAttendances             Number   ← legacy/profile aggregate (default 0)
 │   │
 │   ├── trainingTypes/{typeId}
-│   │   └── { name, color, icon, createdAt }
+│   │   └── { name, color, icon, created_at }
 │   ├── attendances/{YYYY-MM}/days/{YYYY-MM-DD}
-│   │   └── { date, timestamp, trainingTypeId?, durationMinutes?, notes? }
+│   │   └── { date, timestamp, training_type_id?, duration_minutes?, notes? }
 │   ├── healthLogs/{YYYY-MM}/entries/{logId}
-│   │   └── { date, productId, productName?, productBrand?, servingsTaken, timestamp? }
+│   │   └── { date, product_id, product_name?, product_brand?, servings_taken, timestamp? }
 │   └── gymMemberships/{membershipId}
 │       └── { gym_name, start_date, duration_months, valid_until,
 │             price_minor, currency, created_at, updated_at }
 │
 ├── supplementProducts/{productId}
-│   └── { name, brand, ingredients:[{stdId,name,amount,unit}],
-│          servingsPerDayDefault, createdBy?, verified? }
+│   └── { name, brand, ingredients:[{std_id,name,amount,unit}],
+│          servings_per_day_default, created_by?, verified? }
 │
 └── ingredients/{stdId}
     └── { name, aliases?, category, defaultUnit, safeUpperLimit?, rda? }
@@ -360,6 +373,9 @@ appConfig/
     └── updatedAt               Timestamp?
 ```
 
+> The current Health implementation does not read or seed `ingredients`; that
+> collection is reserved for a future shared autocomplete/catalog flow.
+
 **Key Firestore patterns:**
 
 - All `UserSource` writes use `SetOptions(merge: true)` — safe for concurrent updates, preserves subcollections and existing fields.
@@ -371,22 +387,22 @@ appConfig/
 
 ### 7.4 Service / Source Map
 
-| Domain                 | Service                                                                   | Source                                                                                                                       |
-| ---------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Auth                   | `lib/service/auth/auth_service.dart`                                      | — (Firebase Auth SDK directly)                                                                                               |
-| Auth (cubit)           | `lib/cubit/auth/auth_cubit.dart`                                          |                                                                                                                              |
-| User profile           | `lib/service/user/user_service.dart`                                      | `lib/data/remote/user/user_source.dart`                                                                                      |
-| Account cleanup        | `lib/service/account/account_cleanup_service.dart`                        | `lib/data/remote/account/` (deletes all user subcollections)                                                                 |
-| Attendance             | `lib/service/attendance/attendance_service.dart`                          | `lib/data/remote/attendance/attendance_day_source.dart`                                                                      |
-| Workout types          | `lib/service/workout/workout_service.dart`                                | `lib/data/remote/training_type/training_type_source.dart`                                                                    |
-| Health / Supplements   | `lib/service/health/health_service.dart`                                  | `lib/data/remote/supplement/health_source.dart`                                                                              |
+| Domain                 | Service                                                                           | Source                                                                                                                       |
+| ---------------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Auth                   | `lib/service/auth/auth_service.dart`                                              | — (Firebase Auth SDK directly)                                                                                               |
+| Auth (cubit)           | `lib/cubit/auth/auth_cubit.dart`                                                  |                                                                                                                              |
+| User profile           | `lib/service/user/user_service.dart`                                              | `lib/data/remote/user/user_source.dart`                                                                                      |
+| Account cleanup        | `lib/service/account/account_cleanup_service.dart`                                | `lib/data/remote/account/` (deletes all user subcollections)                                                                 |
+| Attendance             | `lib/service/attendance/attendance_service.dart`                                  | `lib/data/remote/attendance/attendance_day_source.dart`                                                                      |
+| Workout types          | `lib/service/workout/workout_service.dart`                                        | `lib/data/remote/training_type/training_type_source.dart`                                                                    |
+| Health / Supplements   | `lib/service/health/health_service.dart`                                          | `lib/data/remote/supplement/health_source.dart`                                                                              |
 | Gym memberships        | `GymMembershipService` + `MembershipReminderService` in `lib/service/membership/` | `lib/data/remote/membership/gym_membership_source.dart` + per-user reminder dismissal in `SharedPreferences`                 |
-| Stats                  | `StatsCubit` composes attendance/workout/health services                  | —                                                                                                                            |
-| App config             | `lib/service/app_config/app_config_service.dart`                          | `lib/data/remote/app_config/app_config_source.dart`                                                                          |
-| App version gate       | `lib/cubit/splash/splash_cubit.dart` + `lib/core/app_version_status.dart` | — (reads `AppConfigService`; calls `AppVersionStatus.getAppVersionDetails()` + `AppVersionStatus.setLegalUrls()` on OK path) |
-| Checking update prompt | `lib/service/checking_update/checking_update_service.dart`                | — (uses `SharedPreferences` + `url_launcher`, reads `AppVersionStatus`)                                                      |
-| Theme                  | `lib/assets/theme/theme_helper.dart`                                      | —                                                                                                                            |
-| Language               | `lib/presentation/helpers/locale_helper.dart`                             | —                                                                                                                            |
+| Stats                  | `StatsCubit` composes attendance/workout/health services                          | —                                                                                                                            |
+| App config             | `lib/service/app_config/app_config_service.dart`                                  | `lib/data/remote/app_config/app_config_source.dart`                                                                          |
+| App version gate       | `lib/cubit/splash/splash_cubit.dart` + `lib/core/app_version_status.dart`         | — (reads `AppConfigService`; calls `AppVersionStatus.getAppVersionDetails()` + `AppVersionStatus.setLegalUrls()` on OK path) |
+| Checking update prompt | `lib/service/checking_update/checking_update_service.dart`                        | — (uses `SharedPreferences` + `url_launcher`, reads `AppVersionStatus`)                                                      |
+| Theme                  | `lib/assets/theme/theme_helper.dart`                                              | —                                                                                                                            |
+| Language               | `lib/presentation/helpers/locale_helper.dart`                                     | —                                                                                                                            |
 
 ---
 
@@ -411,7 +427,7 @@ SplashPage (SplashCubit: min 2.8s animation + appConfig/version fetch)
           │
           ├── OnboardingHelper.isFirstLaunch ────────► OnboardingPage
           │
-          ├── FirebaseAuth.currentUser == null ──────► LoginPage
+          ├── Firebase user missing or unverified ───► LoginPage
     │                                                      │
     │                                                      ├── [submit] signIn()
     │                                                      │       ├── success + verified ──► MainShell
@@ -430,7 +446,7 @@ SplashPage (SplashCubit: min 2.8s animation + appConfig/version fetch)
     │                                                              │       └── error ────────► ErrorBanner (inline)
     │                                                              └── [tap "Back to login"] LoginPage
     │
-          └── FirebaseAuth.currentUser != null ────────► MainShell (bottom nav)
+          └── Firebase user exists + verified ─────────► MainShell (bottom nav)
                                                          │
                                                          ├── post-frame → CheckingUpdateCubit.evaluate()
                                                          │     (2s delay + eligibility checks in CheckingUpdateService)
@@ -487,10 +503,11 @@ State: UNAUTHENTICATED
     ├── signIn(email, pwd)
     │       ├── OK + verified   → AUTHENTICATED  (recordLogin writes lastLoginAt; deletes lastVerificationEmailSentAt)
     │       └── OK + unverified → UNAUTHENTICATED (auto sign-out)
-    ├── signUp(email, pwd, displayName, consent)
+    ├── signUp(email, pwd, displayName, language, consent)
     │       → createUser() writes profile + consent map
     │       → mirrors displayName onto the Firebase Auth profile
     │       → sends verification email
+    │       → signs out the unverified Firebase session
     │       → UNAUTHENTICATED (must verify before next sign-in)
     └── (email verification & password reset handled by Firebase hosted page)
 
@@ -516,13 +533,14 @@ State: AUTHENTICATED
 signUp() success
     │
     └── AuthCubit._createUser() [best-effort]
-            ├── UserService.createUser({userId, email, displayName, consent})
+            ├── UserService.createUser({userId, email, displayName, language, currency, consent})
             │       └── UserSource.create(): Firestore merge write:
             │               {
             │                 email: authEmail,
             │                 displayName: displayName,
             │                 theme: 'dark',
-            │                 language: 'en',
+            │                 language: selected locale,
+            │                 currency: selected locale == 'ro' ? 'RON' : 'EUR',
             │                 createdAt: serverTimestamp,
             │                 lastLoginAt: serverTimestamp,
             │                 lastVerificationEmailSentAt: Timestamp.now(),
@@ -534,6 +552,9 @@ signUp() success
                     → mirrors the name onto the Firebase Auth profile so
                       `AuthUser.displayName` is populated from
                       `authStateChanges()` without a Firestore round-trip.
+            └── AuthService.signOut()
+                    → prevents the newly created unverified session from
+                      passing cold-launch or route guards.
 
 signIn() success
     │
@@ -581,25 +602,27 @@ Day cell in initial state (no attendance, no supplement)
 
 ```
 StatsPage (shell)
-    │  reads ?year= query param
+  │  owns selected year locally (starts at current year)
     │
-    ├── AttendancesTab
-    │   ├── getYearAttendance(userId, year) → 12×MonthStat[]
-    │   ├── totals: sum of all months
-    │   ├── streak: consecutive attended days algorithm
-    │   └── heatmap: group by weekday
+    ├── AttendancesTab (lazy slice)
+    │   ├── first result from previous December + 12 selected-year months
+    │   ├── monthly/weekday totals
+    │   └── consecutive ISO-week streaks
     │
-    ├── WorkoutsTab
-    │   ├── getWorkoutTypeStats(userId, year) → WorkoutTypeStat[] (year totals)
-    │   └── getMonthlyWorkoutTypeStats(userId, year, selectedMonth) → WorkoutTypeStat[]
+    ├── WorkoutsTab (lazy slice)
+    │   ├── reuses attendance source cache + workout-type list
+    │   └── yearly and selected-month type distributions
     │
-    ├── DurationTab
-    │   ├── getYearDurationStats(userId, year) → { totalMinutes, avgMinutes, monthlyData[] }
-    │   └── getWorkoutTypeDurationStats(userId, year) → WorkoutTypeDurationStat[]
+    ├── DurationTab (lazy slice)
+    │   ├── reuses attendance/type source cache
+    │   └── tracked averages + untracked-duration counts
     │
-    └── HealthTab
-        ├── getSupplementLogs(userId, year, month) → SupplementLog[]
-        └── derives: totalServings, mostTakenProduct, topNutrients (from ingredient stdIds)
+    └── HealthTab (lazy slice)
+      ├── first result from 12 health-log months + global products
+      └── derives servings, consistency, top product, top nutrients
+
+  Year change increments an active token, resets every slice, and ignores stale
+  in-flight results. Returning to a loaded tab re-emits that slice's cached state.
 ```
 
 ### 8.4 Health Page View Modes
@@ -614,22 +637,21 @@ HealthPage
     │           └── [remove] → removes individual SupplementLog entry
     │
     ├── Tab: My Supplements
-    │   ├── getProducts() → filter by createdBy == userId
+    │   ├── global product stream → filter by createdBy == userId
     │   ├── search bar (client-side filter by name/brand)
     │   ├── [edit card] → opens SupplementForm (pre-populated)
     │   ├── [delete card] → deleteProduct()
     │   └── [+ FAB] → opens empty SupplementForm
     │           SupplementForm:
     │               name + brand fields
-    │               ingredient list: autocomplete from Firestore `ingredients`
-    │               each ingredient: stdId (hidden) + name + amount + unit
-    │               [save] → addProduct() or updateProduct()
+    │               manually enter ingredient name + amount + unit
+    │               stdId generated locally from the ingredient name
+    │               [save] → createProduct() or updateProduct()
     │
     └── Tab: All Supplements
         ├── getProducts() → all (global + user-created)
         ├── search bar (client-side filter)
-        ├── verified badge on products where verified==true
-        └── [Log today] → logSupplement(userId, today, productId, servingsTaken)
+        └── [tap product] → logSupplement(userId, today, default servings)
 ```
 
 ---
@@ -650,6 +672,7 @@ Every AI session must start with these files loaded, regardless of feature:
 - `lib/model/` — all shared domain models
 - `lib/cubit/base_cubit.dart` + `lib/cubit/base_state.dart` — base classes
 - The relevant `docs/screens/<page>.md` prep doc
+- The relevant `docs/features/<feature>.md` behavior/code-flow map
 - The relevant reusable controls from `lib/presentation/controls/`
 
 ### Feature-slice approach (default)
