@@ -1,7 +1,7 @@
 # Calendar — attendance, supplements & membership reminder
 
 > **Status:** ✅ Implemented
-> **Last updated:** 2026-07-22
+> **Last updated:** 2026-07-23
 
 ## 1. Summary
 
@@ -20,6 +20,7 @@ reminder when no active membership exists.
 | ----- | ---- |
 | Page | [calendar_page.dart](../../lib/presentation/pages/calendar/calendar_page.dart) |
 | Membership banner | [membership_reminder_banner.dart](../../lib/presentation/pages/calendar/widgets/membership_reminder_banner.dart) |
+| Membership shortcut | [membership_history_shortcut.dart](../../lib/presentation/pages/calendar/widgets/membership_history_shortcut.dart) |
 | Cubit + states | [calendar_cubit.dart](../../lib/cubit/calendar/calendar_cubit.dart) · [calendar_states.dart](../../lib/cubit/calendar/calendar_states.dart) |
 | Services | [attendance_service.dart](../../lib/service/attendance/attendance_service.dart) · [health_service.dart](../../lib/service/health/health_service.dart) · [workout_service.dart](../../lib/service/workout/workout_service.dart) · [gym_membership_service.dart](../../lib/service/membership/gym_membership_service.dart) · [membership_reminder_service.dart](../../lib/service/membership/membership_reminder_service.dart) |
 | Controls | [gym_tab_bar.dart](../../lib/presentation/controls/gym_tab_bar.dart) · [pull_to_refresh.dart](../../lib/presentation/controls/pull_to_refresh.dart) |
@@ -118,7 +119,7 @@ no membership is active.
 **In plain English:**
 
 1. An active membership hides every membership prompt.
-2. Without an active membership, the app-bar shortcut remains available even during grace or after dismissal.
+2. Without an active membership, an error-colored app-bar icon remains noticeable and available even during grace or after dismissal.
 3. Expired history is reminder-eligible immediately; no-history accounts wait two hours after account creation.
 4. Dismissing the banner persists per user on this device and does not hide the shortcut.
 
@@ -136,6 +137,7 @@ no membership is active.
 | --------- | ------ |
 | [calendar_cubit_test.dart](../../test/cubit/calendar/calendar_cubit_test.dart) | month/year load, error degrade, membership overview + grace + dismissal |
 | [membership_reminder_banner_test.dart](../../test/presentation/pages/calendar/membership_reminder_banner_test.dart) | banner copy variants |
+| [membership_history_shortcut_test.dart](../../test/presentation/pages/calendar/membership_history_shortcut_test.dart) | reddish icon styling, transparent background, tooltip, and tap callback |
 
 ## 9. Known limitations & improvement candidates
 

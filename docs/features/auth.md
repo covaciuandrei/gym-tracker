@@ -1,7 +1,7 @@
 # Authentication & account
 
 > **Status:** ✅ Implemented
-> **Last updated:** 2026-07-22
+> **Last updated:** 2026-07-23
 
 ## 1. Summary
 
@@ -43,8 +43,8 @@ profile is stored at `users/{uid}`:
 | `email` | String | Mirrors Firebase Auth email |
 | `displayName` | String | Name entered during registration; also mirrored to Firebase Auth |
 | `theme` | String | Initial profile value (`dark`); runtime theme is local in `SharedPreferences` |
-| `language` | String | Locale selected when registering |
-| `currency` | String | Account default; Romanian registration → RON, all other/legacy profiles → EUR |
+| `language` | String | Current app locale at registration (Register has no language selector) |
+| `currency` | String | Account default; every new account starts with EUR and can change it in Settings |
 | `createdAt` | Timestamp | Server timestamp written at profile creation |
 | `lastLoginAt` | Timestamp | Server timestamp refreshed after verified sign-in |
 | `lastVerificationEmailSentAt` | Timestamp? | Registration cooldown marker; deleted after verified sign-in |
@@ -88,7 +88,7 @@ sequenceDiagram
     Page->>Cubit: signUp(email, password, displayName, language, consent)
     Cubit->>Auth: createUserWithEmailAndPassword
     Auth-->>User: Send hosted verification email
-    Cubit->>Profile: Create users/{uid}<br/>language + seeded currency + consent
+    Cubit->>Profile: Create users/{uid}<br/>language + EUR currency + consent
     Cubit->>Auth: Mirror displayName
     Cubit->>Auth: Sign out unverified session
     Cubit-->>Page: AuthSignUpSuccessState
@@ -99,7 +99,7 @@ sequenceDiagram
 
 1. The page validates display name, email, password strength/match, age 16+, and legal consent.
 2. Firebase creates the account and sends its hosted verification email.
-3. Profile creation is best-effort and uses the registration locale for both `language` and initial currency (RO → RON, otherwise EUR).
+3. Profile creation is best-effort. Register has no language selector: it stores the current `LocaleHelper` value as `language`, while account currency always starts as EUR.
 4. The display name is mirrored to Firebase Auth, also best-effort.
 5. The new Firebase session is explicitly signed out, preventing an unverified account from entering guarded routes after restart.
 6. Verification/reset links are completed in Firebase's browser-hosted action page; there is no in-app deep-link handler.
@@ -189,7 +189,7 @@ sequenceDiagram
 
 | Test file | Covers |
 | --------- | ------ |
-| [auth_cubit_test.dart](../../test/cubit/auth/auth_cubit_test.dart) | state mapping, signup currency seeding, sign-out after registration, login recording, password flows, ordered account deletion |
+| [auth_cubit_test.dart](../../test/cubit/auth/auth_cubit_test.dart) | state mapping, unconditional EUR signup default, sign-out after registration, login recording, password flows, ordered account deletion |
 | [auth_service_test.dart](../../test/service/auth/auth_service_test.dart) | Firebase delegation, verification sign-out, typed error mapping, password/auth operations |
 | [auth_guard_test.dart](../../test/core/guards/auth_guard_test.dart) | verified allow; unverified/null redirect |
 | [register_page_test.dart](../../test/presentation/pages/auth/register_page_test.dart) | validation, legal/age consent, language forwarding, loading/error/success UI |

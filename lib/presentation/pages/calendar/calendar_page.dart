@@ -19,6 +19,7 @@ import 'package:gym_tracker/presentation/controls/emoji_text.dart';
 import 'package:gym_tracker/presentation/controls/gym_app_bar.dart';
 import 'package:gym_tracker/presentation/controls/gym_tab_bar.dart';
 import 'package:gym_tracker/presentation/controls/pull_to_refresh.dart';
+import 'package:gym_tracker/presentation/pages/calendar/widgets/membership_history_shortcut.dart';
 import 'package:gym_tracker/presentation/pages/calendar/widgets/membership_reminder_banner.dart';
 import 'package:gym_tracker/presentation/resources/emojis.dart';
 import 'package:gym_tracker/presentation/validators/number_validator.dart';
@@ -385,13 +386,7 @@ class _CalendarPageState extends State<CalendarPage> with SingleTickerProviderSt
             title: l10n.calendarTitle,
             showBackButton: false,
             actions: membershipChecked && !hasActiveMembership
-                ? [
-                    IconButton(
-                      tooltip: l10n.membershipHistoryTitle,
-                      icon: const Icon(Icons.card_membership_outlined),
-                      onPressed: _openMembershipHistory,
-                    ),
-                  ]
+                ? [MembershipHistoryShortcut(tooltip: l10n.membershipHistoryTitle, onPressed: _openMembershipHistory)]
                 : null,
           ),
           body: SafeArea(

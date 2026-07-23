@@ -1,7 +1,7 @@
 # Settings
 
 > **Status:** ✅ Implemented
-> **Last updated:** 2026-07-22
+> **Last updated:** 2026-07-23
 
 ## 1. Summary
 
@@ -39,8 +39,8 @@ Settings deliberately use two persistence scopes:
 | Default currency | `users/{uid}.currency` via `SettingsCubit → UserService → UserSource` | EUR / GBP / RON / USD | Account, shared across devices |
 | App version | `package_info_plus` | Runtime package metadata | Read-only |
 
-New Romanian registrations seed RON; other registrations and missing/invalid legacy values
-normalize to EUR. Changing language later does **not** automatically change currency.
+Every registration starts with EUR, and missing/invalid legacy values normalize to EUR.
+Changing language does **not** automatically change currency; the user controls it separately.
 
 ## 5. Cubit states
 
@@ -161,8 +161,8 @@ flowchart TD
 | --------- | ------ |
 | [settings_cubit_test.dart](../../test/cubit/settings/settings_cubit_test.dart) | init, EUR fallback, currency persistence, unsupported values |
 | [settings_page_test.dart](../../test/presentation/pages/settings/settings_page_test.dart) | sections, navigation, legal/account actions, currency selector callback |
-| [currencies_test.dart](../../test/core/constants/currencies_test.dart) | language seeding and normalization |
-| [auth_cubit_test.dart](../../test/cubit/auth/auth_cubit_test.dart) | registration language/currency seeding and account actions |
+| [currencies_test.dart](../../test/core/constants/currencies_test.dart) | EUR fallback membership and currency normalization |
+| [auth_cubit_test.dart](../../test/cubit/auth/auth_cubit_test.dart) | registration language persistence, unconditional EUR currency default, and account actions |
 
 **Coverage gaps:** real Firestore currency write, helper persistence failure, local theme/language helper unit tests, and legal URL launch integration.
 

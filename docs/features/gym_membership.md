@@ -1,7 +1,7 @@
 # Gym Membership — manual purchase history
 
 > **Status:** ✅ Implemented
-> **Last updated:** 2026-07-22
+> **Last updated:** 2026-07-23
 
 ## 1. Summary
 
@@ -113,8 +113,8 @@ flowchart TD
      - *Start fresh* → blank form.
 3. Saving always **creates a new document**. The old expired period stays untouched.
 
-> New Romanian accounts are seeded with RON. Other and legacy accounts fall back to EUR.
-> Changing the default later affects only new blank drafts; copied and historical records
+> Every account starts with EUR and can change its default in Settings. Changing the
+> default later affects only new blank drafts; copied and historical records
 > retain their own stored currency.
 
 ### 6.2 Edit

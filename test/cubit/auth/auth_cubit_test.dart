@@ -162,7 +162,7 @@ void main() {
       verify(() => mockService.signOut()).called(1);
     });
 
-    test('seeds RON when a Romanian account is created', () async {
+    test('seeds EUR even when the profile language is Romanian', () async {
       when(() => mockService.signUp(email: _email, password: _password)).thenAnswer((_) async => _fakeUser);
       when(() => mockService.signOut()).thenAnswer((_) async {});
 
@@ -180,7 +180,7 @@ void main() {
           email: _email,
           displayName: _displayName,
           language: 'ro',
-          currency: 'RON',
+          currency: 'EUR',
           consent: const <String, Object?>{'termsAccepted': true},
         ),
       ).called(1);

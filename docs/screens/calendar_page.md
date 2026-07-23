@@ -1,6 +1,6 @@
 # Calendar Page — Screen Doc
 
-> Last updated: 2026-07-22
+> Last updated: 2026-07-23
 
 ## Route
 
@@ -16,7 +16,9 @@
 Scaffold
   GymAppBar("Calendar")
     if membership checked AND no membership is active:
-      IconButton(card_membership_outlined) → MembershipHistoryRoute()
+      MembershipHistoryShortcut(card_membership_outlined)
+        transparent IconButton, icon color: error
+        → MembershipHistoryRoute()
   Column
     ── Header row ──
     Row(spaceBetween)
@@ -197,8 +199,9 @@ no reminder or app-bar shortcut is shown, while Calendar continues normally.
   opens the blank membership form directly. If history exists, it first offers
   **Copy last details** or **Start fresh**.
 - Whenever the membership lookup succeeds and no membership is active, the
-  right side of the Calendar app bar shows a membership-history button. This is
-  available during the grace period and after permanent banner dismissal.
+  right side of the Calendar app bar shows a reddish membership-history icon on
+  the normal transparent app-bar background. This is available during the grace
+  period and after permanent banner dismissal.
 
 ## Day Cell Data Model
 
@@ -218,6 +221,7 @@ Each day cell in `CalendarLoadedState` includes:
 - Attendance dot: `cs.primary` (4×4 circle)
 - Workout icon: workoutType.color (hex) tinted background
 - Supplement dot: `💊` emoji (fontSize: 10)
+- Missing-membership app-bar shortcut: transparent background, icon=`cs.error`
 - Toggle selected: `cs.primaryContainer` text=`cs.onPrimaryContainer`
 - Toggle unselected: transparent text=`cs.onSurfaceVariant`
 

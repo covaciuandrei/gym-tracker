@@ -155,7 +155,7 @@ class AuthCubit extends BaseCubit {
         email: user.email ?? '',
         displayName: displayName,
         language: language,
-        currency: defaultCurrencyForLanguage(language),
+        currency: fallbackCurrencyCode,
         consent: consent,
       );
     } catch (_) {

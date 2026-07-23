@@ -190,7 +190,7 @@ decoration: BoxDecoration(
 | Component                   | Actions / State                                                                                                                                                                                                                                                                                                      |
 | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **LoginComponent**          | `email`, `password` fields; `onSubmit()` → `AuthCubit.signIn()` → emits `AuthSignInSuccessState` → navigate `MainShell`; emits `AuthInvalidCredentialsState` or `AuthEmailNotVerifiedState` on failure; link to `/register`, `/forgot-password`                                                                      |
-| **RegisterComponent**       | `email`, `password`, `confirmPassword`, `displayName`; age 16+ and GDPR consent checkboxes (required); validates email/password/match; `AuthCubit.signUp({email, password, displayName, language, consent})` creates the profile, seeds currency, mirrors the display name, signs out the unverified Firebase session, then emits `AuthSignUpSuccessState`; link to `/login` |
+| **RegisterComponent**       | `email`, `password`, `confirmPassword`, `displayName`; age 16+ and GDPR consent checkboxes (required); validates email/password/match; there is no language selector, so `language` is the current `LocaleHelper` value; `AuthCubit.signUp(...)` creates the profile with EUR default currency, mirrors the display name, signs out the unverified Firebase session, then emits `AuthSignUpSuccessState`; link to `/login` |
 | **ForgotPasswordComponent** | `email` field; `onSubmit()` → `AuthCubit.resetPassword({email})` → emits `AuthPasswordResetSentState`; link back to `/login`                                                                                                                                                                                         |
 
 **AuthCubit states:** `AuthAuthenticatedState`, `AuthUnauthenticatedState`, `AuthSignInSuccessState`, `AuthSignUpSuccessState`, `AuthSignOutSuccessState`, `AuthPasswordResetSentState`, `AuthPasswordChangedState`, `AuthAccountDeletedState`, `AuthEmailNotVerifiedState`, `AuthInvalidCredentialsState`, `AuthEmailAlreadyInUseState`, `AuthWeakPasswordState`.
@@ -215,7 +215,7 @@ decoration: BoxDecoration(
 | **Workout types dropdown** | Custom dropdown (not native select); shows emoji + name + colour dot                                                                                                                                                                                                                                                                                                                                                                           |
 | **Products dropdown**      | Custom dropdown for supplement selection                                                                                                                                                                                                                                                                                                                                                                                                       |
 | **Skeleton loading**       | Array(42) skeleton cells during load                                                                                                                                                                                                                                                                                                                                                                                                           |
-| **Membership reminder**    | Best-effort `CalendarCubit.loadMembershipOverview()` check. Expired history is eligible immediately; a brand-new account with no history gets a 2-hour grace period. Dismissal is permanent per user via `MembershipReminderService` + `SharedPreferences`. The banner CTA opens `MembershipHistoryRoute(startAddFlow: true)`; a right app-bar shortcut opens history whenever no membership is active. Calendar never writes membership data. |
+| **Membership reminder**    | Best-effort `CalendarCubit.loadMembershipOverview()` check. Expired history is eligible immediately; a brand-new account with no history gets a 2-hour grace period. Dismissal is permanent per user via `MembershipReminderService` + `SharedPreferences`. The banner CTA opens `MembershipHistoryRoute(startAddFlow: true)`; an error-colored app-bar icon opens history whenever no membership is active. Calendar never writes membership data. |
 
 #### GYM MEMBERSHIP FEATURE
 
@@ -294,7 +294,7 @@ All stats tabs share:
 | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Appearance section** | Dark/light theme toggle → `ThemeHelper.setDark()` → device-local `SharedPreferences`                                                                             |
 | **Language section**   | Language picker (EN / RO) → `LocaleHelper.setLocale()` → device-local `SharedPreferences`                                                                        |
-| **Currency section**   | Account default picker (EUR / GBP / RON / USD) → `SettingsCubit.setCurrency()`; Romanian sign-ups start with RON, every other or legacy account defaults to EUR |
+| **Currency section**   | Account default picker (EUR / GBP / RON / USD) → `SettingsCubit.setCurrency()`; every account starts with EUR and can change the default for future blank membership entries |
 | **Account section**    | "Change password" navigates to dedicated `ChangePasswordPage`; form uses reusable `SetPasswordCard`                                                             |
 | **App version**        | Loaded dynamically via `package_info_plus` in `SettingsCubit.init()`                                                                                            |
 | **Navigation**         | Back arrow → previous page                                                                                                                                      |
@@ -539,8 +539,8 @@ signUp() success
             │                 email: authEmail,
             │                 displayName: displayName,
             │                 theme: 'dark',
-            │                 language: selected locale,
-            │                 currency: selected locale == 'ro' ? 'RON' : 'EUR',
+            │                 language: current app locale (default 'en'),
+            │                 currency: 'EUR',
             │                 createdAt: serverTimestamp,
             │                 lastLoginAt: serverTimestamp,
             │                 lastVerificationEmailSentAt: Timestamp.now(),

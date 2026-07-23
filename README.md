@@ -45,7 +45,7 @@ Track your workouts, gym memberships, supplements, streaks, and progress month-b
 - Days are color-coded by what was logged: workout-only (blue), supplement-only (green), both (cyan), and the workout type's emoji icon is rendered inside the cell.
 - The current day is always highlighted; navigation is by ← → arrows.
 - A compact reminder appears immediately for expired history, or after a two-hour grace period for a brand-new account with no history. Dismissal is permanent per user and never blocks Calendar use.
-- Whenever no membership is active, a Calendar app-bar shortcut keeps Membership History accessible even during the grace period or after dismissing the banner.
+- Whenever no membership is active, a reddish Calendar app-bar icon keeps Membership History noticeable and accessible even during the grace period or after dismissing the banner.
 
 ### Gym memberships — manual purchase history
 
@@ -101,7 +101,7 @@ All tabs share unified loading skeletons and "no data" empty states.
 
 - **Appearance** — toggle between **dark and light** Material 3 themes.
 - **Language** — switch between **English** and **Romanian** at runtime.
-- **Default currency** — choose EUR, GBP, RON, or USD for new membership entries. New Romanian accounts start with RON; all other and legacy accounts fall back to EUR.
+- **Default currency** — every account starts with EUR; choose EUR, GBP, RON, or USD in Settings for future blank membership entries. Existing and copied records preserve their own currency.
 - **Legal** — quick links to the hosted **Terms of Service** and **Privacy Policy** (localized per-language, opened in the external browser).
 - **Account** — open the dedicated **Change Password** screen (current password + new + confirm, with strength indicator and live match feedback).
 - **Account deletion** — re-authenticates and performs a cascading cleanup of all your Firestore data before deleting your auth account.
