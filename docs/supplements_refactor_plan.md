@@ -21,7 +21,7 @@ The feature is architecturally clean (Model → DTO → Mapper → `HealthSource
 `HealthService` → `HealthCubit` → `HealthPage`), but the data model and sourcing strategy
 are the wrong shape for MyFitnessPal-style discovery:
 
-1. **There is no real catalog.** Products are user-created but written to a _global_
+1. **There is no real catalog.** Products are user-created but written to a *global*
    collection — every user's homemade entry pollutes everyone's "All Supplements". No
    curated, verified, searchable database.
 2. **The `ingredients` collection is dead.** The schema documents a rich ingredient
@@ -31,10 +31,10 @@ are the wrong shape for MyFitnessPal-style discovery:
 3. **Ingredient identity is broken.** `stdId` is just a lowercase slug of typed text.
    "Vitamin C", "vitamin c", and "VitC" become three different nutrients — which silently
    **breaks the nutrient roll-up in Stats** (keys on `stdId|unit`).
-4. **No product detail screen.** MFP's core loop is _search → open product → see full
-   ingredient/nutrient breakdown → log_. Here you only get name + brand + first 3
+4. **No product detail screen.** MFP's core loop is *search → open product → see full
+   ingredient/nutrient breakdown → log*. Here you only get name + brand + first 3
    ingredients on a card.
-5. **It won't scale.** `watchAllProducts()` streams the _entire_ global catalog into
+5. **It won't scale.** `watchAllProducts()` streams the *entire* global catalog into
    memory; search is a client-side `.contains()`. The architecture review already flags
    this as the one collection that needs cursor paging + real search.
 
@@ -94,8 +94,7 @@ excluded in v1.
 
 ## Phases
 
-### Phase 0 — Foundations & schema _(everything else depends on this)_
-
+### Phase 0 — Foundations & schema *(everything else depends on this)*
 1. New `Ingredient` domain model + value objects for the RDA/upper-limit tables (keyed by
    sex → age band).
 2. Change `ProductIngredient`: `stdId` → `ingredientId` (FK into canonical catalog); keep
@@ -109,24 +108,21 @@ excluded in v1.
    admin; owners keep create/edit of their own products.
 6. Localization scaffold (EN + RO) for all new strings.
 
-### Phase 1 — Ingredient catalog _(after P0; parallel with P2)_
-
+### Phase 1 — Ingredient catalog *(after P0; parallel with P2)*
 7. `IngredientSource` + `IngredientService` + `IngredientCubit`: prefix search (`nameLower`
-   - alias lookup), admin create/edit/delete.
+   + alias lookup), admin create/edit/delete.
 8. Admin-only **Ingredient Management** page (`AdminGuard`) — list/search + form for name,
    aliases, category, unit, and a compact RDA/UL editor.
 9. Reusable **ingredient picker** control with catalog autocomplete (strict: pick-from-catalog
    only).
 
-### Phase 2 — RDA engine + profile capture _(after P0; parallel with P1)_
-
+### Phase 2 — RDA engine + profile capture *(after P0; parallel with P1)*
 10. Pure-Dart `DailyValueService`: `(ingredient, sex, age) → % daily value + over-upper-limit
-flag`; age bands `14–18 / 19–50 / 51–70 / 71+`.
+    flag`; age bands `14–18 / 19–50 / 51–70 / 71+`.
 11. Add `sex` + `birthDate` capture to **Settings** (new "Personal details" section) via
     `SettingsCubit` + `UserService` / `UserSource`.
 
-### Phase 3 — Catalog search + detail + logging _(after P1, P2)_
-
+### Phase 3 — Catalog search + detail + logging *(after P1, P2)*
 12. `HealthSource.searchProducts(query, cursor, limit)` — `nameLower` prefix range query +
     `startAfterDocument` pagination; `HealthCubit` search/pagination states.
 13. New **Supplement Detail page/route**: full ingredient breakdown with `DailyValueService`
@@ -134,21 +130,18 @@ flag`; age bands `14–18 / 19–50 / 51–70 / 71+`.
 14. Refactor `HealthPage`: **Today** (kept), **Search catalog** (replaces "All Supplements",
     paginated), **My Supplements** (own products).
 
-### Phase 4 — Product form + moderation _(after P3)_
-
+### Phase 4 — Product form + moderation *(after P3)*
 15. Product create/edit uses the strict ingredient picker (Phase 1); writes `nameLower` /
     `brandLower`; new products `verified=false`.
 16. **Unverified badge** control on cards/detail; admin-only **Verify** action on detail
     (flips `verified`).
 
-### Phase 5 — Stats & Calendar compatibility _(after P0–P4)_
-
+### Phase 5 — Stats & Calendar compatibility *(after P0–P4)*
 17. `stats_cubit.dart` (~L472): key nutrient aggregation on `ingredientId|unit` (fixes the
     collision bug).
 18. Update `calendar_page.dart` product/ingredient usages to the new shape.
 
-### Phase 6 — Seed + migration _(after schema stable, P0–P4)_
-
+### Phase 6 — Seed + migration *(after schema stable, P0–P4)*
 19. Author `tools/seed_ingredients.json` (~100–150 curated supplement ingredients: vitamins,
     minerals, amino acids, creatine, caffeine, omega-3, etc., with NIH/FDA age/sex RDAs +
     tolerable upper limits).
@@ -158,7 +151,6 @@ flag`; age bands `14–18 / 19–50 / 51–70 / 71+`.
     `verified=false`.
 
 ### Phase 7 — Tests, docs, verification
-
 21. Unit tests: `DailyValueService`, mappers, search pagination, ingredient/health cubits;
     widget tests: detail + log-with-servings, admin gating; run migration against the Firestore
     emulator.
@@ -199,8 +191,8 @@ flag`; age bands `14–18 / 19–50 / 51–70 / 71+`.
    `ingredient_id`s (unmatched dropped), `verified=false` set; re-run is a no-op (idempotent).
 4. Manual: search paginates; detail shows correct % DV for a set age/sex and a UL warning when
    exceeded; % DV hidden with a prompt when the profile is incomplete; admin account sees Verify
-   - ingredient management, a normal account does not (confirm Firestore rules reject a non-admin
-     `verified=true` write).
+   + ingredient management, a normal account does not (confirm Firestore rules reject a non-admin
+   `verified=true` write).
 
 ---
 
@@ -210,15 +202,15 @@ flag`; age bands `14–18 / 19–50 / 51–70 / 71+`.
    (+ an inline "set age & sex" prompt on the detail screen) and leaving registration's 16+
    consent checkbox untouched; show absolute amounts always but **hide % DV** until the profile
    is complete.
-   - Option A: Settings + prompt _(recommended)_
+   - Option A: Settings + prompt *(recommended)*
    - Option B: also add to registration
    - Option C: use a generic-adult default so % DV always shows
 2. **Admin RDA/UL editing depth.** The per-sex×age-band tables are the heaviest UI. Recommend v1
    admin form edits name/aliases/category/unit + **verify**, while the numeric RDA/UL tables come
    from the seed JSON (re-run/Console to change).
-   - Option A: light form + seed-driven numbers _(recommended)_
+   - Option A: light form + seed-driven numbers *(recommended)*
    - Option B: full in-app matrix editor now
 3. **Pregnancy/lactation RDAs.** Recommend **excluding** these life-stage groups in v1
    (male/female × age bands only).
-   - Option A: exclude _(recommended)_
+   - Option A: exclude *(recommended)*
    - Option B: include now
