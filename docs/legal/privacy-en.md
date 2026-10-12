@@ -1,7 +1,7 @@
 # Privacy Policy
 
-**Last Updated:** 22 July 2026
-**Effective Date:** 22 July 2026
+**Last Updated:** 12 October 2026
+**Effective Date:** 12 October 2026
 
 This Privacy Policy explains how **Gym Tracker** (the "App") collects, uses, and shares your personal data, and what rights you have. It is written to comply with the EU General Data Protection Regulation ("**GDPR**") and Romanian Law No. 190/2018.
 
@@ -34,6 +34,8 @@ Because the App lets you log workouts and supplements, the following data may re
 - Supplement products you record (name, brand, ingredients) and servings taken per day
 - Derived statistics based on the above
 
+On iOS, when creating your account you can also choose (and may skip) to enter your sex, date of birth, height, weight, and body type. These details are stored with your account and are used only to personalize the comparisons shown in Health Insights.
+
 ### c. Gym membership details
 
 - Gym or club name
@@ -57,6 +59,14 @@ The App does **not** process gym payments and does not collect payment-card, ban
 
 We do **not** currently use any third-party analytics or advertising SDKs. The App does not use cookies.
 
+### f. Apple Health data (iOS only, never leaves your device)
+
+If you open Health Insights on an iPhone and allow access, the App **reads** (never writes) the following from Apple Health: weight, lean body mass, height, cardio fitness (VO2 max), heart rate variability, heart rate recovery, resting and active energy, and your sex and date of birth.
+
+- This data is processed **only on your device** to compute your insights. It is never sent to our servers, Firebase, or any third party, and is never used for advertising or marketing.
+- To keep the page fast, the App keeps a copy of the last 24 months of these readings in its on-device cache. The copy is refreshed at most once a day, is excluded from device backups, and is removed when you delete your account or uninstall the App.
+- You can stop access at any time in the Health app (profile picture › Apps › Gym Tracker).
+
 ## 3. Purposes and Legal Bases
 
 We process your personal data for the following purposes:
@@ -66,6 +76,7 @@ We process your personal data for the following purposes:
 | Create and maintain your account, provide the App's core features | Account data, preferences | Art. 6(1)(b) GDPR — performance of a contract                                         |
 | Store and display the gym membership history you enter            | Gym membership details    | Art. 6(1)(b) GDPR — performance of a contract                                         |
 | Log and display your workouts, attendances, and supplement intake | Health-related data       | **Art. 9(2)(a) GDPR — your explicit consent** (collected via the checkbox at sign-up) |
+| Show Health Insights computed from the Apple Health data you allow the App to read, personalized with the optional details you enter (iOS only) | Apple Health data (processed on your device), optional personal details | **Art. 9(2)(a) GDPR — your explicit consent** (the permission you grant in Apple's Health access sheet and the optional details you choose to enter) |
 | Keep the service secure and operational                           | Technical data            | Art. 6(1)(f) GDPR — legitimate interest in preventing abuse and ensuring reliability  |
 | Comply with legal obligations                                     | As needed                 | Art. 6(1)(c) GDPR — legal obligation                                                  |
 
@@ -87,6 +98,7 @@ Our sub-processor Google may process and store data on servers located outside t
 
 - **Account data and all content you create** are kept for as long as your account exists.
 - When you delete your account from **Settings → Delete Account**, we delete your Firestore data (attendances, workouts, supplement logs, gym memberships, and products you created) and your Firebase Authentication account.
+- **Apple Health data** is never stored on our servers. The copy kept in the App's on-device cache is refreshed at most once a day and removed when you delete your account or uninstall the App.
 - Some residual metadata (e.g. Firebase Authentication last-sign-in timestamps) may persist for a short operational window, typically up to 30 days, before being purged by Google.
 - We may retain minimal data longer only where required by law.
 

@@ -155,4 +155,27 @@ class Emojis {
 
   /// 💳  Credit card — manual membership purchase / history
   static const creditCard = '\u{1F4B3}';
+
+  // ── Health Insights ─────────────────────────────────────────────────────────
+
+  /// ⚖️  Balance scale — body composition / recomposition
+  static const scale = '\u{2696}\u{FE0F}';
+
+  /// ❤️  Red heart — cardio fitness
+  static const heart = '\u{2764}\u{FE0F}';
+
+  /// 🌙  Crescent moon — sleep / recovery
+  static const moon = '\u{1F319}';
+
+  /// 🧍  Person standing — physical overview snapshot
+  static const bodySilhouette = '\u{1F9CD}';
+
+  /// 💓  Beating heart — heart rate recovery
+  static const beatingHeart = '\u{1F493}';
+
+  /// 🧠  Brain — stress index
+  static const brain = '\u{1F9E0}';
+
+  /// 👥  Busy people — population comparison
+  static const people = '\u{1F465}';
 }

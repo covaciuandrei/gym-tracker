@@ -33,8 +33,6 @@ class LoginPage extends StatefulWidget implements AutoRouteWrapper {
 class _LoginPageState extends State<LoginPage> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
-  // final _emailCtrl = TextEditingController(text: 'etticov@gmail.com');
-  // final _passwordCtrl = TextEditingController(text: 'Test1234');
 
   @override
   void dispose() {

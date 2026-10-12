@@ -2,6 +2,8 @@ import 'package:injectable/injectable.dart';
 
 import 'package:gym_tracker/core/constants/currencies.dart';
 import 'package:gym_tracker/data/remote/user/user_source.dart';
+import 'package:gym_tracker/model/body_type.dart';
+import 'package:gym_tracker/model/sex.dart';
 import 'package:gym_tracker/model/user.dart';
 
 @injectable
@@ -14,6 +16,10 @@ class UserService {
   Future<User?> getById({required String userId}) => _source.getById(userId: userId);
 
   /// Creates the user profile document on sign-up.
+  ///
+  /// [sex], [birthDate], [heightCm], [weightKg] and [bodyType] are all
+  /// independently optional — the registration personal-details step is
+  /// skippable in whole or in part.
   Future<void> createUser({
     required String userId,
     required String email,
@@ -21,6 +27,11 @@ class UserService {
     required String language,
     required String currency,
     required Map<String, Object?> consent,
+    Sex? sex,
+    DateTime? birthDate,
+    double? heightCm,
+    double? weightKg,
+    BodyType? bodyType,
   }) => _source.create(
     userId: userId,
     email: email,
@@ -28,6 +39,11 @@ class UserService {
     language: language,
     currency: normalizeCurrencyCode(currency),
     consent: consent,
+    sex: sex,
+    birthDate: birthDate,
+    heightCm: heightCm,
+    weightKg: weightKg,
+    bodyType: bodyType,
   );
 
   /// Persists the account-level currency used to prefill new money records.

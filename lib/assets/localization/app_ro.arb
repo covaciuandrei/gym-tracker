@@ -22,6 +22,24 @@
   "authRegisterSuccess": "Cont creat!",
   "authRegisterSuccessMessage": "Verifică-ți emailul pentru a activa contul înainte de autentificare.",
   "authRegisterGoToLogin": "Mergi la autentificare",
+  "authRegisterContinue": "Continuă",
+  "authRegisterSkip": "Omite pentru moment",
+  "authPersonalDetailsTitle": "Personalizează-ți experiența",
+  "authPersonalDetailsSubtitle": "Opțional — ajută la personalizarea viitoarelor statistici de sănătate. Poți omite acest pas și îl poți completa mai târziu.",
+  "authPersonalDetailsSex": "Sex",
+  "authPersonalDetailsSexMale": "Masculin",
+  "authPersonalDetailsSexFemale": "Feminin",
+  "authPersonalDetailsBirthDate": "Data nașterii",
+  "authPersonalDetailsBirthDateHint": "Selectează data",
+  "authPersonalDetailsHeight": "Înălțime (cm)",
+  "authPersonalDetailsWeight": "Greutate (kg)",
+  "authPersonalDetailsBodyType": "Tip corporal",
+  "authPersonalDetailsBodyTypeLean": "Slab",
+  "authPersonalDetailsBodyTypeAthletic": "Atletic",
+  "authPersonalDetailsBodyTypeAverage": "Mediu",
+  "authPersonalDetailsBodyTypeSkinnyFat": "Skinny fat",
+  "authPersonalDetailsBodyTypeHigherBodyFat": "Grăsime corporală ridicată",
+  "authPersonalDetailsBack": "Înapoi",
   "authPasswordStrengthWeak": "Slabă",
   "authPasswordStrengthFair": "Medie",
   "authPasswordStrengthStrong": "Puternică",
@@ -177,6 +195,69 @@
   "workoutTypesPreview": "Previzualizare",
   "workoutTypesPreviewName": "Tip de antrenament",
   "healthTitle": "Sănătate",
+  "healthInsightsEntryTooltip": "Health Insights",
+  "healthInsightsTitle": "Health Insights",
+  "healthInsightsInfoClose": "Am înțeles",
+  "healthInsightsNoData": "Încă nu sunt suficiente date.",
+  "healthInsightsChartPeriod": "{start} – {end}",
+  "healthInsightsOverviewTitle": "Prezentare fizică",
+  "healthInsightsOverviewInfo": "Cele mai recente valori ale greutății, masei musculare și procentului de grăsime corporală din Apple Health, alături de o comparativă la alegere: persoane cu aceeași vârstă, sex și înălțime, sau o versiune anterioară a ta.",
+  "healthInsightsOverviewWeight": "Greutate",
+  "healthInsightsOverviewLeanMass": "Masă musculară",
+  "healthInsightsOverviewBodyFat": "Grăsime corporală",
+  "healthInsightsOverviewAge": "Vârstă",
+  "healthInsightsOverviewHeight": "Înălțime",
+  "healthInsightsOverviewStress": "Stres",
+  "healthInsightsStressBandLow": "Scăzut",
+  "healthInsightsStressBandTypical": "Tipic",
+  "healthInsightsStressBandElevated": "Ridicat",
+  "healthInsightsStressBandHigh": "Foarte ridicat",
+  "healthInsightsOverviewCompareCta": "Atinge pentru comparație",
+  "healthInsightsComparePopulation": "Populație",
+  "healthInsightsCompareSelf": "Tu, în trecut",
+  "healthInsightsWindow3m": "3 luni",
+  "healthInsightsWindow6m": "6 luni",
+  "healthInsightsWindow1y": "1 an",
+  "healthInsightsWindow2y": "2 ani",
+  "healthInsightsBodyCompTitle": "Recompoziție corporală",
+  "healthInsightsBodyCompInfo": "Arată dacă o schimbare recentă de greutate a venit din grăsime sau din masă musculară, folosind datele tale de greutate și masă musculară. O slăbire curată pierde grăsime păstrând masa musculară; recompoziția câștigă mușchi și pierde grăsime la o greutate similară.",
+  "healthInsightsBodyCompCutting": "Slăbire — pierzi grăsime, păstrezi mușchii",
+  "healthInsightsBodyCompBulking": "Creștere — câștigi greutate și mușchi",
+  "healthInsightsBodyCompRecomposition": "Recompoziție — câștigi mușchi, pierzi grăsime",
+  "healthInsightsBodyCompStable": "Stabil",
+  "healthInsightsBodyCompWeightLabel": "Greutate",
+  "healthInsightsBodyCompFatLabel": "Grăsime corporală",
+  "healthInsightsVo2Title": "VO2Max ajustat la greutate",
+  "healthInsightsVo2Info": "VO2Max măsoară cât de eficient îiși folosește corpul oxigenul în timpul efortului — un indicator esențial al condiției fizice. Deoarece Apple îl raportează per kilogram corporal, acest card arată și ce valoare ai avea la o greutate anterioară, ca să nu confunzi o schimbare reală de fitness cu una cauzată de greutate.",
+  "healthInsightsVo2Current": "VO2Max actual",
+  "healthInsightsVo2AtPastWeight": "La greutatea anterioară",
+  "healthInsightsHrrTitle": "Recuperarea Ritmului Cardiac",
+  "healthInsightsHrrInfo": "Câte bătăi pe minut scade ritmul tău cardiac în primul minut după terminarea exercițiului — un indicator consacrat al fitnessului cardiovascular și al modului în care sistemul nervos își revine. Pe baza Cole et al. (New England Journal of Medicine, 1999): o scădere de 12 bpm sau mai puțin a fost asociată cu un risc mai mare pentru sănătate în acel studiu, deci o scădere mai mare este, în general, mai bună.",
+  "healthInsightsHrrBandLabel": "Nivel de recuperare",
+  "healthInsightsHrrBandLow": "Scăzut",
+  "healthInsightsHrrBandFair": "Acceptabil",
+  "healthInsightsHrrBandGood": "Bun",
+  "healthInsightsHrrBandExcellent": "Excelent",
+  "healthInsightsMetabolicTitle": "Energie de repaus & TDEE",
+  "healthInsightsMetabolicInfo": "Două estimări personalizate ale ratei metabolice de repaus — Mifflin-St Jeor (vârstă/sex/înălțime/greutate) și, atunci când ai o citire recentă a masei slabe, ecuația Cunningham, considerată în general mai precisă pentru cei care își urmăresc compoziția corporală — afișate lângă mediile zilnice proprii ale Apple Watch, ca referință.",
+  "healthInsightsMetabolicTdee": "Ardere zilnică totală estimată",
+  "healthInsightsMetabolicCunningham": "Rată de repaus (după masa musculară)",
+  "healthInsightsMetabolicMifflin": "Rată de repaus (estimată)",
+  "healthInsightsMetabolicWatch": "Media de repaus Apple Watch",
+  "healthInsightsMetabolicActive": "Media activă Apple Watch",
+  "healthInsightsPermissionDeniedTitle": "Nu există date Apple Health",
+  "healthInsightsPermissionDeniedMessage": "Gym Tracker nu a putut citi date din Apple Health. Dacă nu ai permis accesul, deschide aplicația Sănătate, atinge poza de profil › Aplicații › Gym Tracker, activează datele, apoi încearcă din nou.",
+  "healthInsightsPopulationCompareSubtitle": "Comparativ cu un adult mediu din grupul de referință {cohort}, la înălțimea ta.",
+  "@healthInsightsPopulationCompareSubtitle": {
+    "placeholders": {
+      "cohort": {
+        "type": "String"
+      }
+    }
+  },
+  "healthInsightsPopulationCompareYou": "Tu",
+  "healthInsightsPopulationCompareAverage": "Media",
+  "healthInsightsHrrReferenceCaption": "Referință sănătoasă",
   "healthToday": "Astăzi",
   "healthMySupplements": "Suplimentele Mele",
   "healthAllSupplements": "Toate Suplimentele",
@@ -248,6 +329,8 @@
   "errorsUnknown": "Ceva nu a mers bine. Încearcă din nou.",
   "errorsFieldRequired": "Acest câmp este obligatoriu.",
   "errorsPasswordMismatch": "Parolele nu coincid.",
+  "errorsHeightInvalid": "Introdu o înălțime între 50 și 260 cm.",
+  "errorsWeightInvalid": "Introdu o greutate între 20 și 400 kg.",
   "settingsPasswordChangedSuccess": "Parola a fost schimbată cu succes.",
   "settingsDeleteAccount": "Șterge Contul",
   "settingsDeleteAccountTitle": "Șterge Contul",
@@ -352,7 +435,6 @@
   },
   "bigUpdateAction": "Actualizează acum",
   "bigUpdateLater": "Mai târziu",
-
   "membershipHistoryTitle": "Istoric abonamente la sală",
   "membershipAdd": "Adaugă abonament",
   "membershipAddFirst": "Adaugă primul abonament",
@@ -363,7 +445,9 @@
   "membershipDeleteConfirm": "Ștergi abonamentul pentru {gymName}? Acțiunea nu poate fi anulată.",
   "@membershipDeleteConfirm": {
     "placeholders": {
-      "gymName": { "type": "String" }
+      "gymName": {
+        "type": "String"
+      }
     }
   },
   "membershipEmptyTitle": "Niciun abonament adăugat",
@@ -379,7 +463,9 @@
   "membershipValidUntilValue": "Valabil până la {date}",
   "@membershipValidUntilValue": {
     "placeholders": {
-      "date": { "type": "String" }
+      "date": {
+        "type": "String"
+      }
     }
   },
   "membershipPrice": "Preț",
@@ -390,7 +476,9 @@
   "membershipDaysRemaining": "{count, plural, =0{Expiră astăzi} =1{1 zi rămasă} few{{count} zile rămase} other{{count} de zile rămase}}",
   "@membershipDaysRemaining": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "membershipMoreActions": "Acțiuni abonament",
@@ -405,11 +493,62 @@
   "membershipCalendarExpiredMessage": "Abonamentul {gymName} a expirat la {date}. Adaugă noua perioadă plătită când îl reînnoiești.",
   "@membershipCalendarExpiredMessage": {
     "placeholders": {
-      "gymName": { "type": "String" },
-      "date": { "type": "String" }
+      "gymName": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
     }
   },
   "membershipCalendarMissingTitle": "Niciun abonament înregistrat",
   "membershipCalendarMissingMessage": "Adaugă unul pentru a-i urmări valabilitatea împreună cu antrenamentele.",
-  "membershipCalendarDismiss": "Închide notificarea despre abonament"
+  "membershipCalendarDismiss": "Închide notificarea despre abonament",
+  "healthInsightsCompareVsPopulation": "Oameni ca tine",
+  "healthInsightsCompareVsPastSelf": "Tu, în trecut",
+  "healthInsightsWeight": "Greutate",
+  "healthInsightsLeanMass": "Masă slabă",
+  "healthInsightsBodyFat": "Grăsime corporală",
+  "healthInsightsHeight": "Înălțime",
+  "healthInsightsAsOf": "La data de {date}",
+  "@healthInsightsAsOf": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "healthInsightsErrorMessage": "Analizele de sănătate nu au putut fi încărcate.",
+  "healthInsightsNoDataTitle": "Încă nu sunt suficiente date",
+  "healthInsightsNoDataMessage": "Continuă să porți Apple Watch — acest card va apărea când există suficient istoric.",
+  "healthInsightsIncompleteProfileMessage": "Adaugă sexul și data nașterii pentru a debloca această comparație.",
+  "healthInsightsInfoButtonTooltip": "Ce înseamnă asta?",
+  "healthInsightsCloseAction": "Am înțeles",
+  "healthInsightsDisclaimer": "Doar estimări de wellness — nu reprezintă sfaturi medicale.",
+  "healthInsightsLoadErrorMessage": "Analizele de sănătate nu au putut fi încărcate. Te rugăm să încerci din nou.",
+  "healthInsightsBodyCompositionTitle": "Recompoziție corporală",
+  "healthInsightsBodyCompositionInfo": "Urmărește greutatea și masa slabă împreună, ca o schimbare de pe cântar să nu spună doar jumătate din poveste. Apple Health arată doar greutatea — acest card arată dacă o schimbare este grăsime, mușchi sau ambele, și (cu sexul tău) cum se compară aproximativ procentul de grăsime corporală cu al altor adulți.",
+  "healthInsightsDirectionCutting": "Definire — pierdere de grăsime",
+  "healthInsightsDirectionBulking": "Masă — creștere în greutate",
+  "healthInsightsDirectionRecomposition": "Recompoziție — grăsime jos, mușchi sus",
+  "healthInsightsDirectionStable": "Stabil",
+  "healthInsightsDirectionInsufficientData": "Încă nu sunt suficiente date",
+  "healthInsightsCardioFitnessTitle": "VO2Max ajustat la greutate",
+  "healthInsightsCardioFitnessInfo": "Apple raportează VO2Max per kilogram de greutate corporală, deci valoarea se schimbă odată cu greutatea ta — chiar dacă fitness-ul aerobic nu s-a schimbat. Acest card recalculează valoarea actuală la greutatea de comparație, ca să poți distinge o schimbare reală de fitness de una cauzată de greutate.",
+  "healthInsightsVo2MaxAtCompareWeight": "La greutatea ta din {date}, valoarea ar fi aproximativ {value}",
+  "@healthInsightsVo2MaxAtCompareWeight": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "healthInsightsMifflinStJeor": "Mifflin-St Jeor",
+  "healthInsightsCunningham": "Cunningham (masă slabă)",
+  "healthInsightsWatchBasalAvg": "Medie repaus Watch",
+  "healthInsightsWatchActiveAvg": "Medie activ Watch",
+  "healthInsightsTotalDailyEnergy": "Energie zilnică totală estimată"
 }

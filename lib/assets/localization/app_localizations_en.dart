@@ -76,6 +76,61 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authRegisterGoToLogin => 'Go to Sign In';
 
   @override
+  String get authRegisterContinue => 'Continue';
+
+  @override
+  String get authRegisterSkip => 'Skip for now';
+
+  @override
+  String get authPersonalDetailsTitle => 'Personalize your experience';
+
+  @override
+  String get authPersonalDetailsSubtitle =>
+      'Optional — helps tailor future health insights. You can skip this and add it later.';
+
+  @override
+  String get authPersonalDetailsSex => 'Sex';
+
+  @override
+  String get authPersonalDetailsSexMale => 'Male';
+
+  @override
+  String get authPersonalDetailsSexFemale => 'Female';
+
+  @override
+  String get authPersonalDetailsBirthDate => 'Date of birth';
+
+  @override
+  String get authPersonalDetailsBirthDateHint => 'Select date';
+
+  @override
+  String get authPersonalDetailsHeight => 'Height (cm)';
+
+  @override
+  String get authPersonalDetailsWeight => 'Weight (kg)';
+
+  @override
+  String get authPersonalDetailsBodyType => 'Body type';
+
+  @override
+  String get authPersonalDetailsBodyTypeLean => 'Lean';
+
+  @override
+  String get authPersonalDetailsBodyTypeAthletic => 'Athletic';
+
+  @override
+  String get authPersonalDetailsBodyTypeAverage => 'Average';
+
+  @override
+  String get authPersonalDetailsBodyTypeSkinnyFat => 'Skinny fat';
+
+  @override
+  String get authPersonalDetailsBodyTypeHigherBodyFat => 'Higher body fat';
+
+  @override
+  String get authPersonalDetailsBack => 'Back';
+
+  @override
   String get authPasswordStrengthWeak => 'Weak';
 
   @override
@@ -611,6 +666,188 @@ class AppLocalizationsEn extends AppLocalizations {
   String get healthTitle => 'Health';
 
   @override
+  String get healthInsightsEntryTooltip => 'Health Insights';
+
+  @override
+  String get healthInsightsTitle => 'Health Insights';
+
+  @override
+  String get healthInsightsInfoClose => 'Got it';
+
+  @override
+  String get healthInsightsNoData => 'Not enough data yet.';
+
+  @override
+  String healthInsightsChartPeriod(String start, String end) {
+    return '$start – $end';
+  }
+
+  @override
+  String get healthInsightsOverviewTitle => 'Physical Overview';
+
+  @override
+  String get healthInsightsOverviewInfo =>
+      'Your latest weight, lean mass, and body-fat % from Apple Health, alongside a comparison you choose: people who share your age, sex, and height, or an earlier version of yourself.';
+
+  @override
+  String get healthInsightsOverviewWeight => 'Weight';
+
+  @override
+  String get healthInsightsOverviewLeanMass => 'Lean mass';
+
+  @override
+  String get healthInsightsOverviewBodyFat => 'Body fat';
+
+  @override
+  String get healthInsightsOverviewAge => 'Age';
+
+  @override
+  String get healthInsightsOverviewHeight => 'Height';
+
+  @override
+  String get healthInsightsOverviewStress => 'Stress';
+
+  @override
+  String get healthInsightsStressBandLow => 'Low';
+
+  @override
+  String get healthInsightsStressBandTypical => 'Typical';
+
+  @override
+  String get healthInsightsStressBandElevated => 'Elevated';
+
+  @override
+  String get healthInsightsStressBandHigh => 'High';
+
+  @override
+  String get healthInsightsOverviewCompareCta => 'Tap to compare';
+
+  @override
+  String get healthInsightsComparePopulation => 'Population';
+
+  @override
+  String get healthInsightsCompareSelf => 'Past you';
+
+  @override
+  String get healthInsightsWindow3m => '3 months';
+
+  @override
+  String get healthInsightsWindow6m => '6 months';
+
+  @override
+  String get healthInsightsWindow1y => '1 year';
+
+  @override
+  String get healthInsightsWindow2y => '2 years';
+
+  @override
+  String get healthInsightsBodyCompTitle => 'Body Recomposition';
+
+  @override
+  String get healthInsightsBodyCompInfo =>
+      'Tracks whether a recent weight change came from fat or muscle, using your weight and lean-body-mass readings. A clean cut loses fat while keeping lean mass; recomposition gains muscle while losing fat at a similar weight.';
+
+  @override
+  String get healthInsightsBodyCompCutting =>
+      'Cutting — losing fat, keeping muscle';
+
+  @override
+  String get healthInsightsBodyCompBulking =>
+      'Bulking — gaining weight and muscle';
+
+  @override
+  String get healthInsightsBodyCompRecomposition =>
+      'Recomposition — gaining muscle, losing fat';
+
+  @override
+  String get healthInsightsBodyCompStable => 'Stable';
+
+  @override
+  String get healthInsightsBodyCompWeightLabel => 'Weight';
+
+  @override
+  String get healthInsightsBodyCompFatLabel => 'Body fat';
+
+  @override
+  String get healthInsightsVo2Title => 'Cardio Fitness (VO2Max)';
+
+  @override
+  String get healthInsightsVo2Info =>
+      'VO2Max measures how efficiently your body uses oxygen during exercise — a core fitness marker. Because Apple reports it per kilogram of body weight, this card also shows what your reading would be at a past weight, so a real fitness change isn\'t confused with a bodyweight change.';
+
+  @override
+  String get healthInsightsVo2Current => 'Current VO2Max';
+
+  @override
+  String get healthInsightsVo2AtPastWeight => 'At your past weight';
+
+  @override
+  String get healthInsightsHrrTitle => 'Heart Rate Recovery';
+
+  @override
+  String get healthInsightsHrrInfo =>
+      'How many beats per minute your heart rate drops in the first minute after exercise stops — a well-established marker of cardiovascular fitness and how well your nervous system recovers. Based on Cole et al. (New England Journal of Medicine, 1999): a drop of 12 bpm or less was linked to higher health risk in that study, so a bigger drop is generally better.';
+
+  @override
+  String get healthInsightsHrrBandLabel => 'Recovery level';
+
+  @override
+  String get healthInsightsHrrBandLow => 'Low';
+
+  @override
+  String get healthInsightsHrrBandFair => 'Fair';
+
+  @override
+  String get healthInsightsHrrBandGood => 'Good';
+
+  @override
+  String get healthInsightsHrrBandExcellent => 'Excellent';
+
+  @override
+  String get healthInsightsMetabolicTitle => 'Resting Energy & TDEE';
+
+  @override
+  String get healthInsightsMetabolicInfo =>
+      'Two personalized resting-metabolic-rate estimates — Mifflin-St Jeor (age/sex/height/weight) and, when you have a recent lean-body-mass reading, the Cunningham equation, generally considered more accurate for people who track body composition — shown next to Apple Watch\'s own daily averages for reference.';
+
+  @override
+  String get healthInsightsMetabolicTdee => 'Estimated total daily burn';
+
+  @override
+  String get healthInsightsMetabolicCunningham =>
+      'Resting rate (lean-mass based)';
+
+  @override
+  String get healthInsightsMetabolicMifflin => 'Resting rate (estimated)';
+
+  @override
+  String get healthInsightsMetabolicWatch => 'Apple Watch resting average';
+
+  @override
+  String get healthInsightsMetabolicActive => 'Apple Watch active average';
+
+  @override
+  String get healthInsightsPermissionDeniedTitle => 'No Apple Health data';
+
+  @override
+  String get healthInsightsPermissionDeniedMessage =>
+      'Gym Tracker couldn\'t read any Apple Health data. If you haven\'t allowed access, open the Health app, tap your profile picture › Apps › Gym Tracker, turn the data on, then try again.';
+
+  @override
+  String healthInsightsPopulationCompareSubtitle(String cohort) {
+    return 'Compared to an average adult in the $cohort reference group, at your height.';
+  }
+
+  @override
+  String get healthInsightsPopulationCompareYou => 'You';
+
+  @override
+  String get healthInsightsPopulationCompareAverage => 'Average';
+
+  @override
+  String get healthInsightsHrrReferenceCaption => 'Healthy reference';
+
+  @override
   String get healthToday => 'Today';
 
   @override
@@ -863,6 +1100,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Password must be at least 6 characters.';
 
   @override
+  String get errorsHeightInvalid => 'Enter a height between 50 and 260 cm.';
+
+  @override
+  String get errorsWeightInvalid => 'Enter a weight between 20 and 400 kg.';
+
+  @override
   String get settingsPasswordChangedSuccess => 'Password changed successfully.';
 
   @override
@@ -1098,4 +1341,106 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get membershipCalendarDismiss => 'Dismiss membership reminder';
+
+  @override
+  String get healthInsightsCompareVsPopulation => 'People like you';
+
+  @override
+  String get healthInsightsCompareVsPastSelf => 'Past you';
+
+  @override
+  String get healthInsightsWeight => 'Weight';
+
+  @override
+  String get healthInsightsLeanMass => 'Lean mass';
+
+  @override
+  String get healthInsightsBodyFat => 'Body fat';
+
+  @override
+  String get healthInsightsHeight => 'Height';
+
+  @override
+  String healthInsightsAsOf(String date) {
+    return 'As of $date';
+  }
+
+  @override
+  String get healthInsightsErrorMessage =>
+      'Could not load your Health Insights.';
+
+  @override
+  String get healthInsightsNoDataTitle => 'Not enough data yet';
+
+  @override
+  String get healthInsightsNoDataMessage =>
+      'Keep wearing your Apple Watch — this card will appear once there\'s enough history.';
+
+  @override
+  String get healthInsightsIncompleteProfileMessage =>
+      'Add your sex and date of birth to unlock this comparison.';
+
+  @override
+  String get healthInsightsInfoButtonTooltip => 'What does this mean?';
+
+  @override
+  String get healthInsightsCloseAction => 'Got it';
+
+  @override
+  String get healthInsightsDisclaimer =>
+      'Wellness estimates only — not medical advice.';
+
+  @override
+  String get healthInsightsLoadErrorMessage =>
+      'Could not load your Health Insights. Please try again.';
+
+  @override
+  String get healthInsightsBodyCompositionTitle => 'Body Recomposition';
+
+  @override
+  String get healthInsightsBodyCompositionInfo =>
+      'Tracks your weight and lean body mass together so a scale-weight change doesn\'t tell half the story. Apple Health shows weight alone — this card shows whether a change is fat, muscle, or both, and (with your sex) roughly how your body-fat % compares to other adults.';
+
+  @override
+  String get healthInsightsDirectionCutting => 'Cutting — losing fat';
+
+  @override
+  String get healthInsightsDirectionBulking => 'Bulking — gaining weight';
+
+  @override
+  String get healthInsightsDirectionRecomposition =>
+      'Recomposition — fat down, muscle up';
+
+  @override
+  String get healthInsightsDirectionStable => 'Stable';
+
+  @override
+  String get healthInsightsDirectionInsufficientData => 'Not enough data yet';
+
+  @override
+  String get healthInsightsCardioFitnessTitle => 'Weight-Adjusted VO2Max';
+
+  @override
+  String get healthInsightsCardioFitnessInfo =>
+      'Apple reports VO2Max per kilogram of bodyweight, so it moves whenever your weight does — even if your aerobic fitness hasn\'t changed. This card rescales your current reading to your comparison weight so you can tell a real fitness change from a bodyweight-driven one.';
+
+  @override
+  String healthInsightsVo2MaxAtCompareWeight(String date, String value) {
+    return 'At your $date weight, this reading would be about $value';
+  }
+
+  @override
+  String get healthInsightsMifflinStJeor => 'Mifflin-St Jeor';
+
+  @override
+  String get healthInsightsCunningham => 'Cunningham (lean mass)';
+
+  @override
+  String get healthInsightsWatchBasalAvg => 'Watch resting avg';
+
+  @override
+  String get healthInsightsWatchActiveAvg => 'Watch active avg';
+
+  @override
+  String get healthInsightsTotalDailyEnergy => 'Estimated total daily energy';
 }

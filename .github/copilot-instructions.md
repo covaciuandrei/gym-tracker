@@ -35,7 +35,9 @@ APIs that require a newer Flutter version.
 
 `gym_tracker` is a gym attendance and health tracking app for Android and iOS.
 It tracks workouts, gym-membership purchase history, supplement intake, and
-statistics — all backed by Firebase Auth + Firestore.
+statistics — all backed by Firebase Auth + Firestore. On **iOS only** it also turns
+Apple Health data (weight, VO2Max, heart rate recovery, energy, …) into Health
+Insights, computed on the device and never uploaded; Android shows none of it.
 
 ---
 
@@ -142,8 +144,11 @@ decoration: BoxDecoration(
 | Services                 | `lib/service/<feature>/`                                     |
 | Firestore sources + DTOs | `lib/data/remote/<feature>/`                                 |
 | Mappers                  | `lib/data/mappers/`                                          |
+| Apple Health data layer  | `lib/data/health_insights/`                                  |
+| HealthKit Swift bridge   | `ios/Runner/HealthKitBridge.swift`                           |
 | Screen prep docs         | `docs/screens/<page_name>.md`                                |
 | Feature behavior maps    | `docs/features/<feature>.md`                                 |
+| Learning guides          | `docs/guides/<topic>.md`                                     |
 | App version status cache | `lib/core/app_version_status.dart`                           |
 | App version gate docs    | `docs/app_version_gate/`                                     |
 
@@ -171,6 +176,10 @@ decoration: BoxDecoration(
 /settings       [auth]    → SettingsPage        (lib/presentation/pages/settings/settings_page.dart, maintainState: false)
 /change-password[auth]    → ChangePasswordPage  (lib/presentation/pages/change_password/change_password_page.dart)
 /membership-history[auth] → MembershipHistoryPage (lib/presentation/pages/membership_history/membership_history_page.dart)
+/health-insights[auth]    → HealthInsightsPage  (lib/presentation/pages/health_insights/health_insights_page.dart, iOS-only entry icon on the Health tab)
+/health-insights/timeline [auth] → MetricTimelinePage (lib/presentation/pages/health_insights/metric_timeline_page.dart, pushed from the Body Recomposition / Cardio Fitness cards)
+/health-insights/compare  [auth] → TwoColumnComparisonPage (lib/presentation/pages/health_insights/two_column_comparison_page.dart, pushed from the Heart Rate Recovery card)
+/health-insights/overview [auth] → PhysicalOverviewDetailPage (lib/presentation/pages/health_insights/physical_overview_detail_page.dart, pushed from the Physical Overview card)
 /maintenance    [guest]   → MaintenancePage     (lib/presentation/pages/maintenance/maintenance_page.dart)
 /force-update   [guest]   → ForceUpdatePage     (lib/presentation/pages/force_update/force_update_page.dart)
 /no-connection  [guest]   → NoConnectionPage    (lib/presentation/pages/no_connection/no_connection_page.dart)
@@ -179,7 +188,7 @@ decoration: BoxDecoration(
 **Auth gating in current implementation:**
 
 - `SplashPage` runs the `SplashCubit` version gate **before** evaluating auth; it then `replaceAll`s with one of the terminal routes: `MaintenanceRoute`, `ForceUpdateRoute`, `NoConnectionRoute`, `OnboardingRoute`, `MainShellRoute`, or `LoginRoute`.
-- `AuthGuard` (`lib/core/guards/auth_guard.dart`) is attached to `MainShellRoute`, `WorkoutTypesRoute`, `SettingsRoute`, `ChangePasswordRoute`, and `MembershipHistoryRoute`. It allows only a non-null Firebase user whose `emailVerified` is true; null or unverified sessions redirect to `LoginRoute`. Authenticated-only pages can safely use `getIt<FirebaseAuth>().currentUser!.uid` in `build()`.
+- `AuthGuard` (`lib/core/guards/auth_guard.dart`) is attached to `MainShellRoute`, `WorkoutTypesRoute`, `SettingsRoute`, `ChangePasswordRoute`, `MembershipHistoryRoute`, and the four Health Insights routes (`HealthInsightsRoute`, `MetricTimelineRoute`, `TwoColumnComparisonRoute`, `PhysicalOverviewDetailRoute`). It allows only a non-null Firebase user whose `emailVerified` is true; null or unverified sessions redirect to `LoginRoute`. Authenticated-only pages can safely use `getIt<FirebaseAuth>().currentUser!.uid` in `build()`.
 - `OnboardingGuard` (`lib/core/guards/onboarding_guard.dart`) is attached to `MainShellRoute` and redirects to `OnboardingRoute` when `OnboardingHelper.isFirstLaunch` is true (defense-in-depth on top of the Splash gate).
 - Pages still listen to `AuthCubit` (`AuthSignOutSuccessState`, `AuthUnauthenticatedState`) to handle **runtime** sign-out — that's a separate concern from entry guards.
 
@@ -190,7 +199,7 @@ decoration: BoxDecoration(
 | Component                   | Actions / State                                                                                                                                                                                                                                                                                                      |
 | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **LoginComponent**          | `email`, `password` fields; `onSubmit()` → `AuthCubit.signIn()` → emits `AuthSignInSuccessState` → navigate `MainShell`; emits `AuthInvalidCredentialsState` or `AuthEmailNotVerifiedState` on failure; link to `/register`, `/forgot-password`                                                                      |
-| **RegisterComponent**       | `email`, `password`, `confirmPassword`, `displayName`; age 16+ and GDPR consent checkboxes (required); validates email/password/match; there is no language selector, so `language` is the current `LocaleHelper` value; `AuthCubit.signUp(...)` creates the profile with EUR default currency, mirrors the display name, signs out the unverified Firebase session, then emits `AuthSignUpSuccessState`; link to `/login` |
+| **RegisterComponent**       | `email`, `password`, `confirmPassword`, `displayName`; age 16+ and GDPR consent checkboxes (required); validates email/password/match; **on iOS only** a second step collects optional personal details (`sex`, `birthDate`, `heightCm`, `weightKg`, `bodyType`) used by Health Insights — Android registers in a single step; there is no language selector, so `language` is the current `LocaleHelper` value; `AuthCubit.signUp(...)` creates the profile with EUR default currency, mirrors the display name, signs out the unverified Firebase session, then emits `AuthSignUpSuccessState`; link to `/login` |
 | **ForgotPasswordComponent** | `email` field; `onSubmit()` → `AuthCubit.resetPassword({email})` → emits `AuthPasswordResetSentState`; link back to `/login`                                                                                                                                                                                         |
 
 **AuthCubit states:** `AuthAuthenticatedState`, `AuthUnauthenticatedState`, `AuthSignInSuccessState`, `AuthSignUpSuccessState`, `AuthSignOutSuccessState`, `AuthPasswordResetSentState`, `AuthPasswordChangedState`, `AuthAccountDeletedState`, `AuthEmailNotVerifiedState`, `AuthInvalidCredentialsState`, `AuthEmailAlreadyInUseState`, `AuthWeakPasswordState`.
@@ -257,6 +266,21 @@ All stats tabs share:
 | **All Supplements tab**     | Lists all products (global + user-created); client-side search; tapping a product quick-logs its default servings for today                                                                                  |
 | **Supplement form**         | Create/edit product: `name`, `brand`, default servings, and a manually entered ingredient list (`stdId` is generated locally from the name; supported units: mg/mcg/g/IU/ml)                                |
 | **Ingredient catalog**      | The current implementation does not read or seed the shared `ingredients` collection; Firestore-backed autocomplete remains a future improvement                                                            |
+
+#### HEALTH INSIGHTS FEATURE (iOS only)
+
+| Aspect                | Detail                                                                                                                                                                                                                                                                                    |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Purpose**           | Apple Watch / Apple Health analytics: Physical Overview (weight / age / height, body fat %, stress index), Body Recomposition, Cardio Fitness (weight-adjusted VO2Max), Heart Rate Recovery, and resting-energy + TDEE estimates                                                         |
+| **Platform**          | iOS only. Android shows nothing: the Health tab icon is `Platform.isIOS`-gated, the sign-up personal-details step is iOS-only, and `HealthKitSource` reports "unavailable" off iOS                                                                                                       |
+| **Entry**             | Insights icon in the Health (Supplements) tab app bar → `/health-insights`; cards push `/health-insights/timeline` (Body Recomposition, Cardio Fitness), `/health-insights/compare` (Heart Rate Recovery), `/health-insights/overview` (Physical Overview)                              |
+| **Data source**       | Live Apple Health through the app's own Swift bridge (`HealthKitBridge.swift`, channel `gym_tracker/healthkit`); read-only; last 24 months (`MetricTimelineBuilder.reportingWindowStart()`); at most one read per calendar day                                                            |
+| **Layers**            | `HealthInsightsPage` → `HealthInsightsCubit` → `HealthInsightsService` (+ analyzers) → `HealthRepository` → `AppleHealthRepository` → `HealthKitSource` → Swift bridge. `MetricTimelineCubit` and `PhysicalOverviewDetailCubit` read `HealthRepository` directly (documented exception) |
+| **Cache**             | One JSON file `health_insights_cache.json` in the OS cache dir (`Library/Caches`, never backed up). Cleared by pull-to-refresh / Retry (`HealthInsightsCubit.refresh()`) and by account deletion (`AccountCleanupService`)                                                                |
+| **Permission denial** | iOS hides it: "no data at all" → `HealthPermissionDeniedException` → "No Apple Health data" state with Retry                                                                                                                                                                         |
+| **Privacy**           | Apple Health data is never written to Firestore or sent anywhere. Related Firestore data = the optional self-reported `sex`, `birthDate`, `heightCm`, `weightKg`, `bodyType` on `users/{uid}` (profile values win over Apple Health for sex / birth date / height). Disclosed in the privacy policy |
+| **Tests**             | `MockHealthRepository` + anonymized fixtures in `test/fixtures/health_insights/`; iOS-only UI tests use `TargetPlatformVariant.only(TargetPlatform.iOS)`                                                                                                                                  |
+| **Docs**              | Feature map `docs/features/health_insights.md`; student walk-through `docs/guides/apple_health_data_flow.md`; rules in `.github/rules.md` § Apple Health                                                                                                                                  |
 
 #### WORKOUT TYPES FEATURE
 
@@ -336,6 +360,11 @@ firestore/
 │   │   ├── theme                        String   ← 'dark' | 'light'
 │   │   ├── language                     String   ← 'en' | 'ro'
 │   │   ├── currency                     String   ← account default: EUR | GBP | RON | USD
+│   │   ├── sex                          String?  ← optional, self-reported (iOS sign-up step): 'male' | 'female'
+│   │   ├── birthDate                    String?  ← optional, self-reported (iOS sign-up step): 'YYYY-MM-DD'
+│   │   ├── heightCm                     Number?  ← optional, self-reported (iOS sign-up step)
+│   │   ├── weightKg                     Number?  ← optional, self-reported (iOS sign-up step); the latest Apple Health weight wins when present
+│   │   ├── bodyType                     String?  ← optional, self-reported (iOS sign-up step): 'lean' | 'athletic' | 'average' | 'skinnyFat' | 'higherBodyFat'
 │   │   ├── lastLoginAt                  Timestamp
 │   │   ├── createdAt                    Timestamp
 │   │   ├── consent                      Map      ← GDPR: {termsVersion, privacyVersion, termsUrl, privacyUrl, acceptedAt, ipCountry?}
@@ -384,6 +413,7 @@ appConfig/
 - Membership `start_date` / `valid_until` values are timezone-safe `YYYY-MM-DD` strings; prices are integer minor units and currency is stored per record.
 - Membership renewal always creates a new document. No status or auto-renew field is persisted.
 - Reads on `appConfig/version` are **public** (anyone, including signed-out users) and happen on every cold-launch before any auth flow. Writes are blocked — only the Firebase Console can update it.
+- **Apple Health data is never stored in Firestore.** Only the optional, self-reported profile fields above exist there; the Apple Health snapshot is a device-local cache file (see § 7.4 and `docs/features/health_insights.md`).
 
 ### 7.4 Service / Source Map
 
@@ -392,10 +422,11 @@ appConfig/
 | Auth                   | `lib/service/auth/auth_service.dart`                                              | — (Firebase Auth SDK directly)                                                                                               |
 | Auth (cubit)           | `lib/cubit/auth/auth_cubit.dart`                                                  |                                                                                                                              |
 | User profile           | `lib/service/user/user_service.dart`                                              | `lib/data/remote/user/user_source.dart`                                                                                      |
-| Account cleanup        | `lib/service/account/account_cleanup_service.dart`                                | `lib/data/remote/account/` (deletes all user subcollections)                                                                 |
+| Account cleanup        | `lib/service/account/account_cleanup_service.dart`                                | `lib/data/remote/account/` (deletes all user subcollections) + `HealthRepository.clearCache()` (deletes the Apple Health cache file)                                                                 |
 | Attendance             | `lib/service/attendance/attendance_service.dart`                                  | `lib/data/remote/attendance/attendance_day_source.dart`                                                                      |
 | Workout types          | `lib/service/workout/workout_service.dart`                                        | `lib/data/remote/training_type/training_type_source.dart`                                                                    |
 | Health / Supplements   | `lib/service/health/health_service.dart`                                          | `lib/data/remote/supplement/health_source.dart`                                                                              |
+| Health Insights (iOS)  | `lib/service/health_insights/health_insights_service.dart` (+ analyzers)          | `lib/data/health_insights/` — `HealthRepository` → `AppleHealthRepository` → `HealthKitSource` (channel `gym_tracker/healthkit`) → `ios/Runner/HealthKitBridge.swift`; daily cache = `HealthCacheStore` + `HealthSnapshot` (no Firestore) |
 | Gym memberships        | `GymMembershipService` + `MembershipReminderService` in `lib/service/membership/` | `lib/data/remote/membership/gym_membership_source.dart` + per-user reminder dismissal in `SharedPreferences`                 |
 | Stats                  | `StatsCubit` composes attendance/workout/health services                          | —                                                                                                                            |
 | App config             | `lib/service/app_config/app_config_service.dart`                                  | `lib/data/remote/app_config/app_config_source.dart`                                                                          |
@@ -654,6 +685,33 @@ HealthPage
         └── [tap product] → logSupplement(userId, today, default servings)
 ```
 
+### 8.5 Health Insights Flow (iOS only)
+
+```
+Health tab (insights icon is Platform.isIOS-gated)
+    │
+    └── [tap insights icon] ──► HealthInsightsPage (HealthInsightsCubit.load)
+            │
+            ├── HealthInsightsService.load
+            │       ├── requestAuthorization() ──► iOS permission sheet (first time only)
+            │       └── AppleHealthRepository (daily cache)
+            │               ├── snapshot in memory from today? ──► answer instantly
+            │               ├── cache file from today?         ──► load file ──► answer
+            │               └── otherwise: HealthKitSource → Swift bridge → HealthKit
+            │                       8 metrics (24 months, in parallel) + sex + birth date
+            │                       → save health_insights_cache.json → answer
+            │
+            ├── ready ──► overview + 4 cards
+            │       ├── Physical Overview card ──► PhysicalOverviewDetailPage (population / past-you)
+            │       ├── Body Recomposition / Cardio Fitness ──► MetricTimelinePage
+            │       └── Heart Rate Recovery ──► TwoColumnComparisonPage
+            ├── no data at all (iOS hides denial) ──► "No Apple Health data" + [Retry]
+            └── other failure ──► generic error state
+
+    pull-to-refresh / Retry ──► HealthInsightsCubit.refresh() = clearCache() + load()
+    delete account          ──► AccountCleanupService → HealthRepository.clearCache()
+```
+
 ---
 
 ## 9. Coding Rules
@@ -688,22 +746,21 @@ For any task, load **only** the relevant vertical slice on top of the foundation
 | Workout Types    | workout_types page + workout cubit + workout service/data            | ~8k     |
 | Memberships      | membership history + cubit + service/data + membership model         | ~10k    |
 | Profile/Settings | profile + settings + change-password pages + settings cubit          | ~8k     |
+| Health Insights  | pages + 3 cubits + service/analyzers + data layer + Swift bridge     | ~38k    |
 
-> Token estimates measured from actual file sizes (April 2026) at ~3.75 chars/token. Foundation files (models, theme, base cubit/state) add ~10k on top of every slice.
+> Token estimates measured from actual file sizes (April 2026; Health Insights measured October 2026) at ~3.75 chars/token. Foundation files (models, theme, base cubit/state) add ~10k on top of every slice.
 
 This approach works within any 200k context window, leaving room for conversation and output.
 
-### Full-project load (complex cross-cutting tasks only)
+### Cross-cutting tasks (several features at once)
 
-The entire Flutter project (lib + test + docs + config, no generated files) fits in ~186k tokens. Loading everything is acceptable **only** for:
-
-- Cross-cutting refactors that touch 3+ features
-- Architecture changes (DI, routing, base classes)
-- Full audit / review tasks
+The whole project (no generated files, no fixtures) measured ~475k tokens in October 2026 — `lib/` ≈ 211k, `test/` ≈ 92k, `docs/` ≈ 92k, `.github/` ≈ 32k, `legal/` ≈ 18k, localization ≈ 14k — which does **not** fit a 200k window, so never load everything. For cross-cutting refactors (3+ features), architecture changes (DI, routing, base classes), or full audits: load the foundations, then work one feature slice at a time (or `lib/` alone, ≈ 211k, on a larger-context model).
 
 ### Never load
 
 - Generated files (`.g.dart`, `.gr.dart`, `.config.dart`, generated localizations, `firebase_options.dart`) — ~29k tokens of noise
+- `test/fixtures/health_insights/*.json` — ~2.3 MB of anonymized Apple Health sample data (~600k tokens); open a single fixture only when a test needs it
+- Raw Apple Health exports (`apple_health_export/`, gitignored) — never open or commit them
 - Binary assets (fonts, images)
 
 ---

@@ -80,6 +80,15 @@ When you create a supplement product you provide:
 
 Logging a supplement records it against the current day in your `healthLogs`, ready to be visualized in stats.
 
+### Health Insights — Apple Health analytics (iOS)
+
+An insights icon on the Health tab (**iOS only** — Android shows nothing of this feature, including the optional personal-details step at sign-up) opens analytics the stock Health app doesn't surface, read live from **Apple Health** (read-only):
+
+- **Physical Overview** — weight, age, height, plus body fat % and a stress index when there's a recent scale reading; opens a population vs. past-you comparison.
+- **Body Recomposition**, **Cardio Fitness (VO2Max, weight-adjusted)**, **Heart Rate Recovery**, and **Resting Energy & TDEE** cards, each with monthly charts or a reference comparison.
+- Covers the **last 24 months**. Apple Health is read at most **once per day** and kept as one file in the iOS Caches folder (never backed up, never uploaded, never written to Firestore); pull to refresh re-reads it.
+- Want to understand how it works under the hood? [`docs/guides/apple_health_data_flow.md`](docs/guides/apple_health_data_flow.md) explains the whole path from the iPhone to the screen, with code, for newcomers.
+
 ### Statistics — multi-tab yearly dashboard
 
 The Stats page is a shell with a year selector (← year →) and **four tabs**:
@@ -152,8 +161,9 @@ Detailed UI specs for every screen live under [`docs/screens/`](docs/screens/):
 | Navigation       | `auto_route`                                    |
 | Dependency inj.  | `get_it` + `injectable`                         |
 | Backend          | Firebase Auth + Cloud Firestore                 |
+| Health data (iOS)| Apple HealthKit via an in-app Swift bridge (read-only) |
 | Crash reporting  | Firebase Crashlytics                            |
-| Local storage    | `shared_preferences` + `flutter_secure_storage` |
+| Local storage    | `shared_preferences` + `flutter_secure_storage` + `path_provider` (Health Insights daily cache file) |
 | Serialization    | `json_serializable` / `json_annotation`         |
 | Localization     | `flutter_localizations` + ARB files             |
 | Testing          | `flutter_test` + `mocktail`                     |
@@ -200,6 +210,7 @@ lib/
 │   ├── base_cubit.dart
 │   └── base_state.dart
 ├── data/
+│   ├── health_insights/         # Apple Health repository, HealthKit channel client, daily cache
 │   ├── mappers/                 # DTO ↔ model
 │   └── remote/                  # Firestore sources + DTOs
 ├── model/                       # Domain models (pure Dart)
@@ -212,7 +223,8 @@ lib/
 test/                            # Mirrors lib/ structure
 docs/screens/                    # Per-screen UI prep docs
 docs/features/                  # End-to-end feature behavior and code-flow maps
-android/  ios/                   # Platform projects
+docs/guides/                     # Learning guides (e.g. how Apple Health data reaches the app)
+android/  ios/                   # Platform projects (ios/Runner/HealthKitBridge.swift = Apple Health bridge)
 firestore.rules                  # Firestore security rules
 ```
 
@@ -291,6 +303,10 @@ The app's [version gate](#app-version-gate) reads a singleton document at `appCo
 ```
 
 > `termsUrls` and `privacyUrls` are optional at runtime — the app falls back to hardcoded constants in `lib/core/constants/legal_urls.dart` when either is missing. `termsVersion` / `privacyVersion` are short revision ids (free-form strings) persisted alongside the user's consent record so you can tell _which_ legal text each user accepted. The static HTML pages themselves live under `legal/` and are deployed via Firebase Hosting (`firebase deploy --only hosting`).
+
+### Apple Health (iOS)
+
+Health Insights reads Apple Health through `ios/Runner/HealthKitBridge.swift`. The Runner target already has the **HealthKit** capability (`ios/Runner/Runner.entitlements`) and the `NSHealthShareUsageDescription` string (localized in `en.lproj` / `ro.lproj`). With automatic signing, Xcode enables HealthKit on your App ID on the first device build; if signing fails, open `ios/Runner.xcworkspace` once and let Xcode refresh the provisioning profile. The simulator's Health store starts empty — add samples in its Health app or test on an iPhone.
 
 ---
 

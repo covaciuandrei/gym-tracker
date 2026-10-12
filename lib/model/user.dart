@@ -1,4 +1,6 @@
 import 'package:equatable/equatable.dart';
+import 'package:gym_tracker/model/body_type.dart';
+import 'package:gym_tracker/model/sex.dart';
 
 class User extends Equatable {
   const User({
@@ -13,6 +15,11 @@ class User extends Equatable {
     required this.totalAttendances,
     this.lastVerificationEmailSentAt,
     this.consent,
+    this.sex,
+    this.birthDate,
+    this.heightCm,
+    this.weightKg,
+    this.bodyType,
   });
 
   final String id;
@@ -33,6 +40,19 @@ class User extends Equatable {
   /// and preserved by [UserSource.recordLogin] (merge: true).
   final Map<String, Object?>? consent;
 
+  /// Optional self-reported personal details, captured at registration.
+  ///
+  /// All five fields are independently optional (the personal-details step
+  /// is skippable) and are used only to seed the Health Insights feature
+  /// (population-benchmark lookups + a body-composition starting point)
+  /// before any Apple Health data is available. Never required to use the
+  /// app.
+  final Sex? sex;
+  final DateTime? birthDate;
+  final double? heightCm;
+  final double? weightKg;
+  final BodyType? bodyType;
+
   @override
   List<Object?> get props => [
     id,
@@ -46,5 +66,10 @@ class User extends Equatable {
     createdAt,
     totalAttendances,
     consent,
+    sex,
+    birthDate,
+    heightCm,
+    weightKg,
+    bodyType,
   ];
 }

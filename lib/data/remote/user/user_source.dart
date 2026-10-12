@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:injectable/injectable.dart';
 
 import 'package:gym_tracker/data/mappers/user_mapper.dart';
+import 'package:gym_tracker/model/body_type.dart';
+import 'package:gym_tracker/model/sex.dart';
 import 'package:gym_tracker/model/user.dart';
 import 'user_dto.dart';
 
@@ -30,6 +32,11 @@ class UserSource {
             createdAt: dto.createdAt,
             totalAttendances: dto.totalAttendances,
             consent: dto.consent,
+            sex: dto.sex,
+            birthDate: dto.birthDate,
+            heightCm: dto.heightCm,
+            weightKg: dto.weightKg,
+            bodyType: dto.bodyType,
           );
         },
         toFirestore: (dto, _) => dto.toJson(),
@@ -58,6 +65,11 @@ class UserSource {
     required String language,
     required String currency,
     required Map<String, Object?> consent,
+    Sex? sex,
+    DateTime? birthDate,
+    double? heightCm,
+    double? weightKg,
+    BodyType? bodyType,
   }) => _db.collection('users').doc(userId).set({
     'email': email,
     'displayName': displayName,
@@ -68,6 +80,11 @@ class UserSource {
     'lastLoginAt': FieldValue.serverTimestamp(),
     'lastVerificationEmailSentAt': Timestamp.now(),
     'consent': {...consent, 'acceptedAt': FieldValue.serverTimestamp()},
+    if (sex != null) 'sex': sex.storageValue,
+    if (birthDate != null) 'birthDate': _isoDate(birthDate),
+    'heightCm': ?heightCm,
+    'weightKg': ?weightKg,
+    if (bodyType != null) 'bodyType': bodyType.storageValue,
   }, SetOptions(merge: true));
 
   /// Updates the user's account-level default currency without touching any
@@ -82,4 +99,12 @@ class UserSource {
     'lastLoginAt': FieldValue.serverTimestamp(),
     'lastVerificationEmailSentAt': FieldValue.delete(),
   }, SetOptions(merge: true));
+}
+
+/// Formats [date] as the canonical `YYYY-MM-DD` string used for date-only
+/// Firestore fields (see Date Presentation rule in `.github/rules.md`).
+String _isoDate(DateTime date) {
+  final month = date.month.toString().padLeft(2, '0');
+  final day = date.day.toString().padLeft(2, '0');
+  return '${date.year.toString().padLeft(4, '0')}-$month-$day';
 }

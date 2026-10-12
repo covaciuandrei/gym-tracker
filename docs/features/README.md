@@ -40,6 +40,7 @@ change set.
 | Settings | [settings.md](settings.md) | ✅ Implemented |
 | App version gate (splash / maintenance / force-update) | [app_version_gate.md](app_version_gate.md) | ✅ Implemented |
 | Onboarding | [onboarding.md](onboarding.md) | ✅ Implemented |
+| Health Insights (Apple Health analytics, iOS-only) | [health_insights.md](health_insights.md) | ✅ Implemented |
 
 > **Status legend:** ✅ Implemented = complete and verified · 🚧 In progress = the
 > implementation or its feature map is intentionally incomplete.
@@ -50,4 +51,6 @@ change set.
   [`.github/copilot-instructions.md`](../../.github/copilot-instructions.md).
 - **Coding rules:** [`.github/rules.md`](../../.github/rules.md).
 - **Per-screen UI prep:** [`docs/screens/`](../screens/).
+- **Guides (concept deep-dives for learning the code):** [`docs/guides/`](../guides/) — e.g.
+  [how Apple Health data reaches the app](../guides/apple_health_data_flow.md).
 - **Feature behavior & code flow (this folder):** the canonical map for changing a feature.

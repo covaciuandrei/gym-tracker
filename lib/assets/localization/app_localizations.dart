@@ -230,6 +230,114 @@ abstract class AppLocalizations {
   /// **'Go to Sign In'**
   String get authRegisterGoToLogin;
 
+  /// No description provided for @authRegisterContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get authRegisterContinue;
+
+  /// No description provided for @authRegisterSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get authRegisterSkip;
+
+  /// No description provided for @authPersonalDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Personalize your experience'**
+  String get authPersonalDetailsTitle;
+
+  /// No description provided for @authPersonalDetailsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — helps tailor future health insights. You can skip this and add it later.'**
+  String get authPersonalDetailsSubtitle;
+
+  /// No description provided for @authPersonalDetailsSex.
+  ///
+  /// In en, this message translates to:
+  /// **'Sex'**
+  String get authPersonalDetailsSex;
+
+  /// No description provided for @authPersonalDetailsSexMale.
+  ///
+  /// In en, this message translates to:
+  /// **'Male'**
+  String get authPersonalDetailsSexMale;
+
+  /// No description provided for @authPersonalDetailsSexFemale.
+  ///
+  /// In en, this message translates to:
+  /// **'Female'**
+  String get authPersonalDetailsSexFemale;
+
+  /// No description provided for @authPersonalDetailsBirthDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date of birth'**
+  String get authPersonalDetailsBirthDate;
+
+  /// No description provided for @authPersonalDetailsBirthDateHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select date'**
+  String get authPersonalDetailsBirthDateHint;
+
+  /// No description provided for @authPersonalDetailsHeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Height (cm)'**
+  String get authPersonalDetailsHeight;
+
+  /// No description provided for @authPersonalDetailsWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight (kg)'**
+  String get authPersonalDetailsWeight;
+
+  /// No description provided for @authPersonalDetailsBodyType.
+  ///
+  /// In en, this message translates to:
+  /// **'Body type'**
+  String get authPersonalDetailsBodyType;
+
+  /// No description provided for @authPersonalDetailsBodyTypeLean.
+  ///
+  /// In en, this message translates to:
+  /// **'Lean'**
+  String get authPersonalDetailsBodyTypeLean;
+
+  /// No description provided for @authPersonalDetailsBodyTypeAthletic.
+  ///
+  /// In en, this message translates to:
+  /// **'Athletic'**
+  String get authPersonalDetailsBodyTypeAthletic;
+
+  /// No description provided for @authPersonalDetailsBodyTypeAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Average'**
+  String get authPersonalDetailsBodyTypeAverage;
+
+  /// No description provided for @authPersonalDetailsBodyTypeSkinnyFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Skinny fat'**
+  String get authPersonalDetailsBodyTypeSkinnyFat;
+
+  /// No description provided for @authPersonalDetailsBodyTypeHigherBodyFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Higher body fat'**
+  String get authPersonalDetailsBodyTypeHigherBodyFat;
+
+  /// No description provided for @authPersonalDetailsBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get authPersonalDetailsBack;
+
   /// No description provided for @authPasswordStrengthWeak.
   ///
   /// In en, this message translates to:
@@ -1208,6 +1316,342 @@ abstract class AppLocalizations {
   /// **'Health'**
   String get healthTitle;
 
+  /// No description provided for @healthInsightsEntryTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Insights'**
+  String get healthInsightsEntryTooltip;
+
+  /// No description provided for @healthInsightsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Health Insights'**
+  String get healthInsightsTitle;
+
+  /// No description provided for @healthInsightsInfoClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get healthInsightsInfoClose;
+
+  /// No description provided for @healthInsightsNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data yet.'**
+  String get healthInsightsNoData;
+
+  /// No description provided for @healthInsightsChartPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'{start} – {end}'**
+  String healthInsightsChartPeriod(String start, String end);
+
+  /// No description provided for @healthInsightsOverviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Physical Overview'**
+  String get healthInsightsOverviewTitle;
+
+  /// No description provided for @healthInsightsOverviewInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Your latest weight, lean mass, and body-fat % from Apple Health, alongside a comparison you choose: people who share your age, sex, and height, or an earlier version of yourself.'**
+  String get healthInsightsOverviewInfo;
+
+  /// No description provided for @healthInsightsOverviewWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get healthInsightsOverviewWeight;
+
+  /// No description provided for @healthInsightsOverviewLeanMass.
+  ///
+  /// In en, this message translates to:
+  /// **'Lean mass'**
+  String get healthInsightsOverviewLeanMass;
+
+  /// No description provided for @healthInsightsOverviewBodyFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Body fat'**
+  String get healthInsightsOverviewBodyFat;
+
+  /// No description provided for @healthInsightsOverviewAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Age'**
+  String get healthInsightsOverviewAge;
+
+  /// No description provided for @healthInsightsOverviewHeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Height'**
+  String get healthInsightsOverviewHeight;
+
+  /// No description provided for @healthInsightsOverviewStress.
+  ///
+  /// In en, this message translates to:
+  /// **'Stress'**
+  String get healthInsightsOverviewStress;
+
+  /// No description provided for @healthInsightsStressBandLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get healthInsightsStressBandLow;
+
+  /// No description provided for @healthInsightsStressBandTypical.
+  ///
+  /// In en, this message translates to:
+  /// **'Typical'**
+  String get healthInsightsStressBandTypical;
+
+  /// No description provided for @healthInsightsStressBandElevated.
+  ///
+  /// In en, this message translates to:
+  /// **'Elevated'**
+  String get healthInsightsStressBandElevated;
+
+  /// No description provided for @healthInsightsStressBandHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get healthInsightsStressBandHigh;
+
+  /// No description provided for @healthInsightsOverviewCompareCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to compare'**
+  String get healthInsightsOverviewCompareCta;
+
+  /// No description provided for @healthInsightsComparePopulation.
+  ///
+  /// In en, this message translates to:
+  /// **'Population'**
+  String get healthInsightsComparePopulation;
+
+  /// No description provided for @healthInsightsCompareSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'Past you'**
+  String get healthInsightsCompareSelf;
+
+  /// No description provided for @healthInsightsWindow3m.
+  ///
+  /// In en, this message translates to:
+  /// **'3 months'**
+  String get healthInsightsWindow3m;
+
+  /// No description provided for @healthInsightsWindow6m.
+  ///
+  /// In en, this message translates to:
+  /// **'6 months'**
+  String get healthInsightsWindow6m;
+
+  /// No description provided for @healthInsightsWindow1y.
+  ///
+  /// In en, this message translates to:
+  /// **'1 year'**
+  String get healthInsightsWindow1y;
+
+  /// No description provided for @healthInsightsWindow2y.
+  ///
+  /// In en, this message translates to:
+  /// **'2 years'**
+  String get healthInsightsWindow2y;
+
+  /// No description provided for @healthInsightsBodyCompTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Body Recomposition'**
+  String get healthInsightsBodyCompTitle;
+
+  /// No description provided for @healthInsightsBodyCompInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracks whether a recent weight change came from fat or muscle, using your weight and lean-body-mass readings. A clean cut loses fat while keeping lean mass; recomposition gains muscle while losing fat at a similar weight.'**
+  String get healthInsightsBodyCompInfo;
+
+  /// No description provided for @healthInsightsBodyCompCutting.
+  ///
+  /// In en, this message translates to:
+  /// **'Cutting — losing fat, keeping muscle'**
+  String get healthInsightsBodyCompCutting;
+
+  /// No description provided for @healthInsightsBodyCompBulking.
+  ///
+  /// In en, this message translates to:
+  /// **'Bulking — gaining weight and muscle'**
+  String get healthInsightsBodyCompBulking;
+
+  /// No description provided for @healthInsightsBodyCompRecomposition.
+  ///
+  /// In en, this message translates to:
+  /// **'Recomposition — gaining muscle, losing fat'**
+  String get healthInsightsBodyCompRecomposition;
+
+  /// No description provided for @healthInsightsBodyCompStable.
+  ///
+  /// In en, this message translates to:
+  /// **'Stable'**
+  String get healthInsightsBodyCompStable;
+
+  /// No description provided for @healthInsightsBodyCompWeightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get healthInsightsBodyCompWeightLabel;
+
+  /// No description provided for @healthInsightsBodyCompFatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Body fat'**
+  String get healthInsightsBodyCompFatLabel;
+
+  /// No description provided for @healthInsightsVo2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Cardio Fitness (VO2Max)'**
+  String get healthInsightsVo2Title;
+
+  /// No description provided for @healthInsightsVo2Info.
+  ///
+  /// In en, this message translates to:
+  /// **'VO2Max measures how efficiently your body uses oxygen during exercise — a core fitness marker. Because Apple reports it per kilogram of body weight, this card also shows what your reading would be at a past weight, so a real fitness change isn\'t confused with a bodyweight change.'**
+  String get healthInsightsVo2Info;
+
+  /// No description provided for @healthInsightsVo2Current.
+  ///
+  /// In en, this message translates to:
+  /// **'Current VO2Max'**
+  String get healthInsightsVo2Current;
+
+  /// No description provided for @healthInsightsVo2AtPastWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'At your past weight'**
+  String get healthInsightsVo2AtPastWeight;
+
+  /// No description provided for @healthInsightsHrrTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart Rate Recovery'**
+  String get healthInsightsHrrTitle;
+
+  /// No description provided for @healthInsightsHrrInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'How many beats per minute your heart rate drops in the first minute after exercise stops — a well-established marker of cardiovascular fitness and how well your nervous system recovers. Based on Cole et al. (New England Journal of Medicine, 1999): a drop of 12 bpm or less was linked to higher health risk in that study, so a bigger drop is generally better.'**
+  String get healthInsightsHrrInfo;
+
+  /// No description provided for @healthInsightsHrrBandLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery level'**
+  String get healthInsightsHrrBandLabel;
+
+  /// No description provided for @healthInsightsHrrBandLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get healthInsightsHrrBandLow;
+
+  /// No description provided for @healthInsightsHrrBandFair.
+  ///
+  /// In en, this message translates to:
+  /// **'Fair'**
+  String get healthInsightsHrrBandFair;
+
+  /// No description provided for @healthInsightsHrrBandGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get healthInsightsHrrBandGood;
+
+  /// No description provided for @healthInsightsHrrBandExcellent.
+  ///
+  /// In en, this message translates to:
+  /// **'Excellent'**
+  String get healthInsightsHrrBandExcellent;
+
+  /// No description provided for @healthInsightsMetabolicTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Resting Energy & TDEE'**
+  String get healthInsightsMetabolicTitle;
+
+  /// No description provided for @healthInsightsMetabolicInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Two personalized resting-metabolic-rate estimates — Mifflin-St Jeor (age/sex/height/weight) and, when you have a recent lean-body-mass reading, the Cunningham equation, generally considered more accurate for people who track body composition — shown next to Apple Watch\'s own daily averages for reference.'**
+  String get healthInsightsMetabolicInfo;
+
+  /// No description provided for @healthInsightsMetabolicTdee.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated total daily burn'**
+  String get healthInsightsMetabolicTdee;
+
+  /// No description provided for @healthInsightsMetabolicCunningham.
+  ///
+  /// In en, this message translates to:
+  /// **'Resting rate (lean-mass based)'**
+  String get healthInsightsMetabolicCunningham;
+
+  /// No description provided for @healthInsightsMetabolicMifflin.
+  ///
+  /// In en, this message translates to:
+  /// **'Resting rate (estimated)'**
+  String get healthInsightsMetabolicMifflin;
+
+  /// No description provided for @healthInsightsMetabolicWatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Watch resting average'**
+  String get healthInsightsMetabolicWatch;
+
+  /// No description provided for @healthInsightsMetabolicActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Watch active average'**
+  String get healthInsightsMetabolicActive;
+
+  /// No description provided for @healthInsightsPermissionDeniedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No Apple Health data'**
+  String get healthInsightsPermissionDeniedTitle;
+
+  /// No description provided for @healthInsightsPermissionDeniedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Gym Tracker couldn\'t read any Apple Health data. If you haven\'t allowed access, open the Health app, tap your profile picture › Apps › Gym Tracker, turn the data on, then try again.'**
+  String get healthInsightsPermissionDeniedMessage;
+
+  /// No description provided for @healthInsightsPopulationCompareSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Compared to an average adult in the {cohort} reference group, at your height.'**
+  String healthInsightsPopulationCompareSubtitle(String cohort);
+
+  /// No description provided for @healthInsightsPopulationCompareYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get healthInsightsPopulationCompareYou;
+
+  /// No description provided for @healthInsightsPopulationCompareAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Average'**
+  String get healthInsightsPopulationCompareAverage;
+
+  /// No description provided for @healthInsightsHrrReferenceCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Healthy reference'**
+  String get healthInsightsHrrReferenceCaption;
+
   /// No description provided for @healthToday.
   ///
   /// In en, this message translates to:
@@ -1676,6 +2120,18 @@ abstract class AppLocalizations {
   /// **'Password must be at least 6 characters.'**
   String get errorsPasswordTooShort;
 
+  /// No description provided for @errorsHeightInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a height between 50 and 260 cm.'**
+  String get errorsHeightInvalid;
+
+  /// No description provided for @errorsWeightInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a weight between 20 and 400 kg.'**
+  String get errorsWeightInvalid;
+
   /// No description provided for @settingsPasswordChangedSuccess.
   ///
   /// In en, this message translates to:
@@ -2095,6 +2551,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dismiss membership reminder'**
   String get membershipCalendarDismiss;
+
+  /// No description provided for @healthInsightsCompareVsPopulation.
+  ///
+  /// In en, this message translates to:
+  /// **'People like you'**
+  String get healthInsightsCompareVsPopulation;
+
+  /// No description provided for @healthInsightsCompareVsPastSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'Past you'**
+  String get healthInsightsCompareVsPastSelf;
+
+  /// No description provided for @healthInsightsWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get healthInsightsWeight;
+
+  /// No description provided for @healthInsightsLeanMass.
+  ///
+  /// In en, this message translates to:
+  /// **'Lean mass'**
+  String get healthInsightsLeanMass;
+
+  /// No description provided for @healthInsightsBodyFat.
+  ///
+  /// In en, this message translates to:
+  /// **'Body fat'**
+  String get healthInsightsBodyFat;
+
+  /// No description provided for @healthInsightsHeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Height'**
+  String get healthInsightsHeight;
+
+  /// No description provided for @healthInsightsAsOf.
+  ///
+  /// In en, this message translates to:
+  /// **'As of {date}'**
+  String healthInsightsAsOf(String date);
+
+  /// No description provided for @healthInsightsErrorMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your Health Insights.'**
+  String get healthInsightsErrorMessage;
+
+  /// No description provided for @healthInsightsNoDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data yet'**
+  String get healthInsightsNoDataTitle;
+
+  /// No description provided for @healthInsightsNoDataMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep wearing your Apple Watch — this card will appear once there\'s enough history.'**
+  String get healthInsightsNoDataMessage;
+
+  /// No description provided for @healthInsightsIncompleteProfileMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your sex and date of birth to unlock this comparison.'**
+  String get healthInsightsIncompleteProfileMessage;
+
+  /// No description provided for @healthInsightsInfoButtonTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'What does this mean?'**
+  String get healthInsightsInfoButtonTooltip;
+
+  /// No description provided for @healthInsightsCloseAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get healthInsightsCloseAction;
+
+  /// No description provided for @healthInsightsDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Wellness estimates only — not medical advice.'**
+  String get healthInsightsDisclaimer;
+
+  /// No description provided for @healthInsightsLoadErrorMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your Health Insights. Please try again.'**
+  String get healthInsightsLoadErrorMessage;
+
+  /// No description provided for @healthInsightsBodyCompositionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Body Recomposition'**
+  String get healthInsightsBodyCompositionTitle;
+
+  /// No description provided for @healthInsightsBodyCompositionInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracks your weight and lean body mass together so a scale-weight change doesn\'t tell half the story. Apple Health shows weight alone — this card shows whether a change is fat, muscle, or both, and (with your sex) roughly how your body-fat % compares to other adults.'**
+  String get healthInsightsBodyCompositionInfo;
+
+  /// No description provided for @healthInsightsDirectionCutting.
+  ///
+  /// In en, this message translates to:
+  /// **'Cutting — losing fat'**
+  String get healthInsightsDirectionCutting;
+
+  /// No description provided for @healthInsightsDirectionBulking.
+  ///
+  /// In en, this message translates to:
+  /// **'Bulking — gaining weight'**
+  String get healthInsightsDirectionBulking;
+
+  /// No description provided for @healthInsightsDirectionRecomposition.
+  ///
+  /// In en, this message translates to:
+  /// **'Recomposition — fat down, muscle up'**
+  String get healthInsightsDirectionRecomposition;
+
+  /// No description provided for @healthInsightsDirectionStable.
+  ///
+  /// In en, this message translates to:
+  /// **'Stable'**
+  String get healthInsightsDirectionStable;
+
+  /// No description provided for @healthInsightsDirectionInsufficientData.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data yet'**
+  String get healthInsightsDirectionInsufficientData;
+
+  /// No description provided for @healthInsightsCardioFitnessTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight-Adjusted VO2Max'**
+  String get healthInsightsCardioFitnessTitle;
+
+  /// No description provided for @healthInsightsCardioFitnessInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple reports VO2Max per kilogram of bodyweight, so it moves whenever your weight does — even if your aerobic fitness hasn\'t changed. This card rescales your current reading to your comparison weight so you can tell a real fitness change from a bodyweight-driven one.'**
+  String get healthInsightsCardioFitnessInfo;
+
+  /// No description provided for @healthInsightsVo2MaxAtCompareWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'At your {date} weight, this reading would be about {value}'**
+  String healthInsightsVo2MaxAtCompareWeight(String date, String value);
+
+  /// No description provided for @healthInsightsMifflinStJeor.
+  ///
+  /// In en, this message translates to:
+  /// **'Mifflin-St Jeor'**
+  String get healthInsightsMifflinStJeor;
+
+  /// No description provided for @healthInsightsCunningham.
+  ///
+  /// In en, this message translates to:
+  /// **'Cunningham (lean mass)'**
+  String get healthInsightsCunningham;
+
+  /// No description provided for @healthInsightsWatchBasalAvg.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch resting avg'**
+  String get healthInsightsWatchBasalAvg;
+
+  /// No description provided for @healthInsightsWatchActiveAvg.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch active avg'**
+  String get healthInsightsWatchActiveAvg;
+
+  /// No description provided for @healthInsightsTotalDailyEnergy.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated total daily energy'**
+  String get healthInsightsTotalDailyEnergy;
 }
 
 class _AppLocalizationsDelegate

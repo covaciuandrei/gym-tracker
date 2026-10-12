@@ -1,6 +1,6 @@
 # Register Page — Screen Doc
 
-> Last updated: 2026-04-19
+> Last updated: 2026-10-12 (personal-details step is iOS-only)
 
 ## Route
 
@@ -8,9 +8,39 @@
 
 ## Angular Source
 
-`src/app/features/auth/register/`
+`src/app/features/auth/register/` (credentials step only — the personal-details step
+below is a new, native addition with no Angular precursor).
 
-## Visual Layout
+## Two-step flow (2026-07-24)
+
+The page is now a 2-step wizard within a single route/widget (no route params). **The
+second step exists on iOS only**: its fields only feed Health Insights, which is iOS-only.
+On every other platform (Android) step 0's button reads "Create Account" and calls
+`signUp` directly with all 5 personal-detail fields `null`; the platform check is
+`defaultTargetPlatform == TargetPlatform.iOS` in `_RegisterPageState._collectsPersonalDetails`.
+
+1. **Step 0 — Credentials** (unchanged layout below): display name, email, password,
+   confirm password, age confirmation, legal consent. On iOS, "Continue" validates the form +
+   consent and advances to step 1 — it does **not** call `signUp` yet.
+2. **Step 1 — Personal details** (`_PersonalDetailsCard`, all fields optional):
+   - Back arrow (returns to step 0, credentials retained)
+   - Sex: `OptionToggle` (Male / Female) — tapping the active option deselects it
+   - Date of birth: tap-to-open `showDatePicker`, displayed via `AppDateFormatter`
+   - Height (cm) / Weight (kg): `CustomTextField`s, numeric-range validated only when
+     non-empty (50–260cm, 20–400kg)
+   - Body type: `Wrap` of 5 `ChoiceChip`s (Lean / Athletic / Average / Skinny fat /
+     Higher body fat)
+   - **Skip** (`TextButton`): calls `signUp` with all 5 personal-detail fields `null`,
+     regardless of anything typed
+   - **Create Account** (`GradientButton`): validates the optional numeric fields, then
+     calls `signUp` with whatever was filled
+
+`AuthCubit.signUp` is called exactly once, at the end of step 1 — there is no
+intermediate account state. Both steps share the same `AnimatedSwitcher` outer
+transition (success card replaces whichever step is showing); an inner
+`AnimatedSwitcher` transitions between step 0 and step 1.
+
+## Visual Layout (step 0 — credentials)
 
 ```
 Scaffold(backgroundColor: cs.surface)

@@ -101,6 +101,20 @@ void main() {
 
       expect(find.text('Sign in'), findsOneWidget);
     });
+
+    testWidgets('first button reads "Continue" on iOS, where a personal-details step follows', (tester) async {
+      await tester.pumpWidget(_buildApp(_idleCubit()));
+      await tester.pumpAndSettle();
+
+      expect(find.descendant(of: find.byType(GradientButton), matching: find.text('Continue')), findsOneWidget);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+    testWidgets('first button reads "Create Account" on Android, where there is no second step', (tester) async {
+      await tester.pumpWidget(_buildApp(_idleCubit()));
+      await tester.pumpAndSettle();
+
+      expect(find.descendant(of: find.byType(GradientButton), matching: find.text('Create Account')), findsOneWidget);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
   });
 
   group('RegisterPage — loading state', () {
@@ -187,7 +201,7 @@ void main() {
   });
 
   group('RegisterPage — form submit', () {
-    testWidgets('calls cubit.signUp with correct credentials on valid submit', (tester) async {
+    testWidgets('calls cubit.signUp with correct credentials after skipping personal details (iOS)', (tester) async {
       final cubit = _idleCubit();
       when(
         () => cubit.signUp(
@@ -196,13 +210,18 @@ void main() {
           displayName: any(named: 'displayName'),
           language: any(named: 'language'),
           consent: any(named: 'consent'),
+          sex: any(named: 'sex'),
+          birthDate: any(named: 'birthDate'),
+          heightCm: any(named: 'heightCm'),
+          weightKg: any(named: 'weightKg'),
+          bodyType: any(named: 'bodyType'),
         ),
       ).thenAnswer((_) async {});
 
       await tester.pumpWidget(_buildApp(cubit));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextFormField).at(0), 'Andrei');
+      await tester.enterText(find.byType(TextFormField).at(0), 'Test User');
       await tester.enterText(find.byType(TextFormField).at(1), 'user@test.com');
       await tester.enterText(find.byType(TextFormField).at(2), 'SecurePass1');
       await tester.enterText(find.byType(TextFormField).at(3), 'SecurePass1');
@@ -215,20 +234,101 @@ void main() {
       await tester.tap(find.byType(Checkbox).at(1));
       await tester.pump();
 
+      // Continue advances to the optional personal-details step (step 2) —
+      // signUp is not called yet.
       await tester.ensureVisible(find.byType(GradientButton));
       await tester.tap(find.byType(GradientButton));
+      await tester.pumpAndSettle();
+
+      verifyNever(
+        () => cubit.signUp(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+          displayName: any(named: 'displayName'),
+          language: any(named: 'language'),
+          consent: any(named: 'consent'),
+          sex: any(named: 'sex'),
+          birthDate: any(named: 'birthDate'),
+          heightCm: any(named: 'heightCm'),
+          weightKg: any(named: 'weightKg'),
+          bodyType: any(named: 'bodyType'),
+        ),
+      );
+
+      // Skip the personal-details step — signUp fires with every optional
+      // field set to null regardless of the (empty) form state.
+      await tester.ensureVisible(find.text('Skip for now'));
+      await tester.tap(find.text('Skip for now'));
       await tester.pump();
 
       verify(
         () => cubit.signUp(
           email: 'user@test.com',
           password: 'SecurePass1',
-          displayName: 'Andrei',
+          displayName: 'Test User',
           language: 'en',
           consent: any(named: 'consent'),
+          sex: null,
+          birthDate: null,
+          heightCm: null,
+          weightKg: null,
+          bodyType: null,
         ),
       ).called(1);
-    });
+    }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
+
+    testWidgets('signs up straight from the first step on Android, with no personal details', (tester) async {
+      final cubit = _idleCubit();
+      when(
+        () => cubit.signUp(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+          displayName: any(named: 'displayName'),
+          language: any(named: 'language'),
+          consent: any(named: 'consent'),
+          sex: any(named: 'sex'),
+          birthDate: any(named: 'birthDate'),
+          heightCm: any(named: 'heightCm'),
+          weightKg: any(named: 'weightKg'),
+          bodyType: any(named: 'bodyType'),
+        ),
+      ).thenAnswer((_) async {});
+
+      await tester.pumpWidget(_buildApp(cubit));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextFormField).at(0), 'Test User');
+      await tester.enterText(find.byType(TextFormField).at(1), 'user@test.com');
+      await tester.enterText(find.byType(TextFormField).at(2), 'SecurePass1');
+      await tester.enterText(find.byType(TextFormField).at(3), 'SecurePass1');
+
+      await tester.ensureVisible(find.byType(Checkbox).first);
+      await tester.tap(find.byType(Checkbox).at(0));
+      await tester.pump();
+      await tester.ensureVisible(find.byType(Checkbox).at(1));
+      await tester.tap(find.byType(Checkbox).at(1));
+      await tester.pump();
+
+      await tester.ensureVisible(find.byType(GradientButton));
+      await tester.tap(find.byType(GradientButton));
+      await tester.pumpAndSettle();
+
+      verify(
+        () => cubit.signUp(
+          email: 'user@test.com',
+          password: 'SecurePass1',
+          displayName: 'Test User',
+          language: 'en',
+          consent: any(named: 'consent'),
+          sex: null,
+          birthDate: null,
+          heightCm: null,
+          weightKg: null,
+          bodyType: null,
+        ),
+      ).called(1);
+      expect(find.text('Skip for now'), findsNothing);
+    }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 
     testWidgets('does NOT call signUp when legal consent is unchecked', (tester) async {
       final cubit = _idleCubit();
@@ -245,7 +345,7 @@ void main() {
       await tester.pumpWidget(_buildApp(cubit));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextFormField).at(0), 'Andrei');
+      await tester.enterText(find.byType(TextFormField).at(0), 'Test User');
       await tester.enterText(find.byType(TextFormField).at(1), 'user@test.com');
       await tester.enterText(find.byType(TextFormField).at(2), 'SecurePass1');
       await tester.enterText(find.byType(TextFormField).at(3), 'SecurePass1');
@@ -286,7 +386,7 @@ void main() {
       await tester.pumpWidget(_buildApp(cubit));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextFormField).at(0), 'Andrei');
+      await tester.enterText(find.byType(TextFormField).at(0), 'Test User');
       await tester.enterText(find.byType(TextFormField).at(1), 'user@test.com');
       await tester.enterText(find.byType(TextFormField).at(2), 'SecurePass1');
       await tester.enterText(find.byType(TextFormField).at(3), 'SecurePass1');
@@ -327,7 +427,7 @@ void main() {
       await tester.pumpWidget(_buildApp(cubit));
       await tester.pumpAndSettle();
 
-      await tester.enterText(find.byType(TextFormField).at(0), 'Andrei');
+      await tester.enterText(find.byType(TextFormField).at(0), 'Test User');
       await tester.enterText(find.byType(TextFormField).at(1), 'user@test.com');
       await tester.enterText(find.byType(TextFormField).at(2), 'SecurePass1');
       await tester.enterText(find.byType(TextFormField).at(3), 'SecurePass1');
@@ -362,7 +462,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Fill displayName and password but use an invalid email
-      await tester.enterText(find.byType(TextFormField).at(0), 'Andrei');
+      await tester.enterText(find.byType(TextFormField).at(0), 'Test User');
       await tester.enterText(find.byType(TextFormField).at(1), 'not-an-email');
 
       await tester.ensureVisible(find.byType(GradientButton));

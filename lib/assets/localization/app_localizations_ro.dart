@@ -78,6 +78,62 @@ class AppLocalizationsRo extends AppLocalizations {
   String get authRegisterGoToLogin => 'Mergi la autentificare';
 
   @override
+  String get authRegisterContinue => 'Continuă';
+
+  @override
+  String get authRegisterSkip => 'Omite pentru moment';
+
+  @override
+  String get authPersonalDetailsTitle => 'Personalizează-ți experiența';
+
+  @override
+  String get authPersonalDetailsSubtitle =>
+      'Opțional — ajută la personalizarea viitoarelor statistici de sănătate. Poți omite acest pas și îl poți completa mai târziu.';
+
+  @override
+  String get authPersonalDetailsSex => 'Sex';
+
+  @override
+  String get authPersonalDetailsSexMale => 'Masculin';
+
+  @override
+  String get authPersonalDetailsSexFemale => 'Feminin';
+
+  @override
+  String get authPersonalDetailsBirthDate => 'Data nașterii';
+
+  @override
+  String get authPersonalDetailsBirthDateHint => 'Selectează data';
+
+  @override
+  String get authPersonalDetailsHeight => 'Înălțime (cm)';
+
+  @override
+  String get authPersonalDetailsWeight => 'Greutate (kg)';
+
+  @override
+  String get authPersonalDetailsBodyType => 'Tip corporal';
+
+  @override
+  String get authPersonalDetailsBodyTypeLean => 'Slab';
+
+  @override
+  String get authPersonalDetailsBodyTypeAthletic => 'Atletic';
+
+  @override
+  String get authPersonalDetailsBodyTypeAverage => 'Mediu';
+
+  @override
+  String get authPersonalDetailsBodyTypeSkinnyFat => 'Skinny fat';
+
+  @override
+  String get authPersonalDetailsBodyTypeHigherBodyFat =>
+      'Grăsime corporală ridicată';
+
+  @override
+  String get authPersonalDetailsBack => 'Înapoi';
+
+  @override
   String get authPasswordStrengthWeak => 'Slabă';
 
   @override
@@ -621,6 +677,189 @@ class AppLocalizationsRo extends AppLocalizations {
   String get healthTitle => 'Sănătate';
 
   @override
+  String get healthInsightsEntryTooltip => 'Health Insights';
+
+  @override
+  String get healthInsightsTitle => 'Health Insights';
+
+  @override
+  String get healthInsightsInfoClose => 'Am înțeles';
+
+  @override
+  String get healthInsightsNoData => 'Încă nu sunt suficiente date.';
+
+  @override
+  String healthInsightsChartPeriod(String start, String end) {
+    return '$start – $end';
+  }
+
+  @override
+  String get healthInsightsOverviewTitle => 'Prezentare fizică';
+
+  @override
+  String get healthInsightsOverviewInfo =>
+      'Cele mai recente valori ale greutății, masei musculare și procentului de grăsime corporală din Apple Health, alături de o comparativă la alegere: persoane cu aceeași vârstă, sex și înălțime, sau o versiune anterioară a ta.';
+
+  @override
+  String get healthInsightsOverviewWeight => 'Greutate';
+
+  @override
+  String get healthInsightsOverviewLeanMass => 'Masă musculară';
+
+  @override
+  String get healthInsightsOverviewBodyFat => 'Grăsime corporală';
+
+  @override
+  String get healthInsightsOverviewAge => 'Vârstă';
+
+  @override
+  String get healthInsightsOverviewHeight => 'Înălțime';
+
+  @override
+  String get healthInsightsOverviewStress => 'Stres';
+
+  @override
+  String get healthInsightsStressBandLow => 'Scăzut';
+
+  @override
+  String get healthInsightsStressBandTypical => 'Tipic';
+
+  @override
+  String get healthInsightsStressBandElevated => 'Ridicat';
+
+  @override
+  String get healthInsightsStressBandHigh => 'Foarte ridicat';
+
+  @override
+  String get healthInsightsOverviewCompareCta => 'Atinge pentru comparație';
+
+  @override
+  String get healthInsightsComparePopulation => 'Populație';
+
+  @override
+  String get healthInsightsCompareSelf => 'Tu, în trecut';
+
+  @override
+  String get healthInsightsWindow3m => '3 luni';
+
+  @override
+  String get healthInsightsWindow6m => '6 luni';
+
+  @override
+  String get healthInsightsWindow1y => '1 an';
+
+  @override
+  String get healthInsightsWindow2y => '2 ani';
+
+  @override
+  String get healthInsightsBodyCompTitle => 'Recompoziție corporală';
+
+  @override
+  String get healthInsightsBodyCompInfo =>
+      'Arată dacă o schimbare recentă de greutate a venit din grăsime sau din masă musculară, folosind datele tale de greutate și masă musculară. O slăbire curată pierde grăsime păstrând masa musculară; recompoziția câștigă mușchi și pierde grăsime la o greutate similară.';
+
+  @override
+  String get healthInsightsBodyCompCutting =>
+      'Slăbire — pierzi grăsime, păstrezi mușchii';
+
+  @override
+  String get healthInsightsBodyCompBulking =>
+      'Creștere — câștigi greutate și mușchi';
+
+  @override
+  String get healthInsightsBodyCompRecomposition =>
+      'Recompoziție — câștigi mușchi, pierzi grăsime';
+
+  @override
+  String get healthInsightsBodyCompStable => 'Stabil';
+
+  @override
+  String get healthInsightsBodyCompWeightLabel => 'Greutate';
+
+  @override
+  String get healthInsightsBodyCompFatLabel => 'Grăsime corporală';
+
+  @override
+  String get healthInsightsVo2Title => 'VO2Max ajustat la greutate';
+
+  @override
+  String get healthInsightsVo2Info =>
+      'VO2Max măsoară cât de eficient îiși folosește corpul oxigenul în timpul efortului — un indicator esențial al condiției fizice. Deoarece Apple îl raportează per kilogram corporal, acest card arată și ce valoare ai avea la o greutate anterioară, ca să nu confunzi o schimbare reală de fitness cu una cauzată de greutate.';
+
+  @override
+  String get healthInsightsVo2Current => 'VO2Max actual';
+
+  @override
+  String get healthInsightsVo2AtPastWeight => 'La greutatea anterioară';
+
+  @override
+  String get healthInsightsHrrTitle => 'Recuperarea Ritmului Cardiac';
+
+  @override
+  String get healthInsightsHrrInfo =>
+      'Câte bătăi pe minut scade ritmul tău cardiac în primul minut după terminarea exercițiului — un indicator consacrat al fitnessului cardiovascular și al modului în care sistemul nervos își revine. Pe baza Cole et al. (New England Journal of Medicine, 1999): o scădere de 12 bpm sau mai puțin a fost asociată cu un risc mai mare pentru sănătate în acel studiu, deci o scădere mai mare este, în general, mai bună.';
+
+  @override
+  String get healthInsightsHrrBandLabel => 'Nivel de recuperare';
+
+  @override
+  String get healthInsightsHrrBandLow => 'Scăzut';
+
+  @override
+  String get healthInsightsHrrBandFair => 'Acceptabil';
+
+  @override
+  String get healthInsightsHrrBandGood => 'Bun';
+
+  @override
+  String get healthInsightsHrrBandExcellent => 'Excelent';
+
+  @override
+  String get healthInsightsMetabolicTitle => 'Energie de repaus & TDEE';
+
+  @override
+  String get healthInsightsMetabolicInfo =>
+      'Două estimări personalizate ale ratei metabolice de repaus — Mifflin-St Jeor (vârstă/sex/înălțime/greutate) și, atunci când ai o citire recentă a masei slabe, ecuația Cunningham, considerată în general mai precisă pentru cei care își urmăresc compoziția corporală — afișate lângă mediile zilnice proprii ale Apple Watch, ca referință.';
+
+  @override
+  String get healthInsightsMetabolicTdee => 'Ardere zilnică totală estimată';
+
+  @override
+  String get healthInsightsMetabolicCunningham =>
+      'Rată de repaus (după masa musculară)';
+
+  @override
+  String get healthInsightsMetabolicMifflin => 'Rată de repaus (estimată)';
+
+  @override
+  String get healthInsightsMetabolicWatch => 'Media de repaus Apple Watch';
+
+  @override
+  String get healthInsightsMetabolicActive => 'Media activă Apple Watch';
+
+  @override
+  String get healthInsightsPermissionDeniedTitle =>
+      'Nu există date Apple Health';
+
+  @override
+  String get healthInsightsPermissionDeniedMessage =>
+      'Gym Tracker nu a putut citi date din Apple Health. Dacă nu ai permis accesul, deschide aplicația Sănătate, atinge poza de profil › Aplicații › Gym Tracker, activează datele, apoi încearcă din nou.';
+
+  @override
+  String healthInsightsPopulationCompareSubtitle(String cohort) {
+    return 'Comparativ cu un adult mediu din grupul de referință $cohort, la înălțimea ta.';
+  }
+
+  @override
+  String get healthInsightsPopulationCompareYou => 'Tu';
+
+  @override
+  String get healthInsightsPopulationCompareAverage => 'Media';
+
+  @override
+  String get healthInsightsHrrReferenceCaption => 'Referință sănătoasă';
+
+  @override
   String get healthToday => 'Astăzi';
 
   @override
@@ -875,6 +1114,12 @@ class AppLocalizationsRo extends AppLocalizations {
       'Parola trebuie să aibă cel puțin 6 caractere.';
 
   @override
+  String get errorsHeightInvalid => 'Introdu o înălțime între 50 și 260 cm.';
+
+  @override
+  String get errorsWeightInvalid => 'Introdu o greutate între 20 și 400 kg.';
+
+  @override
   String get settingsPasswordChangedSuccess =>
       'Parola a fost schimbată cu succes.';
 
@@ -1114,4 +1359,108 @@ class AppLocalizationsRo extends AppLocalizations {
   @override
   String get membershipCalendarDismiss =>
       'Închide notificarea despre abonament';
+
+  @override
+  String get healthInsightsCompareVsPopulation => 'Oameni ca tine';
+
+  @override
+  String get healthInsightsCompareVsPastSelf => 'Tu, în trecut';
+
+  @override
+  String get healthInsightsWeight => 'Greutate';
+
+  @override
+  String get healthInsightsLeanMass => 'Masă slabă';
+
+  @override
+  String get healthInsightsBodyFat => 'Grăsime corporală';
+
+  @override
+  String get healthInsightsHeight => 'Înălțime';
+
+  @override
+  String healthInsightsAsOf(String date) {
+    return 'La data de $date';
+  }
+
+  @override
+  String get healthInsightsErrorMessage =>
+      'Analizele de sănătate nu au putut fi încărcate.';
+
+  @override
+  String get healthInsightsNoDataTitle => 'Încă nu sunt suficiente date';
+
+  @override
+  String get healthInsightsNoDataMessage =>
+      'Continuă să porți Apple Watch — acest card va apărea când există suficient istoric.';
+
+  @override
+  String get healthInsightsIncompleteProfileMessage =>
+      'Adaugă sexul și data nașterii pentru a debloca această comparație.';
+
+  @override
+  String get healthInsightsInfoButtonTooltip => 'Ce înseamnă asta?';
+
+  @override
+  String get healthInsightsCloseAction => 'Am înțeles';
+
+  @override
+  String get healthInsightsDisclaimer =>
+      'Doar estimări de wellness — nu reprezintă sfaturi medicale.';
+
+  @override
+  String get healthInsightsLoadErrorMessage =>
+      'Analizele de sănătate nu au putut fi încărcate. Te rugăm să încerci din nou.';
+
+  @override
+  String get healthInsightsBodyCompositionTitle => 'Recompoziție corporală';
+
+  @override
+  String get healthInsightsBodyCompositionInfo =>
+      'Urmărește greutatea și masa slabă împreună, ca o schimbare de pe cântar să nu spună doar jumătate din poveste. Apple Health arată doar greutatea — acest card arată dacă o schimbare este grăsime, mușchi sau ambele, și (cu sexul tău) cum se compară aproximativ procentul de grăsime corporală cu al altor adulți.';
+
+  @override
+  String get healthInsightsDirectionCutting => 'Definire — pierdere de grăsime';
+
+  @override
+  String get healthInsightsDirectionBulking => 'Masă — creștere în greutate';
+
+  @override
+  String get healthInsightsDirectionRecomposition =>
+      'Recompoziție — grăsime jos, mușchi sus';
+
+  @override
+  String get healthInsightsDirectionStable => 'Stabil';
+
+  @override
+  String get healthInsightsDirectionInsufficientData =>
+      'Încă nu sunt suficiente date';
+
+  @override
+  String get healthInsightsCardioFitnessTitle => 'VO2Max ajustat la greutate';
+
+  @override
+  String get healthInsightsCardioFitnessInfo =>
+      'Apple raportează VO2Max per kilogram de greutate corporală, deci valoarea se schimbă odată cu greutatea ta — chiar dacă fitness-ul aerobic nu s-a schimbat. Acest card recalculează valoarea actuală la greutatea de comparație, ca să poți distinge o schimbare reală de fitness de una cauzată de greutate.';
+
+  @override
+  String healthInsightsVo2MaxAtCompareWeight(String date, String value) {
+    return 'La greutatea ta din $date, valoarea ar fi aproximativ $value';
+  }
+
+  @override
+  String get healthInsightsMifflinStJeor => 'Mifflin-St Jeor';
+
+  @override
+  String get healthInsightsCunningham => 'Cunningham (masă slabă)';
+
+  @override
+  String get healthInsightsWatchBasalAvg => 'Medie repaus Watch';
+
+  @override
+  String get healthInsightsWatchActiveAvg => 'Medie activ Watch';
+
+  @override
+  String get healthInsightsTotalDailyEnergy =>
+      'Energie zilnică totală estimată';
 }

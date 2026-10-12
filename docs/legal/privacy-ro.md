@@ -1,7 +1,7 @@
 # Politica de confidențialitate
 
-**Ultima actualizare:** 22 iulie 2026
-**Data intrării în vigoare:** 22 iulie 2026
+**Ultima actualizare:** 12 octombrie 2026
+**Data intrării în vigoare:** 12 octombrie 2026
 
 Această Politică de confidențialitate explică modul în care **Gym Tracker** (denumită în continuare „Aplicația") colectează, utilizează și partajează datele tale cu caracter personal, precum și drepturile pe care le ai. Este redactată pentru a respecta Regulamentul General privind Protecția Datelor al UE („**GDPR**") și Legea nr. 190/2018.
 
@@ -34,6 +34,8 @@ Pentru că Aplicația îți permite să înregistrezi antrenamente și supliment
 - Produsele de suplimente înregistrate (nume, marcă, ingrediente) și porțiile luate zilnic
 - Statisticile derivate din cele de mai sus
 
+Pe iOS, la crearea contului poți alege (și poți sări peste) să introduci sexul, data nașterii, înălțimea, greutatea și tipul corporal. Aceste detalii sunt stocate împreună cu contul tău și sunt folosite exclusiv pentru a personaliza comparațiile din Health Insights.
+
 ### c. Detalii despre abonamentul la sală
 
 - Numele sălii sau clubului
@@ -57,6 +59,14 @@ Aplicația **nu** procesează plăți către săli și nu colectează date de ca
 
 În prezent **nu** folosim SDK-uri terțe de analiză sau publicitate. Aplicația nu folosește cookie-uri.
 
+### f. Date Apple Health (doar iOS, nu părăsesc dispozitivul)
+
+Dacă deschizi Health Insights pe un iPhone și permiți accesul, Aplicația **citește** (nu scrie niciodată) următoarele date din Apple Health: greutatea, masa corporală slabă, înălțimea, fitnessul cardio (VO2 max), variabilitatea ritmului cardiac, recuperarea ritmului cardiac, energia de repaus și cea activă, precum și sexul și data nașterii.
+
+- Aceste date sunt procesate **doar pe dispozitivul tău** pentru a-ți calcula analizele. Nu sunt trimise niciodată către serverele noastre, Firebase sau terți și nu sunt folosite pentru publicitate sau marketing.
+- Pentru ca pagina să se încarce rapid, Aplicația păstrează în cache-ul de pe dispozitiv o copie a ultimelor 24 de luni din aceste date. Copia este reîmprospătată cel mult o dată pe zi, este exclusă din copiile de siguranță ale dispozitivului și este ștearsă când îți ștergi contul sau dezinstalezi Aplicația.
+- Poți opri accesul oricând din aplicația Sănătate (poza de profil › Aplicații › Gym Tracker).
+
 ## 3. Scopuri și temeiuri juridice
 
 Prelucrăm datele tale pentru următoarele scopuri:
@@ -66,6 +76,7 @@ Prelucrăm datele tale pentru următoarele scopuri:
 | Crearea și menținerea contului, furnizarea funcționalităților esențiale             | Date de cont, preferințe           | Art. 6 alin. (1) lit. b) GDPR — executarea unui contract                                                |
 | Stocarea și afișarea istoricului abonamentelor la sală introdus de tine             | Detalii despre abonamentul la sală | Art. 6 alin. (1) lit. b) GDPR — executarea unui contract                                                |
 | Înregistrarea și afișarea antrenamentelor, prezențelor și a aportului de suplimente | Date privind sănătatea             | **Art. 9 alin. (2) lit. a) GDPR — consimțământul tău explicit** (colectat prin bifa de la înregistrare) |
+| Afișarea Health Insights calculate din datele Apple Health la care permiți accesul Aplicației, personalizate cu detaliile opționale introduse (doar iOS) | Date Apple Health (prelucrate pe dispozitivul tău), detalii personale opționale | **Art. 9 alin. (2) lit. a) GDPR — consimțământul tău explicit** (permisiunea acordată în fereastra Apple de acces la Sănătate și detaliile opționale pe care alegi să le introduci) |
 | Menținerea securității și funcționării serviciului                                  | Date tehnice                       | Art. 6 alin. (1) lit. f) GDPR — interes legitim în prevenirea abuzului și asigurarea fiabilității       |
 | Respectarea obligațiilor legale                                                     | După caz                           | Art. 6 alin. (1) lit. c) GDPR — obligație legală                                                        |
 
@@ -87,6 +98,7 @@ Sub-împuternicitul nostru Google poate prelucra și stoca date pe servere aflat
 
 - **Datele contului și tot conținutul pe care îl creezi** sunt păstrate atât timp cât contul tău există.
 - Când îți ștergi contul din **Setări → Ștergere cont**, ștergem datele tale din Firestore (prezențe, antrenamente, înregistrări de suplimente, abonamente la sală și produse create de tine) și contul tău din Firebase Authentication.
+- **Datele Apple Health** nu sunt stocate niciodată pe serverele noastre. Copia păstrată în cache-ul Aplicației de pe dispozitiv este reîmprospătată cel mult o dată pe zi și este ștearsă când îți ștergi contul sau dezinstalezi Aplicația.
 - Unele metadate reziduale (de ex. timestamp-urile de ultimă autentificare din Firebase Authentication) pot persista pentru o scurtă perioadă operațională, de regulă până la 30 de zile, înainte de a fi șterse de Google.
 - Putem păstra date minime pentru mai mult timp doar dacă legea ne obligă.
 

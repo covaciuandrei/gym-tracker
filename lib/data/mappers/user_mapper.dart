@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:gym_tracker/core/constants/currencies.dart';
 import 'package:gym_tracker/data/remote/user/user_dto.dart';
+import 'package:gym_tracker/model/body_type.dart';
+import 'package:gym_tracker/model/sex.dart';
 import 'package:gym_tracker/model/user.dart';
 import 'package:injectable/injectable.dart';
 
@@ -19,7 +21,19 @@ class UserMapper {
     createdAt: _toDateTime(dto.createdAt),
     totalAttendances: dto.totalAttendances,
     consent: dto.consent?.cast<String, Object?>(),
+    sex: Sex.fromStorage(dto.sex),
+    birthDate: _toNullableIsoDate(dto.birthDate),
+    heightCm: dto.heightCm,
+    weightKg: dto.weightKg,
+    bodyType: BodyType.fromStorage(dto.bodyType),
   );
+
+  /// Parses a canonical `YYYY-MM-DD` date-only string (see Date Presentation
+  /// rule in `.github/rules.md`). Returns `null` when absent or malformed.
+  DateTime? _toNullableIsoDate(String? value) {
+    if (value == null) return null;
+    return DateTime.tryParse(value);
+  }
 
   DateTime _toDateTime(Object? raw) => _toNullableDateTime(raw) ?? DateTime.now();
 

@@ -22,6 +22,24 @@
   "authRegisterSuccess": "Account Created!",
   "authRegisterSuccessMessage": "Please check your email to verify your account before signing in.",
   "authRegisterGoToLogin": "Go to Sign In",
+  "authRegisterContinue": "Continue",
+  "authRegisterSkip": "Skip for now",
+  "authPersonalDetailsTitle": "Personalize your experience",
+  "authPersonalDetailsSubtitle": "Optional — helps tailor future health insights. You can skip this and add it later.",
+  "authPersonalDetailsSex": "Sex",
+  "authPersonalDetailsSexMale": "Male",
+  "authPersonalDetailsSexFemale": "Female",
+  "authPersonalDetailsBirthDate": "Date of birth",
+  "authPersonalDetailsBirthDateHint": "Select date",
+  "authPersonalDetailsHeight": "Height (cm)",
+  "authPersonalDetailsWeight": "Weight (kg)",
+  "authPersonalDetailsBodyType": "Body type",
+  "authPersonalDetailsBodyTypeLean": "Lean",
+  "authPersonalDetailsBodyTypeAthletic": "Athletic",
+  "authPersonalDetailsBodyTypeAverage": "Average",
+  "authPersonalDetailsBodyTypeSkinnyFat": "Skinny fat",
+  "authPersonalDetailsBodyTypeHigherBodyFat": "Higher body fat",
+  "authPersonalDetailsBack": "Back",
   "authPasswordStrengthWeak": "Weak",
   "authPasswordStrengthFair": "Fair",
   "authPasswordStrengthStrong": "Strong",
@@ -227,6 +245,79 @@
   "workoutTypesPreview": "Preview",
   "workoutTypesPreviewName": "Workout Type",
   "healthTitle": "Health",
+  "healthInsightsEntryTooltip": "Health Insights",
+  "healthInsightsTitle": "Health Insights",
+  "healthInsightsInfoClose": "Got it",
+  "healthInsightsNoData": "Not enough data yet.",
+  "healthInsightsChartPeriod": "{start} – {end}",
+  "@healthInsightsChartPeriod": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "healthInsightsOverviewTitle": "Physical Overview",
+  "healthInsightsOverviewInfo": "Your latest weight, lean mass, and body-fat % from Apple Health, alongside a comparison you choose: people who share your age, sex, and height, or an earlier version of yourself.",
+  "healthInsightsOverviewWeight": "Weight",
+  "healthInsightsOverviewLeanMass": "Lean mass",
+  "healthInsightsOverviewBodyFat": "Body fat",
+  "healthInsightsOverviewAge": "Age",
+  "healthInsightsOverviewHeight": "Height",
+  "healthInsightsOverviewStress": "Stress",
+  "healthInsightsStressBandLow": "Low",
+  "healthInsightsStressBandTypical": "Typical",
+  "healthInsightsStressBandElevated": "Elevated",
+  "healthInsightsStressBandHigh": "High",
+  "healthInsightsOverviewCompareCta": "Tap to compare",
+  "healthInsightsComparePopulation": "Population",
+  "healthInsightsCompareSelf": "Past you",
+  "healthInsightsWindow3m": "3 months",
+  "healthInsightsWindow6m": "6 months",
+  "healthInsightsWindow1y": "1 year",
+  "healthInsightsWindow2y": "2 years",
+  "healthInsightsBodyCompTitle": "Body Recomposition",
+  "healthInsightsBodyCompInfo": "Tracks whether a recent weight change came from fat or muscle, using your weight and lean-body-mass readings. A clean cut loses fat while keeping lean mass; recomposition gains muscle while losing fat at a similar weight.",
+  "healthInsightsBodyCompCutting": "Cutting — losing fat, keeping muscle",
+  "healthInsightsBodyCompBulking": "Bulking — gaining weight and muscle",
+  "healthInsightsBodyCompRecomposition": "Recomposition — gaining muscle, losing fat",
+  "healthInsightsBodyCompStable": "Stable",
+  "healthInsightsBodyCompWeightLabel": "Weight",
+  "healthInsightsBodyCompFatLabel": "Body fat",
+  "healthInsightsVo2Title": "Cardio Fitness (VO2Max)",
+  "healthInsightsVo2Info": "VO2Max measures how efficiently your body uses oxygen during exercise — a core fitness marker. Because Apple reports it per kilogram of body weight, this card also shows what your reading would be at a past weight, so a real fitness change isn't confused with a bodyweight change.",
+  "healthInsightsVo2Current": "Current VO2Max",
+  "healthInsightsVo2AtPastWeight": "At your past weight",
+  "healthInsightsHrrTitle": "Heart Rate Recovery",
+  "healthInsightsHrrInfo": "How many beats per minute your heart rate drops in the first minute after exercise stops — a well-established marker of cardiovascular fitness and how well your nervous system recovers. Based on Cole et al. (New England Journal of Medicine, 1999): a drop of 12 bpm or less was linked to higher health risk in that study, so a bigger drop is generally better.",
+  "healthInsightsHrrBandLabel": "Recovery level",
+  "healthInsightsHrrBandLow": "Low",
+  "healthInsightsHrrBandFair": "Fair",
+  "healthInsightsHrrBandGood": "Good",
+  "healthInsightsHrrBandExcellent": "Excellent",
+  "healthInsightsMetabolicTitle": "Resting Energy & TDEE",
+  "healthInsightsMetabolicInfo": "Two personalized resting-metabolic-rate estimates — Mifflin-St Jeor (age/sex/height/weight) and, when you have a recent lean-body-mass reading, the Cunningham equation, generally considered more accurate for people who track body composition — shown next to Apple Watch's own daily averages for reference.",
+  "healthInsightsMetabolicTdee": "Estimated total daily burn",
+  "healthInsightsMetabolicCunningham": "Resting rate (lean-mass based)",
+  "healthInsightsMetabolicMifflin": "Resting rate (estimated)",
+  "healthInsightsMetabolicWatch": "Apple Watch resting average",
+  "healthInsightsMetabolicActive": "Apple Watch active average",
+  "healthInsightsPermissionDeniedTitle": "No Apple Health data",
+  "healthInsightsPermissionDeniedMessage": "Gym Tracker couldn't read any Apple Health data. If you haven't allowed access, open the Health app, tap your profile picture › Apps › Gym Tracker, turn the data on, then try again.",
+  "healthInsightsPopulationCompareSubtitle": "Compared to an average adult in the {cohort} reference group, at your height.",
+  "@healthInsightsPopulationCompareSubtitle": {
+    "placeholders": {
+      "cohort": {
+        "type": "String"
+      }
+    }
+  },
+  "healthInsightsPopulationCompareYou": "You",
+  "healthInsightsPopulationCompareAverage": "Average",
+  "healthInsightsHrrReferenceCaption": "Healthy reference",
   "healthToday": "Today",
   "healthMySupplements": "My Supplements",
   "healthAllSupplements": "All Supplements",
@@ -323,6 +414,8 @@
   "errorsFieldRequired": "This field is required.",
   "errorsPasswordMismatch": "Passwords do not match.",
   "errorsPasswordTooShort": "Password must be at least 6 characters.",
+  "errorsHeightInvalid": "Enter a height between 50 and 260 cm.",
+  "errorsWeightInvalid": "Enter a weight between 20 and 400 kg.",
   "settingsPasswordChangedSuccess": "Password changed successfully.",
   "settingsDeleteAccount": "Delete Account",
   "settingsDeleteAccountTitle": "Delete Account",
@@ -363,7 +456,6 @@
   },
   "bigUpdateAction": "Update now",
   "bigUpdateLater": "Remind me later",
-
   "membershipHistoryTitle": "Membership history",
   "membershipAdd": "Add membership",
   "membershipAddFirst": "Add first membership",
@@ -374,7 +466,9 @@
   "membershipDeleteConfirm": "Delete the membership for {gymName}? This cannot be undone.",
   "@membershipDeleteConfirm": {
     "placeholders": {
-      "gymName": { "type": "String" }
+      "gymName": {
+        "type": "String"
+      }
     }
   },
   "membershipEmptyTitle": "No memberships yet",
@@ -390,7 +484,9 @@
   "membershipValidUntilValue": "Valid until {date}",
   "@membershipValidUntilValue": {
     "placeholders": {
-      "date": { "type": "String" }
+      "date": {
+        "type": "String"
+      }
     }
   },
   "membershipPrice": "Price",
@@ -401,7 +497,9 @@
   "membershipDaysRemaining": "{count, plural, =0{Expires today} =1{1 day left} other{{count} days left}}",
   "@membershipDaysRemaining": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "membershipMoreActions": "Membership actions",
@@ -416,11 +514,62 @@
   "membershipCalendarExpiredMessage": "{gymName} expired on {date}. Add the new paid period when you renew.",
   "@membershipCalendarExpiredMessage": {
     "placeholders": {
-      "gymName": { "type": "String" },
-      "date": { "type": "String" }
+      "gymName": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      }
     }
   },
   "membershipCalendarMissingTitle": "No membership recorded",
   "membershipCalendarMissingMessage": "Add one to track its validity alongside your workouts.",
-  "membershipCalendarDismiss": "Dismiss membership reminder"
+  "membershipCalendarDismiss": "Dismiss membership reminder",
+  "healthInsightsCompareVsPopulation": "People like you",
+  "healthInsightsCompareVsPastSelf": "Past you",
+  "healthInsightsWeight": "Weight",
+  "healthInsightsLeanMass": "Lean mass",
+  "healthInsightsBodyFat": "Body fat",
+  "healthInsightsHeight": "Height",
+  "healthInsightsAsOf": "As of {date}",
+  "@healthInsightsAsOf": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "healthInsightsErrorMessage": "Could not load your Health Insights.",
+  "healthInsightsNoDataTitle": "Not enough data yet",
+  "healthInsightsNoDataMessage": "Keep wearing your Apple Watch — this card will appear once there's enough history.",
+  "healthInsightsIncompleteProfileMessage": "Add your sex and date of birth to unlock this comparison.",
+  "healthInsightsInfoButtonTooltip": "What does this mean?",
+  "healthInsightsCloseAction": "Got it",
+  "healthInsightsDisclaimer": "Wellness estimates only — not medical advice.",
+  "healthInsightsLoadErrorMessage": "Could not load your Health Insights. Please try again.",
+  "healthInsightsBodyCompositionTitle": "Body Recomposition",
+  "healthInsightsBodyCompositionInfo": "Tracks your weight and lean body mass together so a scale-weight change doesn't tell half the story. Apple Health shows weight alone — this card shows whether a change is fat, muscle, or both, and (with your sex) roughly how your body-fat % compares to other adults.",
+  "healthInsightsDirectionCutting": "Cutting — losing fat",
+  "healthInsightsDirectionBulking": "Bulking — gaining weight",
+  "healthInsightsDirectionRecomposition": "Recomposition — fat down, muscle up",
+  "healthInsightsDirectionStable": "Stable",
+  "healthInsightsDirectionInsufficientData": "Not enough data yet",
+  "healthInsightsCardioFitnessTitle": "Weight-Adjusted VO2Max",
+  "healthInsightsCardioFitnessInfo": "Apple reports VO2Max per kilogram of bodyweight, so it moves whenever your weight does — even if your aerobic fitness hasn't changed. This card rescales your current reading to your comparison weight so you can tell a real fitness change from a bodyweight-driven one.",
+  "healthInsightsVo2MaxAtCompareWeight": "At your {date} weight, this reading would be about {value}",
+  "@healthInsightsVo2MaxAtCompareWeight": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "healthInsightsMifflinStJeor": "Mifflin-St Jeor",
+  "healthInsightsCunningham": "Cunningham (lean mass)",
+  "healthInsightsWatchBasalAvg": "Watch resting avg",
+  "healthInsightsWatchActiveAvg": "Watch active avg",
+  "healthInsightsTotalDailyEnergy": "Estimated total daily energy"
 }

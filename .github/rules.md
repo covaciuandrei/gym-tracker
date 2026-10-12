@@ -25,6 +25,7 @@
 - **No business logic in widgets** — all state changes go through cubit methods.
 - **Service + source pattern** — cubits call services (`lib/service/*`), services call Firestore sources (`lib/data/remote/*`). Cubits never touch Firestore directly.
 - **Services are thin orchestration layers** — they delegate to sources and add only business-rule checks (existence guards). No Firestore logic in services.
+- **Health Insights is the one data-layer exception.** Its data comes from Apple Health, not Firestore, so the chain is `Page → Cubit → HealthInsightsService → HealthRepository → HealthKitSource → Swift bridge` (`lib/data/health_insights/`, `ios/Runner/HealthKitBridge.swift`). `MetricTimelineCubit` and `PhysicalOverviewDetailCubit` read the `HealthRepository` directly because they only chart the already-cached snapshot; do not add further cubits that skip the service. All other rules for this feature are in **Apple Health (Health Insights)** below.
 - **auto_route** — all navigation uses `context.router.push/replace/popAndPush`.
 - **Every page implements `AutoRouteWrapper`** with `wrappedRoute` creating its `BlocProvider`.
 - **`@RoutePage()` annotation required** on every page widget.
@@ -119,7 +120,24 @@ If any of these are true, the state **must** go through a cubit (emit state → 
   - Health logs: `users/{uid}/healthLogs/{YYYY-MM}/entries/{logId}`
 - **`yearMonth` format = `"YYYY-MM"`** (zero-padded month). **`date` format = `"YYYY-MM-DD"`**.
 - **yearMonth derivation:** services always derive from the date string via `date.substring(0, 7)`. Callers never pass yearMonth separately.
-- **No SQLite / Drift** — Firestore + SharedPreferences + FlutterSecureStorage only.
+- **No SQLite / Drift** — Firestore + SharedPreferences + FlutterSecureStorage only. The single exception is the Apple Health daily snapshot file (see **Apple Health (Health Insights)**).
+
+---
+
+## Apple Health (Health Insights)
+
+Apple Health data is among the most sensitive data a user has, so these rules are strict. A step-by-step walk-through for newcomers: [`docs/guides/apple_health_data_flow.md`](../docs/guides/apple_health_data_flow.md). Feature map: [`docs/features/health_insights.md`](../docs/features/health_insights.md).
+
+- **iOS only — Android must show nothing of this feature.** Gate every entry point: the Health tab's insights icon (`Platform.isIOS`), the sign-up personal-details step (`defaultTargetPlatform == TargetPlatform.iOS`), and `HealthKitSource` (reports "unavailable" off iOS). Widget tests run as Android by default — use `variant: TargetPlatformVariant.only(TargetPlatform.iOS)` for any iOS-only UI.
+- **Read-only.** Never write to Apple Health. Request only the metrics listed in `HealthKitSource.units`, and keep the Swift `metrics` keys identical to the Dart `HealthMetric` names.
+- **Apple Health data never leaves the device.** Never write it to Firestore, `SharedPreferences`, `FlutterSecureStorage`, logs, Crashlytics, analytics, or any network call. The **only** persisted copy is the daily snapshot file `health_insights_cache.json` in the OS cache directory (`getApplicationCacheDirectory()`, never backed up). It is deleted by `HealthRepository.clearCache()` and by `AccountCleanupService.deleteAllUserData`. Only the personal details the user types in themselves (`sex`, `birthDate`, `heightCm`, `weightKg`, `bodyType` on `users/{uid}`) may live in Firestore.
+- **Bounded, cached reads.** Read at most the window starting at `MetricTimelineBuilder.reportingWindowStart()` (24 months). At most **one** Apple Health read per calendar day; refresh and retry go through `HealthInsightsCubit.refresh()` (`clearCache()` + `load()`) — UI code never calls the source. Changing the snapshot shape requires bumping `HealthSnapshot.version`.
+- **iOS hides permission denial.** "No data at all" is treated as denied (`HealthPermissionDeniedException` → the "No Apple Health data" screen). Never claim to know the real permission state.
+- **Keep the boundary.** Cubits, services, and pages depend on the `HealthRepository` interface only — never on `HealthKitSource` or the method channel. Tests use `MockHealthRepository` and the anonymized fixtures.
+- **Anonymized fixtures only.** `test/fixtures/health_insights/*.json` must contain no names, real birth dates, or emails. Never commit a raw Apple Health export (`apple_health_export/` is gitignored). Regenerate fixtures only through `tools/extract_health_fixtures.mjs`.
+- **No personal data anywhere in the repo** — real emails, names, birth dates, or passwords never appear in code, tests, comments, docs, or fixtures (use obvious placeholders such as `user@example.com`).
+- **Privacy policy stays truthful.** Any change to what is read, stored, or shown from Apple Health must update `legal/privacy.html` (EN + RO) and `docs/legal/privacy-en.md` / `privacy-ro.md`, redeploy Firebase Hosting, and bump `appConfig/version.privacyVersion` so users re-accept it.
+- **Docs move with the code.** Keep `docs/guides/apple_health_data_flow.md` and `docs/features/health_insights.md` in sync with any change to the bridge, channel, cache, or gating.
 
 ---
 
@@ -196,6 +214,7 @@ When building or updating a page's UI, **always** follow this sequence:
 ## Feature Documentation
 
 - `docs/features/` is the canonical source for end-to-end feature behavior and code flow; `docs/screens/` remains the source for per-screen layout and interaction details.
+- `docs/guides/` holds concept deep-dives written for learning the code (for example `apple_health_data_flow.md`). Guides quote real code — when a guided file changes, update the guide in the same change set.
 - **Before changing a feature**, read its matching `docs/features/<feature>.md` file in addition to the relevant screen prep doc.
 - Any change to a feature's behavior, data model, navigation, cubit states, business rules, or user workflow **must update the matching feature map in the same change set**.
 - Every new user-facing feature must add a feature map based on `docs/features/_TEMPLATE.md` and an entry in `docs/features/README.md`.
@@ -232,7 +251,7 @@ Context-loading guidance (feature-slice token estimates, foundations list, never
 
 ## Git Conventions
 
-- Default branch: `master`.
+- Default branch: `main`.
 - Feature branches: `feature/<phase>-<description>`.
 - Commit message style: `feat: <description>` / `chore: <description>` / `fix: <description>`.
 

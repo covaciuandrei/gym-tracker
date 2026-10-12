@@ -1,12 +1,16 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
 import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/core/app_version_status.dart';
 import 'package:gym_tracker/core/injection.dart';
+import 'package:gym_tracker/core/utils/app_date_formatter.dart';
 import 'package:gym_tracker/cubit/auth/auth_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
+import 'package:gym_tracker/model/body_type.dart';
+import 'package:gym_tracker/model/sex.dart';
 import 'package:gym_tracker/presentation/controls/custom_text_field.dart';
 import 'package:gym_tracker/presentation/controls/emoji_text.dart';
 import 'package:gym_tracker/presentation/controls/error_banner.dart';
@@ -14,6 +18,7 @@ import 'package:gym_tracker/presentation/controls/form_card.dart';
 import 'package:gym_tracker/presentation/controls/gradient_button.dart';
 import 'package:gym_tracker/presentation/controls/labeled_checkbox.dart';
 import 'package:gym_tracker/presentation/controls/legal_consent_checkbox.dart';
+import 'package:gym_tracker/presentation/controls/option_toggle.dart';
 import 'package:gym_tracker/presentation/controls/password_match_indicator.dart';
 import 'package:gym_tracker/presentation/controls/password_strength_indicator.dart';
 import 'package:gym_tracker/presentation/controls/success_card.dart';
@@ -39,10 +44,6 @@ class _RegisterPageState extends State<RegisterPage> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
-  // final _nicknameCtrl = TextEditingController(text: 'Andrei');
-  // final _emailCtrl = TextEditingController(text: 'etticov@gmail.com');
-  // final _passwordCtrl = TextEditingController(text: 'Test1234');
-  // final _confirmCtrl = TextEditingController(text: 'Test1234');
 
   final _acceptedTerms = ValueNotifier<bool>(false);
   final _showConsentError = ValueNotifier<bool>(false);
@@ -53,8 +54,22 @@ class _RegisterPageState extends State<RegisterPage> {
   // user tries to submit without ticking it.
   final _consentBlockKey = GlobalKey();
 
+  // Step 2 — optional, skippable personal details. Purely local form state
+  // until `signUp` is called (rules.md ValueNotifier scope: local form drafts
+  // are fine outside a cubit).
+  final ValueNotifier<int> _step = ValueNotifier<int>(0);
+  final _detailsFormKey = GlobalKey<FormState>();
+  final _heightCtrl = TextEditingController();
+  final _weightCtrl = TextEditingController();
+  final ValueNotifier<Sex?> _sex = ValueNotifier<Sex?>(null);
+  final ValueNotifier<DateTime?> _birthDate = ValueNotifier<DateTime?>(null);
+  final ValueNotifier<BodyType?> _bodyType = ValueNotifier<BodyType?>(null);
+
   final LocaleHelper _localeHelper = getIt<LocaleHelper>();
   final AppVersionStatus _versionStatus = getIt<AppVersionStatus>();
+
+  // These details only feed Health Insights, which is iOS-only.
+  bool get _collectsPersonalDetails => defaultTargetPlatform == TargetPlatform.iOS;
 
   @override
   void dispose() {
@@ -66,10 +81,16 @@ class _RegisterPageState extends State<RegisterPage> {
     _showConsentError.dispose();
     _ageConfirmed.dispose();
     _showAgeError.dispose();
+    _step.dispose();
+    _heightCtrl.dispose();
+    _weightCtrl.dispose();
+    _sex.dispose();
+    _birthDate.dispose();
+    _bodyType.dispose();
     super.dispose();
   }
 
-  void _onSubmit(BuildContext ctx) {
+  void _onContinueFromCredentials(BuildContext ctx) {
     final formValid = _formKey.currentState?.validate() == true;
 
     var hasError = false;
@@ -89,6 +110,20 @@ class _RegisterPageState extends State<RegisterPage> {
 
     _showConsentError.value = false;
     _showAgeError.value = false;
+    if (!_collectsPersonalDetails) {
+      _onFinishRegistration(ctx, includeDetails: false);
+      return;
+    }
+    _step.value = 1;
+  }
+
+  /// Finishes registration. [includeDetails] is `false` when the user taps
+  /// "Skip" on the personal-details step — every optional field is then sent
+  /// as `null` regardless of what (if anything) was typed.
+  void _onFinishRegistration(BuildContext ctx, {required bool includeDetails}) {
+    if (includeDetails && _detailsFormKey.currentState?.validate() != true) {
+      return;
+    }
 
     final lang = _localeHelper.locale.languageCode;
     final consent = <String, Object?>{
@@ -108,7 +143,23 @@ class _RegisterPageState extends State<RegisterPage> {
       displayName: _nicknameCtrl.text.trim(),
       language: lang,
       consent: consent,
+      sex: includeDetails ? _sex.value : null,
+      birthDate: includeDetails ? _birthDate.value : null,
+      heightCm: includeDetails ? double.tryParse(_heightCtrl.text.trim()) : null,
+      weightKg: includeDetails ? double.tryParse(_weightCtrl.text.trim()) : null,
+      bodyType: includeDetails ? _bodyType.value : null,
     );
+  }
+
+  Future<void> _pickBirthDate(BuildContext ctx) async {
+    final now = DateTime.now();
+    final selected = await showDatePicker(
+      context: ctx,
+      initialDate: _birthDate.value ?? DateTime(now.year - 25, now.month, now.day),
+      firstDate: DateTime(now.year - 120),
+      lastDate: now,
+    );
+    if (selected != null) _birthDate.value = selected;
   }
 
   void _scrollToConsent() {
@@ -181,23 +232,47 @@ class _RegisterPageState extends State<RegisterPage> {
                                 buttonLabel: l10n.authRegisterGoToLogin,
                                 onAction: () => ctx.router.replace(const LoginRoute()),
                               )
-                            : _RegisterCard(
+                            : ValueListenableBuilder<int>(
                                 key: const ValueKey('form'),
-                                formKey: _formKey,
-                                nicknameCtrl: _nicknameCtrl,
-                                emailCtrl: _emailCtrl,
-                                passwordCtrl: _passwordCtrl,
-                                confirmCtrl: _confirmCtrl,
-                                acceptedTerms: _acceptedTerms,
-                                showConsentError: _showConsentError,
-                                ageConfirmed: _ageConfirmed,
-                                showAgeError: _showAgeError,
-                                consentBlockKey: _consentBlockKey,
-                                termsUrl: _versionStatus.termsUrlFor(_localeHelper.locale.languageCode),
-                                privacyUrl: _versionStatus.privacyUrlFor(_localeHelper.locale.languageCode),
-                                isLoading: isLoading,
-                                errorMessage: errorMessage,
-                                onSubmit: () => _onSubmit(ctx),
+                                valueListenable: _step,
+                                builder: (context, step, child) => AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 250),
+                                  child: step == 0
+                                      ? _RegisterCard(
+                                          key: const ValueKey('credentials'),
+                                          formKey: _formKey,
+                                          nicknameCtrl: _nicknameCtrl,
+                                          emailCtrl: _emailCtrl,
+                                          passwordCtrl: _passwordCtrl,
+                                          confirmCtrl: _confirmCtrl,
+                                          acceptedTerms: _acceptedTerms,
+                                          showConsentError: _showConsentError,
+                                          ageConfirmed: _ageConfirmed,
+                                          showAgeError: _showAgeError,
+                                          consentBlockKey: _consentBlockKey,
+                                          termsUrl: _versionStatus.termsUrlFor(_localeHelper.locale.languageCode),
+                                          privacyUrl: _versionStatus.privacyUrlFor(_localeHelper.locale.languageCode),
+                                          isLoading: isLoading,
+                                          errorMessage: errorMessage,
+                                          isFinalStep: !_collectsPersonalDetails,
+                                          onContinue: () => _onContinueFromCredentials(ctx),
+                                        )
+                                      : _PersonalDetailsCard(
+                                          key: const ValueKey('details'),
+                                          formKey: _detailsFormKey,
+                                          heightCtrl: _heightCtrl,
+                                          weightCtrl: _weightCtrl,
+                                          sex: _sex,
+                                          birthDate: _birthDate,
+                                          bodyType: _bodyType,
+                                          isLoading: isLoading,
+                                          errorMessage: errorMessage,
+                                          onPickBirthDate: () => _pickBirthDate(ctx),
+                                          onBack: () => _step.value = 0,
+                                          onSkip: () => _onFinishRegistration(ctx, includeDetails: false),
+                                          onFinish: () => _onFinishRegistration(ctx, includeDetails: true),
+                                        ),
+                                ),
                               ),
                       ),
 
@@ -260,7 +335,8 @@ class _RegisterCard extends StatelessWidget {
     required this.privacyUrl,
     required this.isLoading,
     required this.errorMessage,
-    required this.onSubmit,
+    required this.isFinalStep,
+    required this.onContinue,
   });
 
   final GlobalKey<FormState> formKey;
@@ -277,7 +353,8 @@ class _RegisterCard extends StatelessWidget {
   final String privacyUrl;
   final bool isLoading;
   final String? errorMessage;
-  final VoidCallback onSubmit;
+  final bool isFinalStep;
+  final VoidCallback onContinue;
 
   @override
   Widget build(BuildContext context) {
@@ -359,7 +436,7 @@ class _RegisterCard extends StatelessWidget {
           textInputAction: TextInputAction.done,
           autofillHints: const [AutofillHints.newPassword],
           enabled: !isLoading,
-          onFieldSubmitted: isLoading ? null : (_) => onSubmit(),
+          onFieldSubmitted: isLoading ? null : (_) => onContinue(),
           validator: (v) {
             if (v == null || v.isEmpty) return l10n.errorsFieldRequired;
             if (v != passwordCtrl.text) {
@@ -415,7 +492,202 @@ class _RegisterCard extends StatelessWidget {
               : const SizedBox.shrink(),
         ),
 
-        GradientButton(label: l10n.authRegisterButton, isLoading: isLoading, onTap: onSubmit),
+        GradientButton(
+          label: isFinalStep ? l10n.authRegisterButton : l10n.authRegisterContinue,
+          isLoading: isLoading,
+          onTap: onContinue,
+        ),
+      ],
+    );
+  }
+}
+
+class _PersonalDetailsCard extends StatelessWidget {
+  const _PersonalDetailsCard({
+    super.key,
+    required this.formKey,
+    required this.heightCtrl,
+    required this.weightCtrl,
+    required this.sex,
+    required this.birthDate,
+    required this.bodyType,
+    required this.isLoading,
+    required this.errorMessage,
+    required this.onPickBirthDate,
+    required this.onBack,
+    required this.onSkip,
+    required this.onFinish,
+  });
+
+  final GlobalKey<FormState> formKey;
+  final TextEditingController heightCtrl;
+  final TextEditingController weightCtrl;
+  final ValueNotifier<Sex?> sex;
+  final ValueNotifier<DateTime?> birthDate;
+  final ValueNotifier<BodyType?> bodyType;
+  final bool isLoading;
+  final String? errorMessage;
+  final VoidCallback onPickBirthDate;
+  final VoidCallback onBack;
+  final VoidCallback onSkip;
+  final VoidCallback onFinish;
+
+  String? _validateRange(String? value, {required double min, required double max, required String message}) {
+    final trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) return null; // optional field
+    final parsed = double.tryParse(trimmed);
+    if (parsed == null || parsed < min || parsed > max) return message;
+    return null;
+  }
+
+  String _bodyTypeLabel(AppLocalizations l10n, BodyType type) => switch (type) {
+    BodyType.lean => l10n.authPersonalDetailsBodyTypeLean,
+    BodyType.athletic => l10n.authPersonalDetailsBodyTypeAthletic,
+    BodyType.average => l10n.authPersonalDetailsBodyTypeAverage,
+    BodyType.skinnyFat => l10n.authPersonalDetailsBodyTypeSkinnyFat,
+    BodyType.higherBodyFat => l10n.authPersonalDetailsBodyTypeHigherBodyFat,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    final labelStyle = tt.bodySmall?.copyWith(fontSize: 14, fontWeight: FontWeight.w500, color: cs.onSurface);
+
+    return FormCard(
+      formKey: formKey,
+      children: [
+        Row(
+          children: [
+            IconButton(
+              onPressed: isLoading ? null : onBack,
+              icon: const Icon(Icons.arrow_back),
+              tooltip: l10n.authPersonalDetailsBack,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(l10n.authPersonalDetailsTitle, style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(l10n.authPersonalDetailsSubtitle, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+        const SizedBox(height: 20),
+
+        Text(l10n.authPersonalDetailsSex, style: labelStyle),
+        const SizedBox(height: 8),
+        ListenableBuilder(
+          listenable: sex,
+          builder: (_, _) => OptionToggle(
+            selectedValue: sex.value?.storageValue ?? '',
+            items: [
+              OptionToggleItem(value: Sex.male.storageValue, label: l10n.authPersonalDetailsSexMale),
+              OptionToggleItem(value: Sex.female.storageValue, label: l10n.authPersonalDetailsSexFemale),
+            ],
+            onSelect: (value) => sex.value = sex.value?.storageValue == value ? null : Sex.fromStorage(value),
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        Text(l10n.authPersonalDetailsBirthDate, style: labelStyle),
+        const SizedBox(height: 8),
+        ListenableBuilder(
+          listenable: birthDate,
+          builder: (_, _) => InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: isLoading ? null : onPickBirthDate,
+            child: InputDecorator(
+              decoration: InputDecoration(
+                hintText: l10n.authPersonalDetailsBirthDateHint,
+                suffixIcon: const Icon(Icons.calendar_today_outlined),
+              ),
+              child: Text(
+                birthDate.value == null ? l10n.authPersonalDetailsBirthDateHint : AppDateFormatter.format(birthDate.value!),
+                style: tt.bodyLarge,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.authPersonalDetailsHeight, style: labelStyle),
+                  const SizedBox(height: 8),
+                  CustomTextField(
+                    controller: heightCtrl,
+                    label: l10n.authPersonalDetailsHeight,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    enabled: !isLoading,
+                    validator: (v) => _validateRange(v, min: 50, max: 260, message: l10n.errorsHeightInvalid),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.authPersonalDetailsWeight, style: labelStyle),
+                  const SizedBox(height: 8),
+                  CustomTextField(
+                    controller: weightCtrl,
+                    label: l10n.authPersonalDetailsWeight,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    enabled: !isLoading,
+                    validator: (v) => _validateRange(v, min: 20, max: 400, message: l10n.errorsWeightInvalid),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+
+        Text(l10n.authPersonalDetailsBodyType, style: labelStyle),
+        const SizedBox(height: 8),
+        ListenableBuilder(
+          listenable: bodyType,
+          builder: (_, _) => Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final type in BodyType.values)
+                ChoiceChip(
+                  label: Text(_bodyTypeLabel(l10n, type)),
+                  selected: bodyType.value == type,
+                  onSelected: (selected) => bodyType.value = selected ? type : null,
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: errorMessage != null
+              ? Column(
+                  key: ValueKey(errorMessage),
+                  children: [ErrorBanner(message: errorMessage!), const SizedBox(height: 20)],
+                )
+              : const SizedBox.shrink(),
+        ),
+
+        GradientButton(label: l10n.authRegisterButton, isLoading: isLoading, onTap: onFinish),
+        const SizedBox(height: 12),
+        Center(
+          child: TextButton(onPressed: isLoading ? null : onSkip, child: Text(l10n.authRegisterSkip)),
+        ),
       ],
     );
   }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:auto_route/auto_route.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gym_tracker/assets/localization/app_localizations.dart';
+import 'package:gym_tracker/core/app_router.gr.dart';
 import 'package:gym_tracker/core/injection.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/cubit/health/health_cubit.dart';
@@ -452,7 +454,19 @@ class _HealthPageState extends State<HealthPage> with SingleTickerProviderStateM
 
             return Scaffold(
               backgroundColor: cs.surfaceContainerLow,
-              appBar: GymAppBar(title: l10n.healthTitle, showBackButton: false),
+              appBar: GymAppBar(
+                title: l10n.healthTitle,
+                showBackButton: false,
+                actions: Platform.isIOS
+                    ? [
+                        IconButton(
+                          icon: const Icon(Icons.insights),
+                          tooltip: l10n.healthInsightsEntryTooltip,
+                          onPressed: () => context.router.push(const HealthInsightsRoute()),
+                        ),
+                      ]
+                    : null,
+              ),
               floatingActionButton: showFab ? PrimaryFab(onPressed: () => _openProductForm(userId)) : null,
               body: SafeArea(
                 child: Padding(

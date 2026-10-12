@@ -5,6 +5,8 @@ import 'package:gym_tracker/core/constants/currencies.dart';
 import 'package:gym_tracker/cubit/base_cubit.dart';
 import 'package:gym_tracker/cubit/base_state.dart';
 import 'package:gym_tracker/model/auth_user.dart';
+import 'package:gym_tracker/model/body_type.dart';
+import 'package:gym_tracker/model/sex.dart';
 import 'package:gym_tracker/service/account/account_cleanup_service.dart';
 import 'package:gym_tracker/service/auth/auth_service.dart';
 import 'package:gym_tracker/service/user/user_service.dart';
@@ -66,11 +68,26 @@ class AuthCubit extends BaseCubit {
     required String displayName,
     required String language,
     required Map<String, Object?> consent,
+    Sex? sex,
+    DateTime? birthDate,
+    double? heightCm,
+    double? weightKg,
+    BodyType? bodyType,
   }) async {
     await guardedAction(() async {
       try {
         final user = await _authService.signUp(email: email, password: password);
-        await _createUser(user: user, displayName: displayName, language: language, consent: consent);
+        await _createUser(
+          user: user,
+          displayName: displayName,
+          language: language,
+          consent: consent,
+          sex: sex,
+          birthDate: birthDate,
+          heightCm: heightCm,
+          weightKg: weightKg,
+          bodyType: bodyType,
+        );
         await _authService.signOut();
         safeEmit(const AuthSignUpSuccessState());
       } on EmailAlreadyInUseException {
@@ -148,6 +165,11 @@ class AuthCubit extends BaseCubit {
     required String displayName,
     required String language,
     required Map<String, Object?> consent,
+    Sex? sex,
+    DateTime? birthDate,
+    double? heightCm,
+    double? weightKg,
+    BodyType? bodyType,
   }) async {
     try {
       await _userService.createUser(
@@ -157,6 +179,11 @@ class AuthCubit extends BaseCubit {
         language: language,
         currency: fallbackCurrencyCode,
         consent: consent,
+        sex: sex,
+        birthDate: birthDate,
+        heightCm: heightCm,
+        weightKg: weightKg,
+        bodyType: bodyType,
       );
     } catch (_) {
       // Best-effort — do not block auth flow on profile sync failure.

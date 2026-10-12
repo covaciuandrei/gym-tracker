@@ -52,6 +52,26 @@ class AppRouter extends RootStackRouter {
       page: MembershipHistoryRoute.page,
       guards: [AuthGuard()],
     ),
+    AutoRoute(
+      path: '/health-insights',
+      page: HealthInsightsRoute.page,
+      guards: [AuthGuard()],
+    ),
+    AutoRoute(
+      path: '/health-insights/timeline',
+      page: MetricTimelineRoute.page,
+      guards: [AuthGuard()],
+    ),
+    AutoRoute(
+      path: '/health-insights/compare',
+      page: TwoColumnComparisonRoute.page,
+      guards: [AuthGuard()],
+    ),
+    AutoRoute(
+      path: '/health-insights/overview',
+      page: PhysicalOverviewDetailRoute.page,
+      guards: [AuthGuard()],
+    ),
     AutoRoute(path: '/force-update', page: ForceUpdateRoute.page),
     AutoRoute(path: '/maintenance', page: MaintenanceRoute.page),
     AutoRoute(path: '/no-connection', page: NoConnectionRoute.page),
