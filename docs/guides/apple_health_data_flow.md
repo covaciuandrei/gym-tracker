@@ -108,14 +108,15 @@ capability X". File: [`ios/Runner/Runner.entitlements`](../../ios/Runner/Runner.
 <dict>
     <key>com.apple.developer.healthkit</key>
     <true/>
-    <key>com.apple.developer.healthkit.access</key>
-    <array/>
 </dict>
 ```
 
 - `com.apple.developer.healthkit` — "this app uses HealthKit".
-- `com.apple.developer.healthkit.access` — an *empty* list means we do **not** use the
-  special clinical-records access. Plain HealthKit only.
+- There is deliberately **no** `com.apple.developer.healthkit.access` key. It is only for
+  clinical health records, which we do not use. Xcode adds it (as an empty list) when you
+  add the HealthKit capability, but even an empty one asks Apple for the *Verifiable Health
+  Records* capability, which a free Personal Team cannot have, so Xcode refuses to create a
+  provisioning profile (see section 13).
 - The file is linked to the app in `ios/Runner.xcodeproj/project.pbxproj` with
   `CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;` (for Debug, Release and Profile).
 - When you build on a real device, Xcode also switches the **HealthKit capability** on for
@@ -1071,6 +1072,7 @@ those, build and run on a device or simulator (next section).
 | ------- | ------------ | ---------- |
 | App crashes the moment Health Insights opens | `NSHealthShareUsageDescription` missing from `Info.plist` | Add it (section 3.2) |
 | Permission sheet never appears | HealthKit capability / entitlement missing for the build, or you already answered it | Check `Runner.entitlements`; reinstall the app |
+| Xcode: "Personal development teams … do not support the HealthKit Access (Verifiable Health Records) capability" | `Runner.entitlements` contains `com.apple.developer.healthkit.access`, or *Clinical Health Records* is ticked | Delete that key so only `com.apple.developer.healthkit` remains, and do not tick *Clinical Health Records* (section 3.1) |
 | Page says "No Apple Health data" | Access declined, or there really is no data, or the phone was locked | Allow access in the Health app, unlock, tap *Try Again* |
 | Some cards say "not enough data" | That metric has no readings (no Watch, or iOS < 16 for Heart Rate Recovery) | Expected; nothing is wrong |
 | A new weight does not show | You are looking at today's cached copy | Pull to refresh |
